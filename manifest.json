@@ -1,13 +1,17 @@
 [
   {
-    "name": "Spicy Lyrics",
-    "description": "Spicy Lyrics is a better lyrics experience (compared to Spotify Lyrics) for Spotify. It brings word-by-word lyrics (karaoke style), beautiful animations, and more. Come and give it a try!",
+    "name": "Spicy Lyrics: Ruytha Edition",
+    "description": "A fork of Spicy Lyrics that adds the AMLL background and lyric player as options. Remove the original Spicy Lyrics before installing.",
     "preview": "./previews/V3latest_smallcard_preview.webp",
-    "main": "./builds/spicy-lyrics.mjs",
+    "main": "./builds/spicy-lyrics-ruytha.mjs",
     "readme": "README.md",
     "branch": "main",
-    "authors": [{ "name": "Spikerko", "url": "https://github.com/Spikerko" }],
+    "authors": [
+      { "name": "Ruytha", "url": "https://github.com/Ruytha" },
+      { "name": "Spikerko", "url": "https://github.com/Spikerko" }
+    ],
     "tags": [
+      "amll",
       "lyrics",
       "spicy-lyrics",
       "word-to-word-lyrics",

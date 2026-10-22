@@ -27,12 +27,28 @@ Notes:
 
 ## Installation
 
-This fork isn't on the Spicetify Marketplace. You build it from source and add it to Spicetify yourself.
+This fork isn't on the Spicetify Marketplace. You install one small loader file, and it downloads the latest version of the fork every time Spotify starts, so updates arrive on their own.
 
-You need [Spicetify](https://spicetify.app/docs/getting-started), [Bun](https://bun.sh) and [Git](https://git-scm.com).
+You need [Spicetify](https://spicetify.app/docs/getting-started) installed.
 
 > [!IMPORTANT]
 > Remove the Marketplace version of Spicy Lyrics, and any other Spicy Lyrics extension, first. Two copies running at once fight over the same lyrics page and settings.
+
+1. Download [`spicy-lyrics-ruytha.mjs`](https://github.com/Ruytha/spicy-lyrics-ruytha-edition/raw/main/builds/spicy-lyrics-ruytha.mjs).
+2. Put it in your Spicetify Extensions folder ([where to find it](https://spicetify.app/docs/customization/extensions#manual-installation)).
+3. Run:
+
+```bash
+spicetify config extensions spicy-lyrics-ruytha.mjs
+spicetify apply
+```
+
+To uninstall, run `spicetify config extensions spicy-lyrics-ruytha.mjs-` and then `spicetify apply`.
+
+<details>
+<summary><strong>Building it yourself instead</strong></summary>
+
+You need [Bun](https://bun.sh) and [Git](https://git-scm.com).
 
 ```bash
 git clone https://github.com/Ruytha/spicy-lyrics-ruytha-edition.git
@@ -41,17 +57,9 @@ bun install
 bun run build
 ```
 
-Then copy `dist/spicy-lyrics.js` into your Spicetify Extensions folder ([where to find it](https://spicetify.app/docs/customization/extensions#manual-installation)) and run:
+Copy `dist/spicy-lyrics.js` into your Spicetify Extensions folder, then run `spicetify config extensions spicy-lyrics.js` and `spicetify apply`. A self-built copy doesn't update on its own.
 
-```bash
-spicetify config extensions spicy-lyrics.js
-spicetify apply
-```
-
-To update, pull the latest changes, build again, copy the new file over the old one, and run `spicetify apply`.
-
-> [!NOTE]
-> `builds/spicy-lyrics.mjs` in this repository is upstream's loader, which downloads the official Spicy Lyrics. It doesn't contain this fork's changes, so don't install that file.
+</details>
 
 ### Turning the AMLL options on
 
@@ -78,6 +86,19 @@ bun run build
 bun run lint
 bun run fmt
 ```
+
+### Publishing an update
+
+The loader serves whatever is committed at `builds/ruytha/spicy-lyrics.js` on `main`. To ship a change:
+
+```bash
+bun run release   # builds and copies the bundle to builds/ruytha/spicy-lyrics.js
+git add builds/ruytha/spicy-lyrics.js
+git commit -m "Update build"
+git push
+```
+
+Installed copies pick it up the next time Spotify starts.
 
 The AMLL code is in:
 

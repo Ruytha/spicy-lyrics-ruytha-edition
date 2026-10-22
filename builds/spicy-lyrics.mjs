@@ -1,1 +1,1 @@
-import(`https://cdn.jsdelivr.net/gh/Spikerko/spicy-lyrics@main/builds/main/entrypoint.mjs?t=${Date.now()}`);
+import(`https://cdn.jsdelivr.net/gh/Ruytha/spicy-lyrics-ruytha-edition@main/builds/spicy-lyrics-ruytha.mjs?t=${Date.now()}`);
