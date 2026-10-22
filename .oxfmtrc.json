@@ -17,6 +17,7 @@
     "dist/**",
     "dist_legacy/**",
     "build/**",
+    "builds/ruytha/**",
     ".spicetify/**",
     "public-storage/**",
 
