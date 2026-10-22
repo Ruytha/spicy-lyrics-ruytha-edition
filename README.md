@@ -5,7 +5,7 @@ A fork of [Spicy Lyrics](https://github.com/Spikerko/spicy-lyrics) by Spikerko t
 > [!NOTE]
 > This is an unofficial fork. It isn't affiliated with or supported by the Spicy Lyrics team, so please don't report problems with this fork in the Spicy Lyrics Discord. Use this repository's [issues](https://github.com/Ruytha/spicy-lyrics-ruytha-edition/issues) instead.
 
-Based on Spicy Lyrics **6.4.70**, which supports Spotify **1.3.6**.
+See the [changelog](./CHANGELOG.md) for what's new. Based on Spicy Lyrics **6.4.70**, which supports Spotify **1.3.6**.
 
 ## What this fork adds
 
