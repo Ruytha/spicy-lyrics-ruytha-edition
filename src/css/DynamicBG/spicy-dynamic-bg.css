@@ -46,7 +46,7 @@ aside .spicy-dynamic-bg {
 .spicy-dynamic-bg.StarryBackground {
   filter: none;
   background-image: var(--ry-stars-far), var(--ry-sky);
-  background-size: 290px 290px, 100% 100%;
+  background-size: var(--ry-stars-far-size), var(--ry-sky-size);
 }
 
 .spicy-dynamic-bg.StarryBackground::before {
@@ -54,7 +54,7 @@ aside .spicy-dynamic-bg {
   position: absolute;
   inset: 0;
   background-image: var(--ry-stars);
-  background-size: 220px 220px;
+  background-size: var(--ry-stars-size);
   animation: SDB_Starry_Twinkle 5s ease-in-out infinite alternate;
 }
 
