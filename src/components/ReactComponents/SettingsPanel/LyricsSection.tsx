@@ -4,10 +4,11 @@ import {
   $duetLinePadding,
   $joinSplitWords,
   $lineHoverBackground,
+  $lyricsRenderer,
   $minimalLyricsMode,
   $simpleLyricsMode,
 } from "../../../utils/stores.ts";
-import { Toggle } from "./components.tsx";
+import { Select, Toggle } from "./components.tsx";
 import { LyricsIcon } from "./icons.tsx";
 import type { GroupDef, SectionDef } from "./model.ts";
 
@@ -16,6 +17,22 @@ const groups: GroupDef[] = [
   {
     title: "Style",
     settings: [
+      {
+        id: "lyricsRenderer",
+        label: "Lyrics Renderer",
+        description:
+          "Which renderer draws synced lyrics. AMLL scrolls and highlights lines with its own layout and effects; Simple and Minimal Lyrics Mode only apply to Spicy. Unsynced lyrics always use Spicy.",
+        keywords: "amll renderer player engine",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($lyricsRenderer)}
+            options={["spicy", "amll"]}
+            labels={["Spicy", "AMLL"]}
+            onChange={(v) => $lyricsRenderer.set(v)}
+          />
+        ),
+      },
       {
         id: "simpleLyricsMode",
         label: "Simple Lyrics Mode",

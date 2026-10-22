@@ -1,5 +1,7 @@
 import { useStore } from "@nanostores/react";
 import {
+  $amllBgFlowSpeed,
+  $amllBgStaticMode,
   $backgroundBlur,
   $backgroundStyle,
   $showNpvDynamicBg,
@@ -13,6 +15,7 @@ import type { GroupDef, SectionDef } from "./model.ts";
 
 export const BACKGROUND_STYLE_LABELS: Record<BackgroundStyle, string> = {
   dynamic: "Dynamic (Kawarp)",
+  amll: "AMLL",
   artist: "Artist Image",
   cover: "Cover Art",
   color: "Cover Colors",
@@ -28,8 +31,8 @@ const groups: GroupDef[] = [
         id: "backgroundStyle",
         label: "Background",
         description:
-          "Dynamic (Kawarp) swirls the cover art in time with the music. Artist Image uses the artist's header photo, or the cover when there isn't one. None (Transparent) leaves the page see-through, so whatever is behind it shows.",
-        keywords: "static animated kawarp artist header cover art color colors image transparent none theme",
+          "Dynamic (Kawarp) swirls the cover art in time with the music. AMLL flows the cover's colors as a soft mesh gradient. Artist Image uses the artist's header photo, or the cover when there isn't one. None (Transparent) leaves the page see-through, so whatever is behind it shows.",
+        keywords: "static animated kawarp amll mesh gradient artist header cover art color colors image transparent none theme",
         useNote: () => {
           const style = useStore($backgroundStyle);
           const canvasStage = useStore($experiment("canvasImmersive"));
@@ -69,6 +72,42 @@ const groups: GroupDef[] = [
             defaultValue={0}
             unit="px"
             onChange={(v) => $backgroundBlur.set(v)}
+            disabled={disabled}
+          />
+        ),
+      },
+      {
+        id: "amllBgFlowSpeed",
+        label: "AMLL Flow Speed",
+        description: "How fast the AMLL background moves. It still slows down while playback is paused.",
+        keywords: "amll background flow speed animation",
+        stacked: true,
+        useDisabled: () => useStore($backgroundStyle) !== "amll" && "Only applies to AMLL.",
+        Control: ({ disabled, label }) => (
+          <Slider
+            label={label}
+            value={useStore($amllBgFlowSpeed)}
+            min={0.25}
+            max={4}
+            step={0.25}
+            defaultValue={1}
+            unit="x"
+            onChange={(v) => $amllBgFlowSpeed.set(v)}
+            disabled={disabled}
+          />
+        ),
+      },
+      {
+        id: "amllBgStaticMode",
+        label: "AMLL Still Mode",
+        description: "Draw each cover once and hold it still instead of animating, to save GPU.",
+        keywords: "amll background static still performance gpu",
+        useDisabled: () => useStore($backgroundStyle) !== "amll" && "Only applies to AMLL.",
+        Control: ({ disabled, label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($amllBgStaticMode)}
+            onChange={(v) => $amllBgStaticMode.set(v)}
             disabled={disabled}
           />
         ),

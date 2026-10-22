@@ -195,3 +195,27 @@ body:has(.Root:not(.global-nav)) #SpicyLyricsPage.Fullscreen.MinimalLyricsMode
   width: 100%;
 }
  */
+
+/* AMLL lyrics renderer. The player lays out and scrolls its own lines against its own
+   box, so the side padding Spicy puts on its scroll container (to keep lyrics clear of
+   the cover panel) goes on the lyrics area instead, with the same values per side. */
+#SpicyLyricsPage.AmllLyrics .LyricsContainer .LyricsContent {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#SpicyLyricsPage.AmllLyrics .ContentBox .NowBar:is(.Active.LeftSide, :not(.Active)) + .LyricsContainer .LyricsContent {
+  padding-left: var(--LyricsLeftSidePadding) !important;
+  padding-right: var(--LyricsRightSidePadding) !important;
+}
+
+#SpicyLyricsPage.AmllLyrics .ContentBox .NowBar.Active.RightSide + .LyricsContainer .LyricsContent {
+  padding-right: var(--LyricsLeftSidePadding) !important;
+  padding-left: calc(var(--LyricsRightSidePadding) * 1.45) !important;
+}
+
+#SpicyLyricsPage.AmllLyrics .LyricsContainer .LyricsContent > .amll-lyric-player {
+  font-family: inherit;
+  font-weight: 700;
+  --amll-lp-font-size: var(--DefaultLyricsSize);
+}

@@ -15,6 +15,17 @@ import { BackgroundAnimationController, type AudioAnalysisData } from "./Backgro
 import { getDynamicAudioAnalysis } from "../../utils/audioAnalysis.ts";
 import Logger from "../../utils/Logger.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
+import {
+  AMLLBackgroundMap,
+  CreateAMLLBackground,
+  DisposeAMLLBackground,
+  DisposeAMLLInstance,
+  IsAMLLBackgroundAvailable,
+  LoadAMLLCover,
+  ReleaseAMLLCanvas,
+  SetAMLLAnimationSpeed,
+  SetAMLLPlaybackPaused,
+} from "./AMLLBackground.ts";
 
 const dynamicBgLogger = new Logger("Dynamic Background");
 
@@ -141,10 +152,12 @@ function retireLayers(host: HTMLElement, keep: Element | null): boolean {
         if (instance === kawarp) KawarpMap.delete(key);
       }
     }
+    const amll = ReleaseAMLLCanvas(layer);
     // A timer, not transitionend: that never fires in a hidden window.
     setTimeout(() => {
       layer.remove();
       kawarp?.dispose();
+      if (amll) DisposeAMLLInstance(amll);
     }, layerSettleMs());
   }
   return replaced;
@@ -408,6 +421,7 @@ export default async function ApplyDynamicBackground(host: HTMLElement, key: str
   if (!track.coverUri) return;
   if (style === "color") return applyColorBackground(host, track);
   if (style === "artist" || style === "cover") return applyImageBackground(host, track, style);
+  if (style === "amll" && IsAMLLBackgroundAvailable()) return applyAmllBackground(host, key, track);
   return applyKawarpBackground(host, key, track);
 }
 
@@ -424,8 +438,12 @@ function onCanvasLoaded(host: HTMLElement, key: string, canvas: HTMLElement, kaw
   if (fadesInWithCss(key)) kawarp.setOptions({ transitionDuration: KawarpTransitionDuration });
 }
 
+/** Kawarp's canvas layer; the AMLL style's canvas is told apart by its class. */
+const KAWARP_LAYER = "canvas:not(.AMLLBackground)";
+const AMLL_LAYER = "canvas.AMLLBackground";
+
 async function applyKawarpBackground(host: HTMLElement, key: string, track: TrackSnapshot) {
-  if (liveLayer(host, "canvas")?.getAttribute("data-cover-id") === track.coverUri) return;
+  if (liveLayer(host, KAWARP_LAYER)?.getAttribute("data-cover-id") === track.coverUri) return;
 
   // Resolve a Kawarp-loadable source up front (rasterizing local art if needed)
   // so we can bail before touching any instance when there's nothing to show.
@@ -446,7 +464,7 @@ async function applyKawarpBackground(host: HTMLElement, key: string, track: Trac
 
   // Re-queried rather than trusting the pre-await snapshot: a concurrent call may
   // have replaced this key's canvas while we were resolving.
-  const liveCanvas = liveLayer(host, "canvas");
+  const liveCanvas = liveLayer(host, KAWARP_LAYER);
   const liveKawarp = liveCanvas ? KawarpMap.get(key) : undefined;
   if (liveCanvas && liveKawarp) {
     liveCanvas.setAttribute("data-cover-id", track.coverUri);
@@ -494,6 +512,44 @@ async function applyKawarpBackground(host: HTMLElement, key: string, track: Trac
       KawarpOptionsStatic.transitionDuration * 2
     );
   }
+}
+
+/**
+ * The AMLL style: a mesh gradient built from the cover, drawn by AMLL's own frame loop.
+ * Falls back to Kawarp when WebGL can't be set up for it.
+ */
+async function applyAmllBackground(host: HTMLElement, key: string, track: TrackSnapshot) {
+  if (liveLayer(host, AMLL_LAYER)?.getAttribute("data-cover-id") === track.coverUri) return;
+
+  const source = await resolveKawarpSource(track);
+  if (!source) {
+    dynamicBgLogger.warn("No loadable cover for AMLL background; skipping", { cover: track.coverUri });
+    return;
+  }
+  if (track.isStale()) return;
+
+  // Re-queried after the await, as in applyKawarpBackground.
+  let canvas = liveLayer(host, AMLL_LAYER);
+  let instance = AMLLBackgroundMap.get(key);
+  if (!canvas || instance?.getElement() !== canvas) {
+    // Play state and speed normally arrive by event; a new instance starts from the current ones.
+    SetAMLLPlaybackPaused(!SpotifyPlayer.IsPlaying);
+    SetAMLLAnimationSpeed(currentSpeed);
+    const created = CreateAMLLBackground();
+    if (!created) return applyKawarpBackground(host, key, track);
+    DisposeAMLLBackground(key);
+    instance = created;
+    canvas = instance.getElement();
+    canvas.classList.add("spicy-dynamic-bg", "AMLLBackground", "is-pending");
+    AMLLBackgroundMap.set(key, instance);
+    host.appendChild(canvas);
+  }
+  canvas.setAttribute("data-cover-id", track.coverUri);
+
+  const loaded = await LoadAMLLCover(instance, source.value);
+  // Disposed or replaced (page closed, style switch) or skipped past while loading.
+  if (!loaded || track.isStale() || AMLLBackgroundMap.get(key) !== instance) return;
+  if (canvas.classList.contains("is-pending")) revealLayer(host, canvas);
 }
 
 /** The artist's header image when `style` asks for it, else the cover. */
@@ -678,6 +734,7 @@ function reapplyPageBackground() {
   if (!isRefined()) {
     KawarpMap.get(PAGE_BACKGROUND_KEY)?.dispose();
     KawarpMap.delete(PAGE_BACKGROUND_KEY);
+    DisposeAMLLBackground(PAGE_BACKGROUND_KEY);
     contentBox.querySelectorAll(OWN_LAYERS).forEach((el) => el.remove());
   } else {
     // A canvas still loading belongs to the style being left: its apply is stale now and
@@ -686,6 +743,8 @@ function reapplyPageBackground() {
       const kawarp = canvasKawarps.get(pending);
       if (kawarp && KawarpMap.get(PAGE_BACKGROUND_KEY) === kawarp) KawarpMap.delete(PAGE_BACKGROUND_KEY);
       kawarp?.dispose();
+      const amll = ReleaseAMLLCanvas(pending);
+      if (amll) DisposeAMLLInstance(amll);
       pending.remove();
     }
   }
@@ -733,6 +792,7 @@ function setAnimationSpeed(speed: number) {
   KawarpMap.forEach((kawarp, key) => {
     if (!suspendedKawarpKeys.has(key)) applyAnimationSpeed(kawarp);
   });
+  SetAMLLAnimationSpeed(currentSpeed);
 }
 
 /** Successful analysis, or `null` once we know the track has no analysis (stops progress-handler spam). */
@@ -783,13 +843,14 @@ Global.Event.listen("playback:songchange", () => {
 
 Global.Event.listen("playback:playpause", (e: { data?: { isPaused?: boolean } }) => {
   setAnimationSpeed(e?.data?.isPaused ? PAUSED_SPEED : 1);
+  SetAMLLPlaybackPaused(!!e?.data?.isPaused);
 });
 
 reducedMotion.addEventListener("change", () => setAnimationSpeed(SpotifyPlayer.IsPlaying ? 1 : PAUSED_SPEED));
 
 Global.Event.listen("playback:progress", async () => {
   // Speed only matters to live backgrounds; a new one picks it up on the next tick.
-  if (KawarpMap.size === 0) return;
+  if (KawarpMap.size === 0 && AMLLBackgroundMap.size === 0) return;
   const songUri = SpotifyPlayer.GetUri();
   // Local tracks have no Spotify audio analysis.
   if (!songUri || songUri.startsWith("spotify:local:")) {

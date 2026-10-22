@@ -233,7 +233,7 @@ let LinesEvListenerExists: boolean = false;
 // on a line's start swallows its first syllable on faster songs.
 const SEEK_FADE_COMPENSATION_MS = 300;
 
-function SeekToLineStart(startTime: number) {
+export function SeekToLineStart(startTime: number) {
   const target = $seekFadeCompensation.get()
     ? Math.max(0, startTime - SEEK_FADE_COMPENSATION_MS)
     : startTime;

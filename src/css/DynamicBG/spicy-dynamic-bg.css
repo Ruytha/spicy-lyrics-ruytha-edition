@@ -36,6 +36,11 @@ aside .spicy-dynamic-bg {
   filter: brightness(0.6) saturate(2.65);
 }
 
+/* The AMLL mesh is already saturated; it only needs darkening for lyrics contrast. */
+.spicy-dynamic-bg.AMLLBackground {
+  filter: brightness(0.7);
+}
+
 @property --sl_videocanvas_mask-stop {
   syntax: '<percentage>';
   inherits: false;

@@ -8,6 +8,7 @@ import { EmitApply, EmitNotApplyed } from "../Applyer/OnApply.ts";
 import { ApplyStaticLyrics, type StaticLyricsData } from "../Applyer/Static.ts";
 import { ApplyLineLyrics } from "../Applyer/Synced/Line.ts";
 import { ApplySyllableLyrics } from "../Applyer/Synced/Syllable.ts";
+import { ApplyAmllLyrics, DisposeAmllLyrics, IsAmllLyricsEnabled } from "../Applyer/AMLL.ts";
 import fetchLyrics, {
   ClearLyricsPageContainer,
   HideLoaderContainer,
@@ -81,6 +82,7 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
 
   EmitNotApplyed();
 
+  DisposeAmllLyrics();
   DestroyAllLyricsContainers();
 
   ClearLyricsContentArrays();
@@ -153,7 +155,9 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
 
   const romanize = isRomanized;
 
-  if (lyrics.Type === "Syllable") {
+  if (IsAmllLyricsEnabled() && ApplyAmllLyrics(lyrics, romanize)) {
+    // Rendered by the AMLL player; unsynced lyrics fall through to the default renderer.
+  } else if (lyrics.Type === "Syllable") {
     ApplySyllableLyrics(lyrics as any, romanize);
   } else if (lyrics.Type === "Line") {
     ApplyLineLyrics(lyrics as any, romanize);

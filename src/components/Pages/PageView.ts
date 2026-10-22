@@ -24,6 +24,8 @@ import {
   ScrollSimplebar,
 } from "../../utils/Scrolling/Simplebar/ScrollSimplebar.ts";
 import ApplyDynamicBackground, { KawarpMap, PAGE_BACKGROUND_KEY } from "../DynamicBG/dynamicBackground.ts";
+import { DisposeAMLLBackground } from "../DynamicBG/AMLLBackground.ts";
+import { DisposeAmllLyrics } from "../../utils/Lyrics/Applyer/AMLL.ts";
 import {
   $creditsFollowLastLine,
   $currentLyricsData,
@@ -31,6 +33,7 @@ import {
   $joinSplitWords,
   $lineHoverBackground,
   $lyricsContainerExists,
+  $lyricsRenderer,
   $minimalLyricsMode,
   $showVolumeSlider,
   $simpleLyricsMode,
@@ -444,6 +447,8 @@ async function DestroyPage() {
 
   KawarpMap.get(PAGE_BACKGROUND_KEY)?.dispose();
   KawarpMap.delete(PAGE_BACKGROUND_KEY);
+  DisposeAMLLBackground(PAGE_BACKGROUND_KEY);
+  DisposeAmllLyrics();
   ResetLastLine();
   CleanupScrollEvents();
   PageResizeListener?.disconnect(); // Disconnect the observer
@@ -844,6 +849,12 @@ $minimalLyricsMode.listen((v) => {
 });
 
 $joinSplitWords.listen(() => {
+  const uri = SpotifyPlayer.GetUri();
+  $currentLyricsData.set("");
+  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+});
+
+$lyricsRenderer.listen(() => {
   const uri = SpotifyPlayer.GetUri();
   $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);
