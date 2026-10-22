@@ -16,6 +16,7 @@ import type { GroupDef, SectionDef } from "./model.ts";
 export const BACKGROUND_STYLE_LABELS: Record<BackgroundStyle, string> = {
   dynamic: "Dynamic (Kawarp)",
   amll: "AMLL",
+  starry: "Starry Night",
   artist: "Artist Image",
   cover: "Cover Art",
   color: "Cover Colors",
@@ -31,8 +32,8 @@ const groups: GroupDef[] = [
         id: "backgroundStyle",
         label: "Background",
         description:
-          "Dynamic (Kawarp) swirls the cover art in time with the music. AMLL flows the cover's colors as a soft mesh gradient. Artist Image uses the artist's header photo, or the cover when there isn't one. None (Transparent) leaves the page see-through, so whatever is behind it shows.",
-        keywords: "static animated kawarp amll mesh gradient artist header cover art color colors image transparent none theme",
+          "Dynamic (Kawarp) swirls the cover art in time with the music. AMLL flows the cover's colors as a soft mesh gradient. Starry Night is a fixed night sky with twinkling stars. Artist Image uses the artist's header photo, or the cover when there isn't one. None (Transparent) leaves the page see-through, so whatever is behind it shows.",
+        keywords: "static animated kawarp amll mesh gradient starry night stars sky artist header cover art color colors image transparent none theme",
         useNote: () => {
           const style = useStore($backgroundStyle);
           const canvasStage = useStore($experiment("canvasImmersive"));

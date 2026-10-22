@@ -116,7 +116,7 @@ onAnimationFrame(() => {
 // removed once the CSS transition has finished, so rapid skips never stack up layers.
 
 /** Only the kinds created here, so a theme's own `.spicy-dynamic-bg` element is never swept away. */
-const OWN_LAYERS = ":scope > :is(canvas, .StaticBackground, .ColorBackground).spicy-dynamic-bg";
+const OWN_LAYERS = ":scope > :is(canvas, .StaticBackground, .ColorBackground, .StarryBackground).spicy-dynamic-bg";
 
 /** The longest layer transition in spicy-dynamic-bg.css, for each look. */
 const layerSettleMs = () => (isRefined() ? 1500 : 1000);
@@ -413,6 +413,19 @@ export default async function ApplyDynamicBackground(host: HTMLElement, key: str
   if (key === PAGE_BACKGROUND_KEY) host.closest("#SpicyLyricsPage")?.classList.toggle("NoBackground", style === "none");
   if (style === "none") {
     retireLayers(host, null);
+    return;
+  }
+  // A fixed night sky drawn in CSS (spicy-dynamic-bg.css); it doesn't change with the track.
+  if (style === "starry") {
+    const live = liveLayer(host, ".StarryBackground");
+    if (live) {
+      retireLayers(host, live);
+      return;
+    }
+    const layer = document.createElement("div");
+    layer.classList.add("spicy-dynamic-bg", "StarryBackground");
+    host.appendChild(layer);
+    revealLayer(host, layer);
     return;
   }
 

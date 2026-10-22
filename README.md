@@ -15,6 +15,11 @@ Based on Spicy Lyrics **6.4.70**, which supports Spotify **1.3.6**.
 | **AMLL Flow Speed** | Settings → Background | How fast the AMLL background moves (0.25×–4×). It still slows down while playback is paused. |
 | **AMLL Still Mode** | Settings → Background | Draws each cover once and holds it still, to save GPU. |
 | **Lyrics Renderer → AMLL** | Settings → Lyrics → Style | Draws synced lyrics with AMLL's lyric player instead of Spicy's renderer: word-by-word fill, blur on nearby lines, and spring scrolling. |
+| **Background → Starry Night** | Settings → Background | A fixed night sky with twinkling stars, matching [ruytha.dev](https://ruytha.dev). |
+| **Profile viewer** | Click **Made by** / **Uploaded by** under the lyrics | Opens the TTML maker's or uploader's Spicy Lyrics profile in a window inside Spotify instead of your browser. **Listen** plays the track. |
+| **Back to current line** | Appears when you scroll the lyrics | Takes you back to the line that's playing. Works with both renderers. |
+| **Clear this song's cache** | Trash button in the lyrics page's top controls | Removes the current song's cached lyrics and fetches them again, without going into Settings → Advanced. |
+| **Ruytha theme** | Always on | Settings, dialogs and controls use [ruytha.dev](https://ruytha.dev)'s night-sky colours, glass and fonts. Lyrics keep Spicy's own look. |
 
 Notes:
 

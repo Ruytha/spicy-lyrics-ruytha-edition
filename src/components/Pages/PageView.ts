@@ -69,6 +69,7 @@ import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
 import { CleanUpIsByCommunity } from "../../utils/Lyrics/Applyer/Credits/ApplyIsByCommunity.tsx";
 import { OpenLyricsDBPanel } from "../../utils/openLyricsDBPanel.tsx";
 import { openSettingsPanel } from "../../utils/settings.ts";
+import { RemoveCurrentLyrics_AllCaches } from "../../utils/LyricsCacheTools.ts";
 import Logger from "../../utils/Logger.ts";
 import { setStockPlaybarPage } from "../../utils/themeMatcher.ts";
 import {
@@ -95,6 +96,7 @@ export const Tooltips: {
   CinemaView: TippyInstance | null;
   NowBarSideToggle: TippyInstance | null;
   LyricsManager: TippyInstance | null;
+  ClearCurrentCache: TippyInstance | null;
   Settings: TippyInstance | null;
 } = {
   Close: null,
@@ -105,6 +107,7 @@ export const Tooltips: {
   CinemaView: null,
   NowBarSideToggle: null,
   LyricsManager: null,
+  ClearCurrentCache: null,
   Settings: null,
 };
 
@@ -569,6 +572,7 @@ function AppendViewControls(ReAppend: boolean = false) {
             ? `<button id="LyricsManager" class="ViewControl">${Icons.LyricsManager}</button>`
             : ""
         }
+        <button id="ClearCurrentCache" class="ViewControl">${Icons.ClearCache}</button>
         ${IsPIP ? "" : `<button id="SettingsToggle" class="ViewControl">${Icons.Settings}</button>`}
         <button id="Close" class="ViewControl">${Icons.Close}</button>
     `;
@@ -789,6 +793,22 @@ function AppendViewControls(ReAppend: boolean = false) {
         nowBarSideToggleBtn.addEventListener("click", () => NowBar_SwapSides());
       } catch (err) {
         controlsLogger.warn("Failed to setup NowBar Side Toggle tooltip", err);
+      }
+    }
+
+    const clearCacheButton = elem.querySelector("#ClearCurrentCache");
+    if (clearCacheButton) {
+      try {
+        if (!isPip) {
+          Tooltips.ClearCurrentCache = createTooltip(clearCacheButton, {
+            ...Spicetify.TippyProps,
+            content: `Clear This Song's Cached Lyrics`,
+          });
+        }
+        // Drops this song from every lyrics cache and fetches its lyrics again.
+        clearCacheButton.addEventListener("click", () => RemoveCurrentLyrics_AllCaches(true));
+      } catch (err) {
+        controlsLogger.warn("Failed to setup Clear Cache button", err);
       }
     }
 

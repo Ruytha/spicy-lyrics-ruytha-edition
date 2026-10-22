@@ -34,6 +34,10 @@ export const Icons = {
         </svg>
     `,
   Close: Line(`<path d="m5.5 5.5 13 13"/><path d="m18.5 5.5-13 13"/>`),
+  BackToLine: Line(`<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>`),
+  ClearCache: Line(
+    `<path d="M4.5 7h15"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10.5 11v5"/><path d="M13.5 11v5"/>`
+  ),
   // The page in miniature: cover and title on the NowBar's side, lyric lines on the other.
   NowBar: Line(
     `<g class="SL_IconPart SL_IconCover"><rect x="3" y="5" width="9" height="9" rx="2"/><path d="M4.5 18.5h6"/></g><g class="SL_IconPart SL_IconLyrics"><path d="M15.5 7.5h5"/><path d="M15.5 11.5h5"/><path d="M15.5 15.5h3"/></g>`

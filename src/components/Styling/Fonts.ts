@@ -4,6 +4,11 @@ const Fonts = DeepFreeze({
   Lyrics: () => LoadFont("https://fonts.spikerko.org/spicy-lyrics/source.css"),
   Vazirmatn: () => LoadFont("https://fonts.spikerko.org/Vazirmatn/source.css"),
   NotoSansGeorgian: () => LoadFont("https://fonts.spikerko.org/NotoSansGeorgian/source.css"),
+  // UI fonts of the Ruytha Edition theme (RuythaTheme.css); lyrics keep the font above.
+  RuythaTheme: () =>
+    LoadFont(
+      "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600..800&family=Geist:wght@400..700&display=swap"
+    ),
 });
 
 export default function LoadFonts() {

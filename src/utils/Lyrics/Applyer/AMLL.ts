@@ -1,5 +1,6 @@
 import "@applemusic-like-lyrics/core/style.css";
 import {
+  LayoutReason,
   LyricPlayer,
   type LyricLine,
   type LyricLineMouseEvent,
@@ -123,6 +124,21 @@ function convertLineLyrics(data: LineLyrics, romanize: boolean): LyricLine[] {
 let player: InstanceType<typeof LyricPlayer> | null = null;
 let lastFrameTime = 0;
 let wasPlaying = false;
+
+export const IsAmllLyricsShowing = () => player !== null;
+
+/** True while the user has scrolled the AMLL player away from the playing line. */
+export const IsAmllScrolledAway = () =>
+  // scrollState is protected in AMLL's types but is the player's own record of a user scroll.
+  !!(player as unknown as { scrollState?: { isAutoAlignSuspended?: boolean } })?.scrollState
+    ?.isAutoAlignSuspended;
+
+export function AmllScrollBack() {
+  if (!player) return;
+  player.resetScroll();
+  // resetScroll only clears the flag; lay out now so it also glides back while paused.
+  player.calcLayout(LayoutReason.PlaybackTick);
+}
 
 export function DisposeAmllLyrics() {
   PageContainer?.classList.remove(PAGE_CLASS);

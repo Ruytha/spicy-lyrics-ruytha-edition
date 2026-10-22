@@ -564,6 +564,16 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
   //}
 }
 
+/** True while the user has scrolled the lyrics away from the playing line. */
+export const IsUserScrolledAway = () => isUserScrolling;
+
+/** Glide back to the playing line and resume following it. */
+export function ScrollBackToActiveLine() {
+  lastUserScrollTime = 0;
+  smoothForceScrollQueued = true;
+  PageContainer?.querySelector(".LyricsContainer .LyricsContent")?.classList.remove("HideLineBlur");
+}
+
 // Function to queue a force scroll for the next frame
 export function QueueForceScroll() {
   forceScrollQueued = true;

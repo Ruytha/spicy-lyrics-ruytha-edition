@@ -41,6 +41,38 @@ aside .spicy-dynamic-bg {
   filter: brightness(0.7);
 }
 
+/* Starry Night: the ruytha.dev sky (tokens in RuythaTheme.css). The near stars twinkle
+   on their own layer through an opacity animation, which stays on the compositor. */
+.spicy-dynamic-bg.StarryBackground {
+  filter: none;
+  background-image: var(--ry-stars-far), var(--ry-sky);
+  background-size: 290px 290px, 100% 100%;
+}
+
+.spicy-dynamic-bg.StarryBackground::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--ry-stars);
+  background-size: 220px 220px;
+  animation: SDB_Starry_Twinkle 5s ease-in-out infinite alternate;
+}
+
+@keyframes SDB_Starry_Twinkle {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spicy-dynamic-bg.StarryBackground::before {
+    animation: none;
+  }
+}
+
 @property --sl_videocanvas_mask-stop {
   syntax: '<percentage>';
   inherits: false;

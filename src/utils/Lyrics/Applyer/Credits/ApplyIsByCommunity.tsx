@@ -1,5 +1,6 @@
 import { createTooltip } from "../../../tooltip.ts";
 import { IsPIP } from "../../../../components/Utils/PopupLyrics.ts";
+import { OpenProfileViewer } from "../../../../components/Utils/ProfileViewer.ts";
 
 let isByCommunityAbortController: AbortController | null = null;
 let madeTippys = new Set<any>();
@@ -116,6 +117,11 @@ export function ApplyIsByCommunity(data: any, LyricsContainer: HTMLElement): voi
     profileButton.addEventListener(
       "click",
       () => {
+        // Opened in the document the credit is in, so Popup Lyrics shows it there too.
+        if (person.id) {
+          OpenProfileViewer(person.id, profileButton.ownerDocument);
+          return;
+        }
         openProfile(person.id);
         if (IsPIP) {
           globalThis.focus();

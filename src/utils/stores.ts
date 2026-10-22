@@ -73,8 +73,8 @@ export function persistAtom<T>(key: string, defaultValue: T) {
 
 // Setting atoms (persisted)
 // "none" paints nothing, so a theme's own background (an image, say) shows through.
-export type BackgroundStyle = "dynamic" | "amll" | "artist" | "cover" | "color" | "none";
-export const BACKGROUND_STYLES: readonly BackgroundStyle[] = ["dynamic", "amll", "artist", "cover", "color", "none"];
+export type BackgroundStyle = "dynamic" | "amll" | "starry" | "artist" | "cover" | "color" | "none";
+export const BACKGROUND_STYLES: readonly BackgroundStyle[] = ["dynamic", "amll", "starry", "artist", "cover", "color", "none"];
 export const $backgroundStyle = persistAtom<BackgroundStyle>("backgroundStyle", "dynamic");
 // AMLL style: flow speed multiplier, and whether it holds still once each cover is in.
 export const $amllBgFlowSpeed = persistAtom<number>("amllBgFlowSpeed", 1);
