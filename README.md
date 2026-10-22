@@ -1,252 +1,96 @@
-# Spicy Lyrics
-[![Github Version](https://img.shields.io/github/v/release/spikerko/spicy-lyrics)](https://github.com/spikerko/spicy-lyrics/) [![Github Stars badge](https://img.shields.io/github/stars/spikerko/spicy-lyrics?style=social)](https://github.com/spikerko/spicy-lyrics/) [![Discord Badge](https://dcbadge.limes.pink/api/server/uqgXU5wh8j?style=flat)](https://discord.com/invite/uqgXU5wh8j)
+# Spicy Lyrics: Ruytha Edition
 
-### *[oursitee](https://yoursit.ee/lyrics)*
+A fork of [Spicy Lyrics](https://github.com/Spikerko/spicy-lyrics) by Spikerko that adds the [AMLL](https://github.com/amll-dev/applemusic-like-lyrics) background and lyric player as options. Everything else works the same as upstream Spicy Lyrics.
 
-Spicy Lyrics replaces Spotify's lyrics view with animated lyrics, dynamic backgrounds, romanization, and customization options. It is an open-source extension for the Spotify desktop client, built on [Spicetify](https://spicetify.app).
+> [!NOTE]
+> This is an unofficial fork. It isn't affiliated with or supported by the Spicy Lyrics team, so please don't report problems with this fork in the Spicy Lyrics Discord. Use this repository's [issues](https://github.com/Ruytha/spicy-lyrics-ruytha-edition/issues) instead.
 
-![Extension Example](./previews/wide_home.webp)
+Based on Spicy Lyrics **6.4.50**, which supports Spotify **1.3.6**.
 
-**Links:** [Guides](https://guides.spicylyrics.org/s/guides) · [FAQ](https://guides.spicylyrics.org/s/tools/doc/faq-anGSiKrnmX) · [Status](https://status.spicylyrics.org/) · [Discord](https://discord.gg/lyrc) · [Developers Platform](https://developers.spicylyrics.org)
+## What this fork adds
+
+| Setting | Where | What it does |
+|---------|-------|--------------|
+| **Background → AMLL** | Settings → Background | A flowing mesh gradient made from the cover art. Falls back to Dynamic (Kawarp) if WebGL isn't available. |
+| **AMLL Flow Speed** | Settings → Background | How fast the AMLL background moves (0.25×–4×). It still slows down while playback is paused. |
+| **AMLL Still Mode** | Settings → Background | Draws each cover once and holds it still, to save GPU. |
+| **Lyrics Renderer → AMLL** | Settings → Lyrics → Style | Draws synced lyrics with AMLL's lyric player instead of Spicy's renderer: word-by-word fill, blur on nearby lines, and spring scrolling. |
+
+Notes:
+
+- Both are off by default. Spicy's own background and renderer stay the default.
+- The AMLL lyric player is used for word-synced and line-synced lyrics in every view (lyrics page, fullscreen, the Now Playing sidebar card and popup). Static (unsynced) lyrics always use Spicy's renderer.
+- With the AMLL renderer, songwriters, the lyrics provider and community sync credits show under the last line, the same as in Spicy's renderer.
+- Simple Lyrics Mode and Minimal Lyrics Mode only affect Spicy's renderer.
+- The AMLL background follows Spicy's **Limit Frame Rate** setting (Appearance → Performance), drops to 15 FPS while paused, and stops while Spotify is minimized.
+- The Now Playing sidebar background always uses Dynamic (Kawarp), as in upstream.
 
 ## Installation
 
-Spicy Lyrics runs only in the Spotify **desktop** client, through Spicetify. It does not need Spotify Premium.
+This fork isn't on the Spicetify Marketplace. You build it from source and add it to Spicetify yourself.
 
-### 1. Install Spicetify
+You need [Spicetify](https://spicetify.app/docs/getting-started), [Bun](https://bun.sh) and [Git](https://git-scm.com).
 
-**Windows** (PowerShell):
-
-```powershell
-iwr -useb https://raw.githubusercontent.com/spicetify/cli/main/install.ps1 | iex
-```
-
-**macOS / Linux** (Terminal):
+> [!IMPORTANT]
+> Remove the Marketplace version of Spicy Lyrics, and any other Spicy Lyrics extension, first. Two copies running at once fight over the same lyrics page and settings.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/spicetify/cli/main/install.sh | sh
+git clone https://github.com/Ruytha/spicy-lyrics-ruytha-edition.git
+cd spicy-lyrics-ruytha-edition
+bun install
+bun run build
 ```
 
-> [!WARNING]
-> Spicetify cannot modify a Snap-based Spotify installation on Linux. See the [official Spicetify guide](https://spicetify.app/docs/getting-started) for other setups.
-
-### 2. Check that the Marketplace is installed
-
-Look for the **Marketplace** button in Spotify's top-left corner. If it's missing, install it:
-
-**Windows:**
-
-```powershell
-iwr -useb https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.ps1 | iex
-```
-
-**macOS / Linux:**
+Then copy `dist/spicy-lyrics.js` into your Spicetify Extensions folder ([where to find it](https://spicetify.app/docs/customization/extensions#manual-installation)) and run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/spicetify/marketplace/main/resources/install.sh | sh
-```
-
-### 3. Install Spicy Lyrics
-
-1. Open the **Marketplace**.
-2. Go to **Extensions** and search for **Spicy Lyrics**.
-3. Select **Install**.
-
-Play a song and open the lyrics view to confirm it loaded. Marketplace installs update automatically; restart Spotify if a new version hasn't appeared.
-
-<details>
-<summary><strong>Manual installation (not recommended)</strong></summary>
-
-1. Download [`spicy-lyrics.mjs`](./builds/spicy-lyrics.mjs).
-2. Put it in your Spicetify Extensions folder. [Find the folder for your OS](https://spicetify.app/docs/customization/extensions#manual-installation).
-3. Run:
-
-```bash
-spicetify config extensions spicy-lyrics.mjs
+spicetify config extensions spicy-lyrics.js
 spicetify apply
 ```
 
-Manual installs don't update automatically.
+To update, pull the latest changes, build again, copy the new file over the old one, and run `spicetify apply`.
 
-</details>
+> [!NOTE]
+> `builds/spicy-lyrics.mjs` in this repository is upstream's loader, which downloads the official Spicy Lyrics. It doesn't contain this fork's changes, so don't install that file.
+
+### Turning the AMLL options on
+
+1. Open Spicy Lyrics' settings (the gear on the lyrics page).
+2. **Background** → set **Background** to **AMLL**.
+3. **Lyrics** → set **Lyrics Renderer** to **AMLL**.
 
 ## Troubleshooting
 
-If Spicy Lyrics disappears after a Spotify update or fails to load, try these in order:
+**The Spicy Lyrics button doesn't appear after restarting Spotify.** Play or skip a song. Spicy Lyrics sets up its button on the first song change, and Spotify doesn't always send one for the track it restores at startup.
 
-```bash
-spicetify apply
-spicetify backup apply
-spicetify update
-spicetify restore backup apply
-```
+**The AMLL options aren't in the settings.** Another copy of Spicy Lyrics is probably loading too. Check which extensions are enabled in `config-xpui.ini` (`spicetify -c` prints its path), remove any other Spicy Lyrics entry by adding `-` to the end of its name (`spicetify config extensions name.mjs-`), then run `spicetify refresh -e`.
 
-**Lyrics missing, outdated, or wrong?**
+**The background is Kawarp even with AMLL selected.** WebGL couldn't start. Open Spotify's DevTools console and look for an `(AMLL Background)` warning.
 
-1. Make sure you opened the song version you meant to. Singles, albums, deluxe, clean, and remastered releases can have different lyrics or timing.
-2. Try another release of the same recording.
-3. Clear the lyrics cache in Spicy Lyrics' settings, then reopen the song.
-4. Check the [status page](https://status.spicylyrics.org/).
-5. Search [#lyric-issues](https://discord.com/channels/1369992682214264993/1370023661830148106) on Discord, then report it with the exact Spotify link.
-
-**High CPU or memory use?** Animated lyrics, dynamic backgrounds, themes, custom CSS, and other extensions all add load. Restart Spotify, test without other extensions or snippets, and check Spotify's hardware-acceleration setting.
-
-### Reporting a bug
-
-Search [#extension-bugs](https://discord.com/channels/1369992682214264993/1370023518313644193) first. If it's new, include:
-
-- your operating system
-- Spotify, Spicetify, and Spicy Lyrics versions
-- exact steps to reproduce
-- what you expected and what happened instead
-- the affected song link, if relevant
-- screenshots, video, or console errors
-
-> [!CAUTION]
-> Never share account tokens, cookies, authorization headers, or other secrets in a bug report.
-
-Security issues go through [SECURITY.md](./SECURITY.md), not public channels.
-
-## FAQ
-
-<details>
-<summary><strong>What types of lyrics are supported?</strong></summary>
-
-| Type | What it does |
-|------|--------------|
-| Word-synced | Highlights individual words, or timed parts of words, as they're sung. |
-| Line-synced | Advances one timed line at a time. |
-| Static | Shows lyrics without timing. |
-
-The sync type depends on the lyric data available for that exact track. There's no setting to turn line-synced lyrics into word-synced ones.
-
-</details>
-
-<details>
-<summary><strong>Where do the lyrics come from?</strong></summary>
-
-Community-uploaded TTML lyrics first, then other supported sources, including Apple Music and Spotify. What you see depends on availability, matching, and source priority.
-
-</details>
-
-<details>
-<summary><strong>Can I use it on mobile?</strong></summary>
-
-No. The extension runs in Spotify's desktop client only.
-
-[Spicy Player](https://github.com/thex24/Spicy-Player/) is a separate offline Android music player by TX24 that ports the Spicy Lyrics experience. It is not a Spotify mobile extension.
-
-</details>
-
-<details>
-<summary><strong>Can I use it offline?</strong></summary>
-
-Online lyric lookup needs an internet connection. Lyrics you import into the **Lyrics Manager's** persistent local library stay on your device until you remove them.
-
-</details>
-
-<details>
-<summary><strong>Can I use my own TTML file without uploading it?</strong></summary>
-
-Yes. Open the **Lyrics Manager** and import the TTML as a temporary upload (for quick testing) or a persistent one (kept in your local library). There's no setting for adding other online lyric providers.
-
-</details>
-
-<details>
-<summary><strong>Why is the timing off in Spotify?</strong></summary>
-
-If one song is off, the lyric file may have been timed against a different release. Report it with the song link.
-
-If every song is off on your device, use the playback-offset setting in Spicy Lyrics.
-
-</details>
-
-<details>
-<summary><strong>Can I change the lyrics font?</strong></summary>
-
-Install the font on your computer, then:
-
-1. Open **Marketplace → Snippets → Add CSS**.
-2. Paste this, replacing `Your Font Name` with the font's exact name:
-
-   ```css
-   * {
-     font-family: "Your Font Name" !important;
-   }
-   ```
-
-3. Name and save the snippet.
-4. In Spicy Lyrics settings, enable **Use System Font** under **Appearance**.
-
-This changes Spotify's whole interface font, not only the lyrics. Disable the snippet if characters go missing or layouts break.
-
-</details>
-
-<details>
-<summary><strong>Where can I request a feature?</strong></summary>
-
-Search [#extension-suggestions](https://discord.com/channels/1369992682214264993/1370023393675575369) first, then post if your idea isn't already there. Describe the problem and who it affects, not only the solution you want.
-
-</details>
-
-More answers are in the [full FAQ](https://guides.spicylyrics.org/s/tools/doc/faq-anGSiKrnmX).
-
-## Contributing lyrics
-
-Most word-synced lyrics in Spicy Lyrics are TTML files made by the community. TTML is an XML-based format that can store line and word timing, background vocals, duet positioning, and romanization, which LRC can't do consistently.
-
-To make one, start with the [TTML Guide](https://guides.spicylyrics.org/s/ttml):
-
-1. [Import the song](https://guides.spicylyrics.org/s/ttml/doc/1-import-the-song-iHfycCuOSU)
-2. [Import the lyrics](https://guides.spicylyrics.org/s/ttml/doc/2-import-the-lyrics-CK0YxRxPwp)
-3. [Check the lyrics](https://guides.spicylyrics.org/s/ttml/doc/3-check-the-lyrics-ZHDMonddCz)
-4. [Sync the lyrics](https://guides.spicylyrics.org/s/ttml/doc/4-sync-the-lyrics-MJsQ3M0dIS)
-5. [Add the songwriters](https://guides.spicylyrics.org/s/ttml/doc/5-add-the-songwriters-cP7OWZhyKd)
-6. [Export and test the TTML](https://guides.spicylyrics.org/s/ttml/doc/6-export-and-test-the-ttml-nzae0Py9JJ)
-7. [Submit your first TTML](https://guides.spicylyrics.org/s/ttml/doc/submit-your-first-ttml-sX53doCeNh)
-
-Line-synced TTML is fully valid. If it's your first file, start with whole-word timing and learn syllable splitting later.
-
-| Guide | Covers |
-|-------|--------|
-| [Transcription Guide](https://guides.spicylyrics.org/s/transcription) | Spelling, capitalization, punctuation, ad-libs, censored lyrics, repeats, and romanization |
-| [Splitting Guide](https://guides.spicylyrics.org/s/splitting) | Splitting words into timed syllables, and which splits are accepted |
-| [Uploading and TTML Rules](https://guides.spicylyrics.org/s/tools/doc/uploading-and-ttml-rules-rvofBBi0PV) | What an upload must meet to be approved |
-| [Separating Vocals](https://guides.spicylyrics.org/s/tools/doc/separating-vocals-for-better-syncing-HYKpdByeMF) | Isolating vocals so words are easier to hear while syncing |
-| [TTML Tool Feature Reference](https://guides.spicylyrics.org/s/tools/doc/ttml-tool-feature-reference-hx9XAG06L8) | Every feature of the TTML Tool |
-
-The short version of the rules:
-
-- **The recording is the source of truth.** Check copied lyrics against the exact song version; even official lyrics can be wrong.
-- **No AI transcription or AI timing.** AI vocal separation is fine as a listening aid, and so is the TTML Tool's built-in automation, as long as you check its output.
-- **No filler.** Don't add `[Instrumental]`, section headings, ellipses, or placeholders. Spicy Lyrics draws interludes itself.
-- **One timing mode per file.** Line-synced or word-synced, never both.
-- **One file per distinct version.** Different audio, censorship, intros, or timing need separate TTMLs.
-- **No unreleased songs.** Wait until the song is playable on Spotify in at least one timezone.
-- **Clear the lyrics cache after every upload**, then verify the result against the streamed song.
+For everything else (lyrics sources, sync issues, TTML uploads, the FAQ), see the [upstream README](https://github.com/Spikerko/spicy-lyrics#readme) and the [Spicy Lyrics guides](https://guides.spicylyrics.org/s/guides). Check that a problem also happens in upstream Spicy Lyrics before reporting it there.
 
 ## Development
 
-Requires [Bun](https://bun.sh) and a working Spicetify install.
-
 ```bash
 bun install
-bun run dev
+bun run dev    # watch mode: rebuilds and syncs to Spicetify
 bun run build
 bun run lint
 bun run fmt
 ```
 
-## Support the project
+The AMLL code is in:
 
-- Donate to Spikerko on [Ko-fi](https://ko-fi.com/spikerko)
-- Contribute code to this repository
-- Boost the [Discord server](https://discord.gg/lyrc)
-- Report bugs you can reproduce
-- Make accurate TTML lyrics
+- `src/components/DynamicBG/AMLLBackground.ts`: the AMLL background renderer
+- `src/utils/Lyrics/Applyer/AMLL.ts`: the AMLL lyric player
+- `src/components/DynamicBG/dynamicBackground.ts` and `src/utils/Lyrics/Global/Applyer.ts`: where each one is chosen
+
+## Credits
+
+- [Spicy Lyrics](https://github.com/Spikerko/spicy-lyrics) by Spikerko and contributors. Support the original project on [Ko-fi](https://ko-fi.com/spikerko).
+- [AMLL (Apple Music-like Lyrics)](https://github.com/amll-dev/applemusic-like-lyrics) (`@applemusic-like-lyrics/core`), which provides the background and lyric player.
+- Lyrics and sync credits come from the Spicy Lyrics community and its lyric providers.
 
 ## License
 
-The extension is licensed under [AGPL-3.0](./LICENSE). The hosted services, databases, and websites behind Spicy Lyrics are separate and aren't covered by this license.
-
-*Inspired by [Beautiful Lyrics](https://github.com/surfbryce/beautiful-lyrics)*
+[AGPL-3.0](./LICENSE), the same as upstream Spicy Lyrics and AMLL. The hosted services, databases and websites behind Spicy Lyrics are separate and aren't covered by this license.
