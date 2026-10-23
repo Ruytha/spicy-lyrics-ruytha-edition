@@ -4,7 +4,7 @@ import Session from "../../Global/Session.ts";
 import App from "../../../utils/app.ts";
 import { $spicyLyricsVersion } from "../../../utils/stores.ts";
 import { OpenBugReport } from "../../../utils/Ruytha/BugReport.ts";
-import { CHANGELOG_URL, FORK_URL, GetForkRelease } from "../../../utils/Ruytha/ForkRelease.ts";
+import { CHANGELOG_URL, FORK_URL, GetForkRelease, MAKER } from "../../../utils/Ruytha/ForkRelease.ts";
 
 interface Link {
   label: string;
@@ -13,10 +13,11 @@ interface Link {
   brand?: string;
 }
 
+// Ruytha's own links (from ruytha.dev): the fork's questions go there, not to Spicy Lyrics.
 const LINKS: Link[] = [
-  { label: "Website", url: "https://spicylyrics.org" },
-  { label: "Discord", url: "https://discord.com/invite/uqgXU5wh8j", brand: "88, 101, 242" },
-  { label: "Ko-fi", url: "https://ko-fi.com/spikerko", brand: "255, 94, 138" },
+  { label: "Website", url: MAKER.site },
+  { label: "Discord", url: MAKER.discord, brand: "88, 101, 242" },
+  { label: "Ko-fi", url: MAKER.kofi, brand: "255, 94, 138" },
 ];
 
 /** "checking" until the fetch lands; "unknown" if it never does. */
@@ -103,6 +104,23 @@ export default function About({ status }: { status: UpdateStatus }) {
 
   return (
     <div className="sl-sp-about">
+      <div className="sl-sp-maker">
+        <img className="sl-sp-maker-avatar" src={MAKER.avatar} alt="" width={64} height={64} />
+        <div className="sl-sp-maker-text">
+          <span className="sl-sp-maker-kicker">Ruytha Edition is made by</span>
+          <span className="sl-sp-maker-name">{MAKER.name}</span>
+          <span className="sl-sp-maker-line">
+            Builds this fork and syncs lyrics for it. Built on Spicy Lyrics by Spikerko.
+          </span>
+        </div>
+        <div className="sl-sp-maker-links">
+          <button type="button" className="sl-sp-about-link" onClick={() => window.open(MAKER.github, "_blank")}>
+            <span>GitHub</span>
+            <ExternalArrow />
+          </button>
+        </div>
+      </div>
+
       <div className="sl-sp-about-hero">
         <span className="sl-sp-about-wordmark">Spicy Lyrics</span>
         <div className="sl-sp-about-status-row">

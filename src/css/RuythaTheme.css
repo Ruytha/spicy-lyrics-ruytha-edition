@@ -111,23 +111,7 @@ sl-generic-modal.SpicyLyricsModal .sl-modal {
 
 /* ─── View controls ───────────────────────────────────────────────────────── */
 
-#SpicyLyricsPage .ViewControls .ViewControl {
-  background: var(--ry-glass), rgba(10, 18, 52, 0.28);
-  box-shadow:
-    0 10px 24px -8px rgba(2, 5, 19, 0.55),
-    var(--ry-glass-shine),
-    inset 0 0 0 1px var(--ry-line);
-}
-
-#SpicyLyricsPage .ViewControls .ViewControl:hover {
-  color: var(--ry-accent-3);
-  background: var(--ry-glass), rgba(156, 199, 242, 0.16);
-  box-shadow:
-    0 14px 32px -8px rgba(2, 5, 19, 0.6),
-    0 0 22px -4px rgba(156, 199, 242, 0.35),
-    var(--ry-glass-shine),
-    inset 0 0 0 1px rgba(156, 199, 242, 0.32);
-}
+/* The view controls are the dock in RuythaDock.css. */
 
 /* ─── Community credits (Made by / Uploaded by) ───────────────────────────── */
 
@@ -218,4 +202,192 @@ sl-generic-modal.SpicyLyricsModal .sl-modal {
 .sl-notice .sl-whatsnew-list strong {
   color: var(--ry-text);
   font-weight: 650;
+}
+
+/* ─── Settings, Ruytha Edition layout ─────────────────────────────────────── */
+/* Each section gets its own tinted icon tile, like Apple's System Settings, so a section
+   can be found by colour before its name is read. */
+
+sl-generic-modal.SpicyLyricsModal .sl-sp {
+  --sl-tint: 156, 199, 242;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon {
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: #fff;
+  background: linear-gradient(160deg, rgba(var(--sl-tint), 1), rgba(var(--sl-tint), 0.72));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 2px 6px -2px rgba(var(--sl-tint), 0.6);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="lyrics"] { --sl-tint: 255, 94, 122; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="background"] { --sl-tint: 94, 124, 255; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="cover"] { --sl-tint: 255, 149, 0; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="playback"] { --sl-tint: 52, 199, 89; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="interface"] { --sl-tint: 50, 173, 230; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="appearance"] { --sl-tint: 175, 82, 222; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="experiments"] { --sl-tint: 230, 168, 0; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="advanced"] { --sl-tint: 128, 134, 152; }
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="about"] { --sl-tint: 122, 166, 220; }
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab {
+  height: 38px;
+  border-radius: 10px;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab[data-active] {
+  background: rgba(156, 199, 242, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(156, 199, 242, 0.2);
+}
+
+/* The pane title reads as a page heading, the intro right under it. */
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-pane-title {
+  font-family: var(--ry-display);
+  font-size: 1.6rem !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-card {
+  border-radius: 14px;
+  background: var(--ry-glass), rgba(10, 18, 52, 0.22);
+  box-shadow: var(--ry-glass-shine), inset 0 0 0 1px var(--ry-line);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-group-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem !important;
+  color: var(--ry-muted);
+}
+
+/* The maker's credit under the title. */
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-brand-line {
+  color: var(--ry-accent);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 8px;
+  padding: 3px 10px 3px 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ry-surface-2);
+  box-shadow: inset 0 0 0 1px var(--ry-line);
+  color: var(--ry-muted);
+  font: inherit;
+  font-size: 0.78rem !important;
+  cursor: pointer;
+  transition: background 0.2s var(--ry-ease), color 0.2s var(--ry-ease);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-credit strong {
+  color: var(--ry-text);
+  font-weight: 600;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-credit:hover {
+  background: rgba(156, 199, 242, 0.18);
+  color: var(--ry-text);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-credit-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(156, 199, 242, 0.5);
+}
+
+/* The maker card at the top of About. */
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 16px;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 18px;
+  border-radius: 16px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(156, 199, 242, 0.2), transparent 60%),
+    var(--ry-glass), rgba(10, 18, 52, 0.3);
+  box-shadow: var(--ry-glass-shine), inset 0 0 0 1px var(--ry-line-strong);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(156, 199, 242, 0.55), 0 8px 24px -6px rgba(156, 199, 242, 0.45);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker-kicker {
+  color: var(--ry-muted);
+  font-size: 0.75rem !important;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker-name {
+  font-family: var(--ry-display);
+  font-size: 1.5rem !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ry-text);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker-line {
+  color: var(--ry-muted);
+  font-size: 0.8rem !important;
+  line-height: 1.4;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-maker-links {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Text field (Custom Font), drawn like the selects beside it. */
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-text {
+  width: 190px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  outline: none;
+  background: var(--ry-surface);
+  box-shadow: inset 0 0 0 1px var(--ry-line);
+  color: var(--ry-text);
+  font: inherit;
+  font-size: 0.8rem !important;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-text:focus {
+  box-shadow: inset 0 0 0 1px var(--ry-accent);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-text::placeholder {
+  color: var(--ry-muted);
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-text:disabled {
+  opacity: 0.5;
 }

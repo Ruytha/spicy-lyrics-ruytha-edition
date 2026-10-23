@@ -15,6 +15,9 @@ import "./css/RuythaTheme.css";
 import "./components/Utils/BackToLineButton.ts";
 import "./components/Utils/TimingOverlay.ts";
 import "./components/DynamicBG/RuythaSpotlight.ts";
+import "./components/DynamicBG/AnimatedCover.ts";
+import "./utils/Ruytha/PageOptions.ts";
+import "./css/RuythaDock.css";
 import { ShowForkWhatsNew } from "./utils/Ruytha/WhatsNew.tsx";
 
 import ApplyDynamicBackground, {

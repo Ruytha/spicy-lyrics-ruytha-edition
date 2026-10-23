@@ -35,6 +35,8 @@ export const Icons = {
     `,
   Close: Line(`<path d="m5.5 5.5 13 13"/><path d="m18.5 5.5-13 13"/>`),
   BackToLine: Line(`<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>`),
+  // The page with only the cover in it, centred: Cover Only.
+  CoverOnly: Line(`${Frame}<rect x="8.5" y="7.5" width="7" height="7" rx="1.5"/><path d="M9.5 17h5"/>`),
   ClearCache: Line(
     `<path d="M4.5 7h15"/><path d="M9.5 7V4.5h5V7"/><path d="M6.5 7l1 12.5h9l1-12.5"/><path d="M10.5 11v5"/><path d="M13.5 11v5"/>`
   ),

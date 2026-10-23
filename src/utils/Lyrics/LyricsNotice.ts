@@ -6,7 +6,7 @@ import Fullscreen from "../../components/Utils/Fullscreen.ts";
 import { SyncNowBarSide } from "../../components/Utils/NowBar.ts";
 import { IsOpen as IsBreakerOpen, RetryAfterMs } from "../API/CircuitBreaker.ts";
 import { getExperiments, isExperimentEnabled } from "../experiments.ts";
-import { $showNoLyricsNotice } from "../stores.ts";
+import { $coverOnlyMode, $showNoLyricsNotice } from "../stores.ts";
 import { GetLastLyricsFailure } from "./fetchLyrics.ts";
 
 const DISCORD_URL = "https://discord.com/invite/uqgXU5wh8j";
@@ -109,7 +109,13 @@ export function SetShownNotice(descriptor: string | null): void {
   shownNotice = descriptor;
 }
 
+export function IsCoverOnly(): boolean {
+  return $coverOnlyMode.get() && !!PageContainer && !IsCardMode && !IsCompactMode();
+}
+
 function shouldHideLyricsArea(): boolean {
+  // Cover Only takes the lyrics away whatever they hold, and lays the song out on its own.
+  if (IsCoverOnly()) return true;
   if (!shownNotice || !PageContainer) return false;
   // The NPV card has its own switch (Hide When a Song Has No Lyrics), which removes it.
   if (IsCardMode) return false;
@@ -138,6 +144,7 @@ export function SyncNoLyricsLayout(): void {
 }
 
 $showNoLyricsNotice.listen(() => queueMicrotask(SyncNoLyricsLayout));
+$coverOnlyMode.listen(() => queueMicrotask(SyncNoLyricsLayout));
 
 function describeView(): string {
   const parts: string[] = [];

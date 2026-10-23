@@ -92,7 +92,7 @@ export const EXPERIMENTS = [
     id: "canvasImmersive",
     label: "Canvas Stage",
     description:
-      "When a song has a Spotify Canvas, it fills the Now Bar side of the screen in place of the album cover, and its colors drive the page background. Only applies with the dynamic background. Disable to keep the cover and the animated cover background.",
+      "When a song has a Spotify Canvas, it fills the Now Bar side of the screen in place of the album cover, and its colors drive the page background. Works with every background style except None. Disable to keep the cover and your background.",
     default: true,
   },
   {

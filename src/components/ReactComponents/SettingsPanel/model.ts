@@ -35,6 +35,7 @@ export interface GroupDef {
 export type SectionId =
   | "lyrics"
   | "background"
+  | "cover"
   | "playback"
   | "interface"
   | "appearance"

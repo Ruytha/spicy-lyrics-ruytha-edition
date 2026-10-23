@@ -2,9 +2,11 @@ import { useStore } from "@nanostores/react";
 import {
   $animationFpsCap,
   $animationFpsCapEnabled,
-  $skipSpicyFont,
+  $customFontName,
+  $lyricsFont,
+  type LyricsFont,
 } from "../../../utils/stores.ts";
-import { Slider, Toggle } from "./components.tsx";
+import { Select, Slider, TextInput, Toggle } from "./components.tsx";
 import { AppearanceIcon } from "./icons.tsx";
 import type { GroupDef, SectionDef } from "./model.ts";
 
@@ -14,15 +16,34 @@ const groups: GroupDef[] = [
     title: "Text",
     settings: [
       {
-        id: "skipSpicyFont",
-        label: "Use System Font",
-        description: "Use your system font instead of the Spicy Lyrics font.",
-        keywords: "default font typeface",
+        id: "lyricsFont",
+        label: "Font",
+        description:
+          "The font for the lyrics and the song info. SF Pro only shows if it's installed; otherwise Segoe UI stands in. Custom takes any Google Fonts name.",
+        keywords: "font typeface system custom google sf pro apple geist inter poppins bricolage spicy",
         Control: ({ label }) => (
-          <Toggle
+          <Select
             label={label}
-            checked={useStore($skipSpicyFont)}
-            onChange={(v) => $skipSpicyFont.set(v)}
+            value={useStore($lyricsFont)}
+            options={["spicy", "system", "sf", "geist", "inter", "bricolage", "poppins", "custom"]}
+            labels={["Spicy Lyrics", "Spotify's font", "SF Pro (Apple)", "Geist", "Inter", "Bricolage Grotesque", "Poppins", "Custom"]}
+            onChange={(v) => $lyricsFont.set(v as LyricsFont)}
+          />
+        ),
+      },
+      {
+        id: "customFontName",
+        label: "Custom Font",
+        description: "A font name from fonts.google.com, or one installed on this computer. Press Enter to apply.",
+        keywords: "custom font google fonts name family",
+        useDisabled: () => useStore($lyricsFont) !== "custom" && "Pick Custom under Font first.",
+        Control: ({ disabled, label }) => (
+          <TextInput
+            label={label}
+            value={useStore($customFontName)}
+            placeholder="e.g. Space Grotesk"
+            onChange={(v) => $customFontName.set(v)}
+            disabled={disabled}
           />
         ),
       },
@@ -74,6 +95,7 @@ const groups: GroupDef[] = [
 export const appearanceSection: SectionDef = {
   id: "appearance",
   title: "Appearance",
+  intro: "Fonts and how hard the page works to draw itself.",
   icon: AppearanceIcon,
   groups: () => groups,
 };

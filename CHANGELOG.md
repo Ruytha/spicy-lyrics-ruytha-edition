@@ -6,6 +6,38 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-23, third update
+
+### Added
+
+- **Canvas on every background.** Canvas Stage, the song's Spotify Canvas filling the
+  cover's half of the page, now works with AMLL, Starry Night and the image and color
+  styles too, not only Dynamic.
+- **Apple Music animated covers.** Settings → Cover → **Moving Artwork** → Apple Music
+  Cover plays an album's animated cover from Apple Music inside the cover square, for
+  albums that have one (After Hours, for one). Albums without one keep the still cover.
+- **Cover Only.** Hides the lyrics and shows the cover large in the middle of the page.
+  Turn it on with the new button on the lyrics page, the C key, or Settings → Cover.
+- **Cover moves to the beat.** Settings → Cover → **Move to the Beat** makes the cover
+  swell on each beat, like the background.
+- **Melt into Background.** Settings → Cover drops the cover's frame and fades its edges
+  into the background.
+- **Render controls.** Settings → Background → Render has Bloom, Brightness, Saturation
+  and Contrast for the background, and a Render Quality choice for AMLL.
+- **Lyric Glow.** Settings → Lyrics sets how much sung words glow, from off to 250%.
+- **Fonts.** Settings → Appearance → **Font** offers Spicy Lyrics, Spotify's font, SF Pro,
+  Geist, Inter, Bricolage Grotesque and Poppins, or any Google Fonts name under Custom.
+
+### Changed
+
+- **Settings redesign.** Each section has its own coloured icon, there's a new Cover
+  section, every page opens with a line on what's in it, and About leads with who makes
+  the fork.
+- **New lyrics page controls.** The buttons are now one glass dock in three groups (view,
+  lyrics, settings), with a new icon set drawn for the fork. A switch that's on shows a
+  dot under its icon, and Close is a down arrow that puts the page away.
+- **About** now links to Ruytha's website, Discord and Ko-fi.
+
 ## 2026-10-23, second update
 
 ### Added

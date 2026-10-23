@@ -12,8 +12,10 @@
      dynamicBackground.ts; each look folds it into its own scale and brightness. */
   --sl_beat-scale: calc(1 + var(--sl_beat, 0) * 0.04);
   --sl_beat-glow: calc(1 + var(--sl_beat, 0) * 0.4);
+  /* --sl_bg-tune is the Brightness, Saturation and Contrast render settings, set on the
+     lyrics page by PageOptions.ts. Every page look appends it to its own filter. */
   scale: var(--sl_beat-scale);
-  filter: saturate(2.5) brightness(calc(0.65 * var(--sl_beat-glow)));
+  filter: saturate(2.5) brightness(calc(0.65 * var(--sl_beat-glow))) var(--sl_bg-tune, brightness(1));
 }
 
 body:has(.starrynight-bg-container) #main .spicy-dynamic-bg:not(.StaticBackground),
@@ -43,13 +45,13 @@ aside .spicy-dynamic-bg {
 
 /* The AMLL mesh is already saturated; it only needs darkening for lyrics contrast. */
 .spicy-dynamic-bg.AMLLBackground {
-  filter: brightness(calc(0.7 * var(--sl_beat-glow)));
+  filter: brightness(calc(0.7 * var(--sl_beat-glow))) var(--sl_bg-tune, brightness(1));
 }
 
 /* Starry Night: the ruytha.dev sky (tokens in RuythaTheme.css). The near stars twinkle
    on their own layer through an opacity animation, which stays on the compositor. */
 .spicy-dynamic-bg.StarryBackground {
-  filter: brightness(var(--sl_beat-glow));
+  filter: brightness(var(--sl_beat-glow)) var(--sl_bg-tune, brightness(1));
   background-image: var(--ry-stars-far), var(--ry-sky);
   background-size: var(--ry-stars-far-size), var(--ry-sky-size);
 }
@@ -187,7 +189,7 @@ aside:has(.spicy-dynamic-bg) .iHa_q9pq4un3VNRQgwTx {
 #SpicyLyricsPage:not(.Exp_RefinedBackground) .spicy-dynamic-bg.StaticBackground {
   background: var(--BackgroundImage) center / cover no-repeat;
   filter: brightness(calc(0.55 * var(--sl_beat-glow))) contrast(1.05) saturate(1.7)
-    blur(var(--BackgroundImageBlur, 0px));
+    blur(var(--BackgroundImageBlur, 0px)) var(--sl_bg-tune, brightness(1));
   /* The 1.25 upscale crops the transparent fringe blur samples in at the edges. */
   scale: calc(1.25 * var(--sl_beat-scale));
   transform: translateX(0);
@@ -214,7 +216,7 @@ aside:has(.spicy-dynamic-bg) .iHa_q9pq4un3VNRQgwTx {
   inset: calc(var(--BackgroundImageBlur, 0px) * -2);
   background: var(--BackgroundImage) center / cover no-repeat;
   filter: brightness(calc(0.55 * var(--sl_beat-glow))) contrast(1.05) saturate(1.7)
-    blur(var(--BackgroundImageBlur, 0px));
+    blur(var(--BackgroundImageBlur, 0px)) var(--sl_bg-tune, brightness(1));
 }
 
 /* Refined layer changes: a new layer fades in over the old one, which holds still
@@ -291,7 +293,7 @@ body:has(#SpicyLyricsPage.Fullscreen) aside.NowPlayingView .spicy-dynamic-bg {
 #SpicyLyricsPage .spicy-dynamic-bg.ColorBackground {
   background-color: rgba(var(--MinContrastColor));
   transition: background-color 1.5s;
-  filter: brightness(var(--sl_beat-glow));
+  filter: brightness(var(--sl_beat-glow)) var(--sl_bg-tune, brightness(1));
 }
 
 #SpicyLyricsPage .spicy-dynamic-bg.ColorBackground::before {
@@ -359,4 +361,23 @@ body:has(#SpicyLyricsPage.Fullscreen) aside.NowPlayingView .spicy-dynamic-bg {
    the theme's base colour instead of showing through to nothing. */
 .spicy-pip-wrapper #SpicyLyricsPage.NoBackground {
   background-color: var(--spice-main, #121212);
+}
+
+/* Bloom (render settings): a copy of the background, crushed to its bright parts and
+   blurred, added back on top. --sl_bloom (0..1) is set by PageOptions.ts. */
+#SpicyLyricsPage .ContentBox > .SL_Bloom {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: none;
+  /* Above every background layer (they stack at auto), under the lyrics (4) and NowBar (10). */
+  z-index: 1;
+  -webkit-backdrop-filter: brightness(0.95) contrast(1.7) saturate(1.25) blur(36px);
+  backdrop-filter: brightness(0.95) contrast(1.7) saturate(1.25) blur(36px);
+  mix-blend-mode: plus-lighter;
+  opacity: var(--sl_bloom, 0);
+}
+
+#SpicyLyricsPage.SL_HasBloom .ContentBox > .SL_Bloom {
+  display: block;
 }

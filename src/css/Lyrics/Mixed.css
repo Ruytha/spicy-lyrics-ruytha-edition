@@ -176,7 +176,7 @@
   text-shadow:
     0 0 var(--BlurAmount, 0)
       rgba(var(--gradient-color), var(--gradient-color), var(--gradient-color), var(--gradient-alpha)),
-    0 0 var(--text-shadow-blur-radius) rgba(255, 255, 255, var(--text-shadow-opacity));
+    0 0 calc(var(--text-shadow-blur-radius) * var(--sl_glow-size, 1)) rgba(255, 255, 255, calc(var(--text-shadow-opacity) * var(--sl_glow, 1)));
 }
 
 #SpicyLyricsPage.SpicyRenderer.SimpleLyricsMode.Exp_RefreshedSimpleLyrics
@@ -360,7 +360,7 @@
 #SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.Active .word,
 #SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.Active .letter,
 #SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.Active .letterGroup {
-  text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(255, 255, 255, var(--text-shadow-opacity));
+  text-shadow: 0 0 calc(var(--text-shadow-blur-radius) * var(--sl_glow-size, 1)) rgba(255, 255, 255, calc(var(--text-shadow-opacity) * var(--sl_glow, 1)));
 }
 
 #SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.bg-line .word,

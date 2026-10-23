@@ -1,0 +1,61 @@
+/*
+ * Ruytha Edition page options (utils/Ruytha/PageOptions.ts): custom fonts, the cover's
+ * beat, melt and animated looks, and Cover Only.
+ */
+
+/* ─── Font ────────────────────────────────────────────────────────────────── */
+
+#SpicyLyricsPage.SL_CustomFont,
+#SpicyLyricsPage.SL_CustomFont * {
+  font-family: var(--sl_font), "Noto Sans Georgian", "VazirmatnRegular", sans-serif !important;
+}
+
+/* ─── Animated cover (components/DynamicBG/AnimatedCover.ts) ──────────────── */
+
+#SpicyLyricsPage .MediaImageContainer > video.SL_AnimatedCover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+#SpicyLyricsPage .MediaImageContainer > video.SL_AnimatedCover.Visible {
+  opacity: 1;
+}
+
+/* ─── Cover moves to the beat ─────────────────────────────────────────────── */
+
+#SpicyLyricsPage.SL_CoverBeat .ContentBox .NowBar .Header .MediaBox .MediaImageContainer {
+  scale: calc(1 + var(--sl_cover-beat, 0) * 0.035);
+  transform-origin: center;
+}
+
+/* ─── Melt the cover into the background ──────────────────────────────────── */
+/* Like Apple Music's full-bleed artwork: no frame or shadow, and the edges fade out into
+   the background behind it. One oval mask: two intersected masks left a hard seam. */
+
+#SpicyLyricsPage.SL_CoverBlend .ContentBox .NowBar .Header .MediaBox .MediaImageContainer {
+  box-shadow: none;
+  border-radius: 0;
+  --BorderRadius: 0;
+  opacity: 1;
+  -webkit-mask-image: radial-gradient(ellipse 62% 62% at 50% 50%, #000 42%, rgba(0, 0, 0, 0.6) 66%, transparent 88%);
+  mask-image: radial-gradient(ellipse 62% 62% at 50% 50%, #000 42%, rgba(0, 0, 0, 0.6) 66%, transparent 88%);
+}
+
+#SpicyLyricsPage.SL_CoverBlend .MediaImageContainer .ti_ToImage {
+  box-shadow: none;
+}
+
+/* ─── Cover Only ──────────────────────────────────────────────────────────── */
+/* The lyrics area is hidden through .LyricsHidden (LyricsNotice.ts), which also centres
+   the side; this only lets the cover grow into the room the lyrics left. */
+
+#SpicyLyricsPage.SL_CoverOnly:not(.CompactMode):has(.ContentBox.LyricsHidden) {
+  --NowBarWidth: min(46cqw, 62cqh) !important;
+}

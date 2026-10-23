@@ -99,6 +99,23 @@ export const $amllHidePassedLines = persistAtom<boolean>("amllHidePassedLines", 
 export const $timingOverlay = persistAtom<boolean>("timingOverlay", false);
 // Songs synced by Ruytha (the fork's maker) get shooting stars, a banner and a credit ring.
 export const $ruythaSpotlight = persistAtom<boolean>("ruythaSpotlight", true);
+// Background render controls, applied on top of whichever style is picked. Percentages:
+// 100 is the style as designed. Bloom adds a glow on the bright parts (0 is off).
+export const $bgBrightness = persistAtom<number>("bgBrightness", 100);
+export const $bgSaturation = persistAtom<number>("bgSaturation", 100);
+export const $bgContrast = persistAtom<number>("bgContrast", 100);
+export const $bgBloom = persistAtom<number>("bgBloom", 0);
+// Fraction of the screen's pixels the AMLL mesh renders at.
+export type RenderQuality = "low" | "medium" | "high";
+export const $bgRenderQuality = persistAtom<RenderQuality>("bgRenderQuality", "medium");
+// Glow on sung words, as a percentage of the renderer's own (100 is unchanged).
+export const $lyricGlow = persistAtom<number>("lyricGlow", 100);
+// The cover: the song's Canvas plays inside it when it has one, it can pulse with the
+// beat, melt into the background, or take the whole page with the lyrics hidden.
+export const $animatedCovers = persistAtom<boolean>("animatedCovers", true);
+export const $coverBeatPulse = persistAtom<boolean>("coverBeatPulse", false);
+export const $coverBlend = persistAtom<boolean>("coverBlend", false);
+export const $coverOnlyMode = persistAtom<boolean>("coverOnlyMode", false);
 export const $simpleLyricsMode = persistAtom<boolean>("simpleLyricsMode", false);
 export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", false);
 // Shows a word sung in syllables as one word when its parts line up evenly.
@@ -112,6 +129,11 @@ export const $duetLinePadding = persistAtom<boolean>("duetLinePadding", true);
 // (writers, provider, community info) move to the right with it.
 export const $creditsFollowLastLine = persistAtom<boolean>("creditsFollowLastLine", false);
 export const $skipSpicyFont = persistAtom<boolean>("skipSpicyFont", false);
+// The page's font. Starts from the old Use System Font switch so nobody's font changes.
+export type LyricsFont = "spicy" | "system" | "sf" | "geist" | "inter" | "bricolage" | "poppins" | "custom";
+export const $lyricsFont = persistAtom<LyricsFont>("lyricsFont", $skipSpicyFont.get() ? "system" : "spicy");
+// Any Google Fonts family name, used when the font is "custom".
+export const $customFontName = persistAtom<string>("customFontName", "");
 export const $showNpvDynamicBg = persistAtom<boolean>("showNpvDynamicBg", true);
 // Never inject the lyrics card into the Now Playing sidebar at all.
 export const $disableNpvLyrics = persistAtom<boolean>("disableNpvLyrics", false);

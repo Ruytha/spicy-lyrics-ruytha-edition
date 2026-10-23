@@ -1,3 +1,4 @@
+import { MAKER_AVATAR } from "./MakerAvatar.ts";
 import changelog from "../../../CHANGELOG.md";
 
 // The fork's newest release, read from the top section of CHANGELOG.md (bundled as
@@ -6,6 +7,15 @@ import changelog from "../../../CHANGELOG.md";
 export const FORK_REPO = "Ruytha/spicy-lyrics-ruytha-edition";
 export const FORK_URL = `https://github.com/${FORK_REPO}`;
 export const CHANGELOG_URL = `${FORK_URL}/blob/main/CHANGELOG.md`;
+// The fork's maker, credited in the settings.
+export const MAKER = {
+  name: "Ruytha",
+  site: "https://ruytha.dev",
+  github: "https://github.com/Ruytha",
+  avatar: MAKER_AVATAR,
+  discord: "https://discord.gg/m9veFRXxDF",
+  kofi: "https://ko-fi.com/ruytha",
+};
 
 export interface ReleaseItem {
   title: string;

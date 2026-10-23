@@ -6,16 +6,58 @@ import {
   $backgroundBlur,
   $backgroundStyle,
   $beatPulseStrength,
+  $bgBloom,
+  $bgBrightness,
+  $bgContrast,
+  $bgRenderQuality,
+  $bgSaturation,
   $ruythaSpotlight,
   $showNpvDynamicBg,
   BACKGROUND_STYLES,
   type BackgroundStyle,
   type BeatPulseStrength,
+  type RenderQuality,
 } from "../../../utils/stores.ts";
 import { $experiment, getExperiment } from "../../../utils/experiments.ts";
 import { Select, Slider, Toggle } from "./components.tsx";
 import { BackgroundIcon } from "./icons.tsx";
-import type { GroupDef, SectionDef } from "./model.ts";
+import type { GroupDef, SectionDef, SettingDef } from "./model.ts";
+import type { WritableAtom } from "nanostores";
+
+const useNoBackground = () => useStore($backgroundStyle) === "none" && "There's no background to change.";
+
+/** A 0 to 200% slider for one of the background's render controls. */
+function renderSlider(
+  id: string,
+  label: string,
+  description: string,
+  keywords: string,
+  store: WritableAtom<number>,
+  max = 200,
+  defaultValue = 100
+): SettingDef {
+  return {
+    id,
+    label,
+    description,
+    keywords,
+    stacked: true,
+    useDisabled: useNoBackground,
+    Control: ({ disabled, label: rowLabel }) => (
+      <Slider
+        label={rowLabel}
+        value={useStore(store)}
+        min={0}
+        max={max}
+        step={5}
+        defaultValue={defaultValue}
+        unit="%"
+        onChange={(v) => store.set(v)}
+        disabled={disabled}
+      />
+    ),
+  };
+}
 
 export const BACKGROUND_STYLE_LABELS: Record<BackgroundStyle, string> = {
   dynamic: "Dynamic (Kawarp)",
@@ -42,9 +84,9 @@ const groups: GroupDef[] = [
           const style = useStore($backgroundStyle);
           const canvasStage = useStore($experiment("canvasImmersive"));
           return (
-            style !== "dynamic" &&
+            style === "none" &&
             canvasStage &&
-            `${getExperiment("canvasImmersive").label} only plays over Dynamic (Kawarp), so it won't show with ${BACKGROUND_STYLE_LABELS[style] ?? "this background"}.`
+            `${getExperiment("canvasImmersive").label} needs a background, so it won't show with None.`
           );
         },
         Control: ({ label }) => (
@@ -167,6 +209,58 @@ const groups: GroupDef[] = [
     ],
   },
   {
+    title: "Render",
+    settings: [
+      renderSlider(
+        "bgBloom",
+        "Bloom",
+        "Makes the bright parts of the background glow and spill into the rest.",
+        "bloom glow light bright render effect",
+        $bgBloom,
+        100,
+        0
+      ),
+      renderSlider(
+        "bgBrightness",
+        "Brightness",
+        "How light the background is. Lower keeps the lyrics easier to read.",
+        "brightness dim dark light render",
+        $bgBrightness
+      ),
+      renderSlider(
+        "bgSaturation",
+        "Saturation",
+        "How strong the background's colors are. 0% is black and white.",
+        "saturation color vivid grayscale render",
+        $bgSaturation
+      ),
+      renderSlider(
+        "bgContrast",
+        "Contrast",
+        "How far apart the background's light and dark parts are.",
+        "contrast render",
+        $bgContrast
+      ),
+      {
+        id: "bgRenderQuality",
+        label: "AMLL Render Quality",
+        description: "How sharp the AMLL background is drawn. High costs the most GPU; the blur hides most of the difference.",
+        keywords: "amll render quality resolution scale gpu performance",
+        useDisabled: () => useStore($backgroundStyle) !== "amll" && "Only applies to AMLL.",
+        Control: ({ disabled, label }) => (
+          <Select
+            label={label}
+            value={useStore($bgRenderQuality)}
+            options={["low", "medium", "high"]}
+            labels={["Low", "Medium", "High"]}
+            onChange={(v) => $bgRenderQuality.set(v as RenderQuality)}
+            disabled={disabled}
+          />
+        ),
+      },
+    ],
+  },
+  {
     title: "Now Playing Sidebar",
     settings: [
       {
@@ -189,6 +283,7 @@ const groups: GroupDef[] = [
 export const backgroundSection: SectionDef = {
   id: "background",
   title: "Background",
+  intro: "What sits behind the lyrics, how it moves with the music, and how it renders.",
   icon: BackgroundIcon,
   groups: () => groups,
 };

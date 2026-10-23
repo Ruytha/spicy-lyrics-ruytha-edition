@@ -37,14 +37,14 @@ import {
   $minimalLyricsMode,
   $showVolumeSlider,
   $simpleLyricsMode,
-  $skipSpicyFont,
+  $lyricsFont,
+  $coverOnlyMode,
   $ttmlMakerMode,
   $viewControlsPosition,
 } from "../../utils/stores.ts";
 import Global from "../Global/Global.ts";
 import Session from "../Global/Session.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
-import { Icons } from "../Styling/Icons.ts";
 import {
   DisableCompactMode,
   EnableCompactMode,
@@ -69,6 +69,8 @@ import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
 import { CleanUpIsByCommunity } from "../../utils/Lyrics/Applyer/Credits/ApplyIsByCommunity.tsx";
 import { OpenLyricsDBPanel } from "../../utils/openLyricsDBPanel.tsx";
 import { openSettingsPanel } from "../../utils/settings.ts";
+import { ToggleCoverOnly } from "../../utils/Ruytha/PageOptions.ts";
+import { DockIcons } from "../Styling/DockIcons.ts";
 import { RemoveCurrentLyrics_AllCaches } from "../../utils/LyricsCacheTools.ts";
 import Logger from "../../utils/Logger.ts";
 import { setStockPlaybarPage } from "../../utils/themeMatcher.ts";
@@ -97,6 +99,7 @@ export const Tooltips: {
   NowBarSideToggle: TippyInstance | null;
   LyricsManager: TippyInstance | null;
   ClearCurrentCache: TippyInstance | null;
+  CoverOnlyToggle: TippyInstance | null;
   Settings: TippyInstance | null;
 } = {
   Close: null,
@@ -108,6 +111,7 @@ export const Tooltips: {
   NowBarSideToggle: null,
   LyricsManager: null,
   ClearCurrentCache: null,
+  CoverOnlyToggle: null,
   Settings: null,
 };
 
@@ -288,7 +292,8 @@ async function OpenPage(
   
   PageContainer = elem;
 
-  if (!$skipSpicyFont.get()) {
+  // UseSpicyFont and the other fonts are set by utils/Ruytha/PageOptions.ts.
+  if ($lyricsFont.get() === "spicy") {
     elem.classList.add("UseSpicyFont");
   }
 
@@ -525,57 +530,35 @@ function AppendViewControls(ReAppend: boolean = false) {
   const isNoLyrics =
     $currentLyricsData.get() === `NO_LYRICS:${SpotifyPlayer.GetUri()}`;
   const isTTMLMakerMode = $ttmlMakerMode.get();
-  elem.innerHTML = `
-        ${
-          Fullscreen.IsOpen || Fullscreen.CinemaViewOpen
-            ? ""
-            : IsPIP ? "" : `<button id="CinemaView" class="ViewControl">${Icons.CinemaView}</button>`
-        }
-        ${
-          Fullscreen.IsOpen || Fullscreen.CinemaViewOpen
-            ? IsPIP ? "" : `<button id="CompactModeToggle" class="ViewControl">${
-                IsCompactMode()
-                  ? Icons.DisableCompactModeIcon
-                  : Icons.EnableCompactModeIcon
-              }</button>`
-            : ""
-        }
-        <button id="RomanizationToggle" class="ViewControl">
-          ${
-            isRomanized
-              ? Icons.DisableRomanization
-              : Icons.EnableRomanization
-          }
-        </button>
-        ${
-          !Fullscreen.IsOpen &&
-          !Fullscreen.CinemaViewOpen
-            ? IsPIP ? "" : `<button id="NowBarToggle" class="ViewControl">${Icons.NowBar}</button>`
-            : ""
-        }
-        ${
-          NowBarObj.Open
-            ? IsPIP ? "" : `<button id="NowBarSideToggle" class="ViewControl">${Icons.NowBarSideSwap}</button>`
-            : ""
-        }
-        ${
-          Fullscreen.IsOpen
-            ? (IsPIP ? "" : `<button id="FullscreenToggle" class="ViewControl">${
-                Fullscreen.CinemaViewOpen
-                  ? Icons.Fullscreen
-                  : Icons.CloseFullscreen
-              }</button>`)
-            : ""
-        }
-        ${
-          isTTMLMakerMode
-            ? `<button id="LyricsManager" class="ViewControl">${Icons.LyricsManager}</button>`
-            : ""
-        }
-        <button id="ClearCurrentCache" class="ViewControl">${Icons.ClearCache}</button>
-        ${IsPIP ? "" : `<button id="SettingsToggle" class="ViewControl">${Icons.Settings}</button>`}
-        <button id="Close" class="ViewControl">${Icons.Close}</button>
-    `;
+  // The dock (RuythaDock.css): what the page shows, then what it does with the lyrics,
+  // then settings and close, each group split by a hairline. Empty groups drop out.
+  const inFullscreen = Fullscreen.IsOpen || Fullscreen.CinemaViewOpen;
+  const button = (id: string, icon: string, pressed?: boolean) =>
+    `<button id="${id}" class="ViewControl"${pressed === undefined ? "" : ` aria-pressed="${pressed}"`}>${icon}</button>`;
+  const viewGroup = [
+    !inFullscreen && !IsPIP ? button("CinemaView", DockIcons.CinemaView) : "",
+    Fullscreen.IsOpen && !IsPIP
+      ? button("FullscreenToggle", Fullscreen.CinemaViewOpen ? DockIcons.Fullscreen : DockIcons.CloseFullscreen)
+      : "",
+    inFullscreen && !IsPIP
+      ? button("CompactModeToggle", IsCompactMode() ? DockIcons.DisableCompactMode : DockIcons.EnableCompactMode)
+      : "",
+    !inFullscreen && !IsPIP ? button("NowBarToggle", DockIcons.NowBar, NowBarObj.Open) : "",
+    NowBarObj.Open && !IsPIP ? button("NowBarSideToggle", DockIcons.NowBarSideSwap) : "",
+    !IsPIP ? button("CoverOnlyToggle", DockIcons.CoverOnly, $coverOnlyMode.get()) : "",
+  ].join("");
+  const lyricsGroup = [
+    button("RomanizationToggle", DockIcons.Romanization, isRomanized),
+    isTTMLMakerMode ? button("LyricsManager", DockIcons.LyricsManager) : "",
+    button("ClearCurrentCache", DockIcons.ClearCache),
+  ].join("");
+  const appGroup = [
+    !IsPIP ? button("SettingsToggle", DockIcons.Settings) : "",
+    `<button id="Close" class="ViewControl SL_DockClose">${DockIcons.Close}</button>`,
+  ].join("");
+  elem.innerHTML = [viewGroup, lyricsGroup, appGroup]
+    .filter(Boolean)
+    .join(`<span class="SL_DockDivider" aria-hidden="true"></span>`);
 
   let targetElem: HTMLElement | null = elem;
   if (Fullscreen.IsOpen) {
@@ -812,6 +795,19 @@ function AppendViewControls(ReAppend: boolean = false) {
       }
     }
 
+    const coverOnlyButton = elem.querySelector("#CoverOnlyToggle");
+    if (coverOnlyButton && !isPip) {
+      try {
+        Tooltips.CoverOnlyToggle = createTooltip(coverOnlyButton, {
+          ...Spicetify.TippyProps,
+          content: $coverOnlyMode.get() ? "Show the Lyrics (C)" : "Cover Only (C)",
+        });
+        coverOnlyButton.addEventListener("click", () => ToggleCoverOnly());
+      } catch (err) {
+        controlsLogger.warn("Failed to setup Cover Only button", err);
+      }
+    }
+
     const settingsButton = elem.querySelector("#SettingsToggle");
     if (settingsButton && !isPip) {
       try {
@@ -896,11 +892,6 @@ $creditsFollowLastLine.listen((v) => {
   PageContainer.classList.toggle("CreditsFollowLastLine", v);
 });
 
-$skipSpicyFont.listen((v) => {
-  if (!PageContainer) return;
-  PageContainer.classList.toggle("UseSpicyFont", !v);
-});
-
 // Purely a CSS gate — NowBar.ts handles rebuilding the band itself.
 $showVolumeSlider.listen((v) => {
   if (!PageContainer) return;
@@ -929,6 +920,12 @@ $viewControlsPosition.listen((v) => {
   PageContainer.classList.toggle("ViewControlsPosition_Top", v === "Top");
   PageContainer.classList.toggle("ViewControlsPosition_Bottom", v === "Bottom");
   AppendViewControls(true);
+});
+
+// The button's state and tooltip change with it.
+$coverOnlyMode.listen(() => {
+  if (!PageContainer) return;
+  setTimeout(() => AppendViewControls(true), 0);
 });
 
 $ttmlMakerMode.listen((v) => {

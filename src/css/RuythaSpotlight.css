@@ -13,7 +13,7 @@
 /* The arrival banner, top centre of the lyrics page, under the view controls. */
 .SL_RuythaBanner {
   position: absolute;
-  top: 76px;
+  top: 104px;
   left: 50%;
   z-index: 102;
   display: flex;

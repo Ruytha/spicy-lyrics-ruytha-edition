@@ -31,6 +31,21 @@
   opacity: 0;
 }
 
+/* The other styles (AMLL, Starry Night, images, colors) step aside the same way. Their own
+   crossfades animate opacity, which only !important outranks. */
+/* No specificity, so a style with its own transition keeps it. */
+:where(#SpicyLyricsPage .ContentBox > div.spicy-dynamic-bg) {
+  transition: opacity var(--CanvasFade) var(--CanvasEaseOut);
+}
+
+#SpicyLyricsPage.CanvasImmersive .ContentBox > div.spicy-dynamic-bg {
+  opacity: 0 !important;
+}
+
+#SpicyLyricsPage.CanvasImmersive .ContentBox > .CanvasAmbient {
+  filter: var(--sl_bg-tune, brightness(1));
+}
+
 /* Stage: the NowBar's side of the page, edge to edge, feathered only where it meets the lyrics.
    A sibling of the NowBar, so the NowBar width vars resolve against the same container. */
 #SpicyLyricsPage .ContentBox > .CanvasStage {

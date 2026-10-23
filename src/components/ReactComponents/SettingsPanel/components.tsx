@@ -278,6 +278,46 @@ export function Slider({
   );
 }
 
+/**
+ * A one-line text field that commits on Enter or when it loses focus, so a half-typed
+ * value (a font name, say) isn't applied on every keystroke.
+ */
+export function TextInput({
+  value,
+  onChange,
+  placeholder,
+  disabled,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  label?: string;
+}) {
+  const [draft, setDraft] = React.useState(value);
+  React.useEffect(() => setDraft(value), [value]);
+  const commit = () => {
+    if (draft.trim() !== value) onChange(draft.trim());
+  };
+  return (
+    <input
+      type="text"
+      className="sl-sp-text"
+      aria-label={label}
+      placeholder={placeholder}
+      value={draft}
+      spellCheck={false}
+      disabled={disabled}
+      onChange={(e) => setDraft(e.currentTarget.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") commit();
+      }}
+    />
+  );
+}
+
 export const SearchBar = forwardRef<
   HTMLInputElement,
   {

@@ -6,6 +6,8 @@ import About, { useUpdateStatus } from "./About.tsx";
 import { advancedSection } from "./AdvancedSection.tsx";
 import { appearanceSection } from "./AppearanceSection.tsx";
 import { backgroundSection } from "./BackgroundSection.tsx";
+import { coverSection } from "./CoverSection.tsx";
+import { MAKER } from "../../../utils/Ruytha/ForkRelease.ts";
 import { Highlight, PeekContext, Row, SearchBar } from "./components.tsx";
 import { experimentsSection } from "./ExperimentsSection.tsx";
 import { AboutIcon, ChevronIcon, CloseIcon, PeekIcon } from "./icons.tsx";
@@ -31,6 +33,7 @@ const aboutSection: SectionDef = {
 const SECTIONS: SectionDef[] = [
   lyricsSection,
   backgroundSection,
+  coverSection,
   playbackSection,
   interfaceSection,
   appearanceSection,
@@ -249,7 +252,7 @@ export default function SettingsPanel() {
         data-empty={count === 0 || undefined}
         onClick={() => select(s.id)}
       >
-        <span className="sl-sp-tab-icon">{s.icon}</span>
+        <span className="sl-sp-tab-icon" data-section={s.id}>{s.icon}</span>
         <span className="sl-sp-tab-label">{s.title}</span>
         {count !== null && count > 0 && <span className="sl-sp-tab-count">{count}</span>}
         {count === null && s.id === "about" && updateStatus === "outdated" && (
@@ -268,8 +271,19 @@ export default function SettingsPanel() {
     <div className="sl-sp" ref={rootRef}>
       <nav className="sl-sp-sidebar" aria-label="Settings sections">
         <div className="sl-sp-brand">
-          <span className="sl-sp-brand-line">Spicy Lyrics</span>
+          <span className="sl-sp-brand-line">Ruytha Edition</span>
           <h1 className="sl-sp-title">Settings</h1>
+          <button
+            type="button"
+            className="sl-sp-credit"
+            title="ruytha.dev"
+            onClick={() => window.open(MAKER.site, "_blank")}
+          >
+            <img className="sl-sp-credit-avatar" src={MAKER.avatar} alt="" width={20} height={20} />
+            <span>
+              by <strong>{MAKER.name}</strong>
+            </span>
+          </button>
         </div>
 
         <SearchBar ref={searchRef} value={query} onChange={onQueryChange} />

@@ -11,11 +11,12 @@ import {
   $duetLinePadding,
   $joinSplitWords,
   $lineHoverBackground,
+  $lyricGlow,
   $lyricsRenderer,
   $minimalLyricsMode,
   $simpleLyricsMode,
 } from "../../../utils/stores.ts";
-import { Select, Toggle } from "./components.tsx";
+import { Select, Slider, Toggle } from "./components.tsx";
 import { LyricsIcon } from "./icons.tsx";
 import type { GroupDef, SectionDef, SettingDef } from "./model.ts";
 
@@ -59,6 +60,27 @@ const groups: GroupDef[] = [
             options={["spicy", "amll"]}
             labels={["Spicy", "AMLL"]}
             onChange={(v) => $lyricsRenderer.set(v)}
+          />
+        ),
+      },
+      {
+        id: "lyricGlow",
+        label: "Lyric Glow",
+        description: "How much the words glow as they're sung. 0% turns the glow off.",
+        keywords: "glow bloom shine text shadow sung words",
+        stacked: true,
+        useDisabled: () => useStore($lyricsRenderer) === "amll" && "Only applies to the Spicy renderer.",
+        Control: ({ disabled, label }) => (
+          <Slider
+            label={label}
+            value={useStore($lyricGlow)}
+            min={0}
+            max={250}
+            step={10}
+            defaultValue={100}
+            unit="%"
+            onChange={(v) => $lyricGlow.set(v)}
+            disabled={disabled}
           />
         ),
       },
@@ -217,6 +239,7 @@ const groups: GroupDef[] = [
 export const lyricsSection: SectionDef = {
   id: "lyrics",
   title: "Lyrics",
+  intro: "How the lyrics are drawn, and the options for each renderer.",
   icon: LyricsIcon,
   groups: () => groups,
 };

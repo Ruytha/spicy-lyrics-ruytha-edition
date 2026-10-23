@@ -11,6 +11,7 @@ import { IsPIP } from "../Utils/PopupLyrics.ts";
 import { IsCompactMode } from "../Utils/CompactMode.ts";
 import { SetSideSwapTransition } from "../Utils/NowBar.ts";
 import { getBackgroundStyle, PAGE_BACKGROUND_KEY, SetKawarpSuspended } from "./dynamicBackground.ts";
+import { AMLLBackgroundMap } from "./AMLLBackground.ts";
 import { AttachCanvasMedia, GetPlayingCanvasInfo, LoadCanvasMedia } from "./CanvasVideo.ts";
 
 const immersiveLogger = new Logger("Canvas Immersive");
@@ -182,7 +183,7 @@ function Unmount() {
   active = false;
   clearSuspendTimer();
   clearRetryTimer();
-  SetKawarpSuspended(PAGE_BACKGROUND_KEY, false);
+  suspendPageBackground(false);
   mount.resizeObserver.disconnect();
   mount.themeObserver.disconnect();
   for (const layer of mount.layers) releaseLayer(layer);
@@ -383,7 +384,8 @@ function isEligible(): boolean {
     !IsCardMode &&
     !IsPIP &&
     !IsCompactMode() &&
-    getBackgroundStyle() === "dynamic" &&
+    // Any style but None: the stage brings its own backdrop, drawn from the canvas.
+    getBackgroundStyle() !== "none" &&
     !themeOwnsBackground(PageContainer)
   );
 }
@@ -406,6 +408,14 @@ function syncPlayback() {
   lastAmbientTime = -1;
 }
 
+// The page background sits under the backdrop while the stage shows; stop drawing it.
+function suspendPageBackground(suspended: boolean) {
+  SetKawarpSuspended(PAGE_BACKGROUND_KEY, suspended);
+  const amll = AMLLBackgroundMap.get(PAGE_BACKGROUND_KEY);
+  if (suspended) amll?.pause();
+  else if (!document.hidden) amll?.resume();
+}
+
 function activate() {
   if (!mount || active) return;
   active = true;
@@ -415,7 +425,7 @@ function activate() {
   clearSuspendTimer();
   suspendTimer = setTimeout(() => {
     suspendTimer = null;
-    if (active) SetKawarpSuspended(PAGE_BACKGROUND_KEY, true);
+    if (active) suspendPageBackground(true);
   }, FADE_MS);
 }
 
@@ -424,7 +434,7 @@ function deactivate() {
   finishSideSwap();
   active = false;
   clearSuspendTimer();
-  SetKawarpSuspended(PAGE_BACKGROUND_KEY, false);
+  suspendPageBackground(false);
   toggleDockLayout(mount, false);
 
   const gen = generation;

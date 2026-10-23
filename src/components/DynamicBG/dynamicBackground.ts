@@ -3,6 +3,7 @@ import {
   $backgroundBlur,
   $backgroundStyle,
   $beatPulseStrength,
+  $coverBeatPulse,
   BACKGROUND_STYLES,
   type BackgroundStyle,
   type BeatPulseStrength,
@@ -943,10 +944,15 @@ function beatPulseAt(data: AudioAnalysisData, time: number): number {
   return envelope * Math.sqrt(Math.max(0, beat.confidence)) * level;
 }
 
+const COVER = ":scope .ContentBox .NowBar .Header .MediaBox .MediaImageContainer";
+let lastCoverPulse = 0;
+
 onAnimationFrame(() => {
   const page = document.getElementById("SpicyLyricsPage");
-  let pulse = 0;
-  if (page && $backgroundBeatPulse.get() && !reducedMotion.matches && SpotifyPlayer.IsPlaying) {
+  const backgroundOn = $backgroundBeatPulse.get();
+  const coverOn = $coverBeatPulse.get();
+  let beat = 0;
+  if (page && (backgroundOn || coverOn) && !reducedMotion.matches && SpotifyPlayer.IsPlaying) {
     const uri = SpotifyPlayer.GetUri();
     if (uri && uri !== pulseRequestedUri && !uri.startsWith("spotify:local:")) {
       pulseRequestedUri = uri;
@@ -955,13 +961,26 @@ onAnimationFrame(() => {
       });
     }
     if (pulseAnalysis && pulseAnalysis.uri === uri) {
-      pulse =
+      beat =
         beatPulseAt(pulseAnalysis.data, SpotifyPlayer.GetPosition() / 1000) *
         (BEAT_PULSE_STRENGTHS[$beatPulseStrength.get()] ?? 1);
     }
   }
+  const pulse = backgroundOn ? beat : 0;
+  const coverPulse = coverOn ? beat : 0;
   // Skip the style writes while nothing visible changes (between beats, or paused).
-  if (Math.abs(pulse - lastPulse) < 0.002 && (pulse !== 0 || lastPulse === 0)) return;
+  const changed = (next: number, last: number) =>
+    !(Math.abs(next - last) < 0.002 && (next !== 0 || last === 0));
+
+  if (changed(coverPulse, lastCoverPulse)) {
+    lastCoverPulse = coverPulse;
+    // Set on the cover itself: a custom property on the page would restyle all of it every frame.
+    const cover = page?.querySelector<HTMLElement>(COVER);
+    if (coverPulse) cover?.style.setProperty("--sl_cover-beat", coverPulse.toFixed(3));
+    else cover?.style.removeProperty("--sl_cover-beat");
+  }
+
+  if (!changed(pulse, lastPulse)) return;
   lastPulse = pulse;
   if (page) {
     for (const layer of page.querySelectorAll<HTMLElement>(PAGE_BG_LAYERS)) {

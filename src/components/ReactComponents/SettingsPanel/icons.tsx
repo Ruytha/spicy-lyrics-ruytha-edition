@@ -112,3 +112,10 @@ export const ChevronIcon = (
     />
   </svg>
 );
+
+export const CoverIcon = (
+  <Icon>
+    <rect x="2.5" y="2.5" width="11" height="11" rx="2" />
+    <circle cx="8" cy="8" r="2.25" />
+  </Icon>
+);
