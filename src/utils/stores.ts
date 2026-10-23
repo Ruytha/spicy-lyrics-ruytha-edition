@@ -68,7 +68,36 @@ export function persistAtom<T>(key: string, defaultValue: T) {
     _settings[key] = v;
     saveSettingsBlob(_settings);
   });
+  persistedSettings.set(key, { reset: () => store.set(defaultValue) });
   return store;
+}
+
+// Every persisted setting by key, so a settings tab can put its rows back to their defaults.
+const persistedSettings = new Map<string, { reset: () => void }>();
+
+/** Put one setting back to its default. False when no persisted setting has that key. */
+export function ResetSetting(key: string): boolean {
+  const entry = persistedSettings.get(key);
+  entry?.reset();
+  return !!entry;
+}
+
+/** The saved settings as JSON, for a backup file. */
+export function ExportSettings(): string {
+  return JSON.stringify({ format: "spicy-lyrics-ruytha-settings", version: 1, settings: _settings }, null, 2);
+}
+
+/**
+ * Replace the saved settings with a backup's. Settings are read once at startup, so the
+ * caller reloads Spotify after. Throws on a file that isn't a settings backup.
+ */
+export function ImportSettings(json: string): void {
+  const parsed = JSON.parse(json);
+  const settings = parsed?.format === "spicy-lyrics-ruytha-settings" ? parsed.settings : null;
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
+    throw new Error("That file isn't a Ruytha Edition settings backup.");
+  }
+  saveSettingsBlob(settings);
 }
 
 // Setting atoms (persisted)
@@ -113,6 +142,8 @@ export const $lyricGlow = persistAtom<number>("lyricGlow", 100);
 // The cover: the song's Canvas plays inside it when it has one, it can pulse with the
 // beat, melt into the background, or take the whole page with the lyrics hidden.
 export const $animatedCovers = persistAtom<boolean>("animatedCovers", true);
+// While an Apple Music animated cover plays, the page background is drawn from it.
+export const $coverMotionBackground = persistAtom<boolean>("coverMotionBackground", true);
 export const $coverBeatPulse = persistAtom<boolean>("coverBeatPulse", false);
 export const $coverBlend = persistAtom<boolean>("coverBlend", false);
 export const $coverOnlyMode = persistAtom<boolean>("coverOnlyMode", false);

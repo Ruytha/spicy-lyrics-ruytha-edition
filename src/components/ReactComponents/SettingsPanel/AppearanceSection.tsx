@@ -8,10 +8,29 @@ import {
 } from "../../../utils/stores.ts";
 import { Select, Slider, TextInput, Toggle } from "./components.tsx";
 import { AppearanceIcon } from "./icons.tsx";
+import { ApplyAppleMusicLook } from "../../../utils/Ruytha/Presets.ts";
 import type { GroupDef, SectionDef } from "./model.ts";
 
 // Built once: the Control components must keep their identity across renders.
 const groups: GroupDef[] = [
+  {
+    title: "Looks",
+    settings: [
+      {
+        id: "appleMusicLook",
+        label: "Apple Music Look",
+        description:
+          "Sets everything up like Apple Music's player in one go: AMLL lyrics and background, Apple Music animated covers with the background following them, the melted cover and SF Pro. Undo is on the message that pops up.",
+        keywords: "preset apple music look theme one click style",
+        reset: () => undefined,
+        Control: () => (
+          <button type="button" className="sl-sp-btn" onClick={ApplyAppleMusicLook}>
+            Apply
+          </button>
+        ),
+      },
+    ],
+  },
   {
     title: "Text",
     settings: [
@@ -95,6 +114,7 @@ const groups: GroupDef[] = [
 export const appearanceSection: SectionDef = {
   id: "appearance",
   title: "Appearance",
+  resettable: true,
   intro: "Fonts and how hard the page works to draw itself.",
   icon: AppearanceIcon,
   groups: () => groups,

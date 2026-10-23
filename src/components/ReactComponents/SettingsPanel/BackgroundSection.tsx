@@ -283,6 +283,7 @@ const groups: GroupDef[] = [
 export const backgroundSection: SectionDef = {
   id: "background",
   title: "Background",
+  resettable: true,
   intro: "What sits behind the lyrics, how it moves with the music, and how it renders.",
   icon: BackgroundIcon,
   groups: () => groups,

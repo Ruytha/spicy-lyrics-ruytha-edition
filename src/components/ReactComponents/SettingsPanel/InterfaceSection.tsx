@@ -164,6 +164,7 @@ const groups: GroupDef[] = [
 export const interfaceSection: SectionDef = {
   id: "interface",
   title: "Interface",
+  resettable: true,
   icon: InterfaceIcon,
   groups: () => groups,
 };

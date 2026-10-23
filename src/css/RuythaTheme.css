@@ -391,3 +391,16 @@ sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-text::placeholder {
 sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-text:disabled {
   opacity: 0.5;
 }
+
+/* "Reset <tab> to defaults" under a tab's rows; red while it's asking to confirm. */
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-reset {
+  display: flex;
+  justify-content: center;
+  margin-top: 28px;
+}
+
+sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-reset .sl-sp-btn[data-armed] {
+  background: rgba(255, 92, 92, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 92, 92, 0.45);
+  color: #ffd9d9;
+}

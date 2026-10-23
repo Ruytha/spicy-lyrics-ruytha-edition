@@ -23,6 +23,11 @@ export interface SettingDef {
    */
   useNote?: () => string | false;
   Control?: React.FC<{ disabled: boolean; label: string }>;
+  /**
+   * Puts the row back to its default for the tab's Reset button. Leave it out when the
+   * row's id is its persisted setting's key; that one is reset by key.
+   */
+  reset?: () => void;
   /** Renders the whole row instead of `Control` (experiments bring their own badge). */
   render?: (label: React.ReactNode) => React.ReactNode;
 }
@@ -57,6 +62,8 @@ export interface SectionDef {
   emptyText?: string;
   /** Sits beside the pane title. */
   Accessory?: React.FC;
+  /** Offer a button that resets every row in the tab. */
+  resettable?: boolean;
   /** Runs right before the tab is shown. */
   onEnter?: () => void;
 }

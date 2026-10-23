@@ -66,10 +66,10 @@ const groups: GroupDef[] = [
       {
         id: "lyricGlow",
         label: "Lyric Glow",
-        description: "How much the words glow as they're sung. 0% turns the glow off.",
-        keywords: "glow bloom shine text shadow sung words",
+        description:
+          "How much the words glow as they're sung. With AMLL the playing line glows softly instead. 0% turns the glow off.",
+        keywords: "glow bloom shine text shadow sung words amll",
         stacked: true,
-        useDisabled: () => useStore($lyricsRenderer) === "amll" && "Only applies to the Spicy renderer.",
         Control: ({ disabled, label }) => (
           <Slider
             label={label}
@@ -239,6 +239,7 @@ const groups: GroupDef[] = [
 export const lyricsSection: SectionDef = {
   id: "lyrics",
   title: "Lyrics",
+  resettable: true,
   intro: "How the lyrics are drawn, and the options for each renderer.",
   icon: LyricsIcon,
   groups: () => groups,

@@ -2,6 +2,7 @@ import { useStore } from "@nanostores/react";
 import { $experiment, setExperiment } from "../../../utils/experiments.ts";
 import {
   $animatedCovers,
+  $coverMotionBackground,
   $coverBeatPulse,
   $coverBlend,
   $coverOnlyMode,
@@ -32,6 +33,7 @@ const groups: GroupDef[] = [
     settings: [
       {
         id: "canvasMode",
+        reset: () => setCanvasMode("stage"),
         label: "Moving Artwork",
         description:
           "Spotify Canvas fills the cover's half of the page with the song's Canvas video. Apple Music Cover plays the album's animated cover from Apple Music inside the cover square, for albums that have one (After Hours, say). Off keeps the still cover.",
@@ -43,6 +45,23 @@ const groups: GroupDef[] = [
             options={["stage", "cover", "off"]}
             labels={["Spotify Canvas", "Apple Music Cover", "Off"]}
             onChange={(v) => setCanvasMode(v as CanvasMode)}
+          />
+        ),
+      },
+      {
+        id: "coverMotionBackground",
+        label: "Background Follows the Cover",
+        description:
+          "While an Apple Music animated cover plays, the page background is drawn from it, so the whole page moves with the artwork.",
+        keywords: "apple music animated cover background motion moving video ambient",
+        useDisabled: () =>
+          useCanvasMode() !== "cover" && "Set Moving Artwork to Apple Music Cover first.",
+        Control: ({ disabled, label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($coverMotionBackground)}
+            onChange={(v) => $coverMotionBackground.set(v)}
+            disabled={disabled}
           />
         ),
       },
@@ -87,6 +106,7 @@ const groups: GroupDef[] = [
 export const coverSection: SectionDef = {
   id: "cover",
   title: "Cover",
+  resettable: true,
   intro: "The album cover: moving artwork, the beat, and how it sits on the page.",
   icon: CoverIcon,
   groups: () => groups,

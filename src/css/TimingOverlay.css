@@ -42,3 +42,22 @@
 .SL_TimingOverlay:hover {
   background: rgba(10, 18, 52, 0.75);
 }
+
+/* Fullscreen, Cinema View and the popup put the player in the bottom-left corner, so the
+   readout moves to the top right, clear of it. */
+#SpicyLyricsPage.Fullscreen .SL_TimingOverlay {
+  left: auto;
+  bottom: auto;
+  right: 16px;
+  top: 16px;
+}
+
+/* The popup is small: a tighter readout. */
+.spicy-pip-wrapper #SpicyLyricsPage .SL_TimingOverlay {
+  right: 8px;
+  top: 8px;
+  min-width: 0;
+  padding: 6px 10px;
+  transform: scale(0.85);
+  transform-origin: top right;
+}

@@ -119,6 +119,7 @@ const groups: GroupDef[] = [
 export const playbackSection: SectionDef = {
   id: "playback",
   title: "Playback",
+  resettable: true,
   icon: PlaybackIcon,
   groups: () => groups,
 };

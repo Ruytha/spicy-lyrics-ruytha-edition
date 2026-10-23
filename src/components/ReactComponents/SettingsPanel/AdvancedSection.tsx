@@ -7,10 +7,38 @@ import {
 import { $developerMode } from "../../../utils/stores.ts";
 import { Toggle } from "./components.tsx";
 import { AdvancedIcon } from "./icons.tsx";
+import { DownloadSettingsBackup, RestoreSettingsBackup } from "../../../utils/Ruytha/Presets.ts";
 import type { GroupDef, SectionDef } from "./model.ts";
 
 // Built once: the Control components must keep their identity across renders.
 const groups: GroupDef[] = [
+  {
+    title: "Backup",
+    settings: [
+      {
+        id: "backupSettings",
+        label: "Back Up Settings",
+        description: "Save every Spicy Lyrics setting to a file, to keep or move to another computer.",
+        keywords: "backup export save settings file json",
+        Control: () => (
+          <button type="button" className="sl-sp-btn" onClick={DownloadSettingsBackup}>
+            Save File
+          </button>
+        ),
+      },
+      {
+        id: "restoreSettings",
+        label: "Restore Settings",
+        description: "Load settings from a backup file. Spotify reloads afterwards to use them.",
+        keywords: "restore import load settings file json",
+        Control: () => (
+          <button type="button" className="sl-sp-btn" onClick={RestoreSettingsBackup}>
+            Choose File
+          </button>
+        ),
+      },
+    ],
+  },
   {
     title: "Lyrics Cache",
     settings: [

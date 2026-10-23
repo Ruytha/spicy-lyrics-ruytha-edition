@@ -6,6 +6,34 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-23, fourth update
+
+### Added
+
+- **Apple Music look.** Settings → Appearance → **Apple Music Look** sets up AMLL lyrics
+  and background, Apple Music animated covers, the melted cover and SF Pro in one click.
+  The message that pops up has an Undo.
+- **Background follows the cover.** While an Apple Music animated cover plays, the page
+  background is drawn from it, so the whole page moves with the artwork. Settings →
+  Cover → **Background Follows the Cover**.
+- **Lyric Glow for AMLL.** With the AMLL renderer, the playing line now glows softly too,
+  following the Lyric Glow slider.
+- **Reset a tab.** Each settings tab has a button at the bottom that puts its settings
+  back to their defaults, after a second click to confirm.
+- **Back up and restore settings.** Settings → Advanced → Backup saves every setting to a
+  file and loads it back, for keeping or moving to another computer.
+
+### Changed
+
+- **Apple Music covers match exactly.** Albums are found on Apple Music by their barcode,
+  in your own country's store first, so deluxe editions and albums outside the US find
+  their cover. A light sweeps across the cover while one loads for the first time.
+
+### Fixed
+
+- The timing overlay covered the player controls in Cinema View, fullscreen and the
+  popup. It now sits in the top-right corner there.
+
 ## 2026-10-23, third update
 
 ### Added

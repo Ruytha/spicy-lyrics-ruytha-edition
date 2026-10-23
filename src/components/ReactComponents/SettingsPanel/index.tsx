@@ -1,6 +1,7 @@
 import { useStore } from "@nanostores/react";
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { $experimentOverrides } from "../../../utils/experiments.ts";
+import { ResetSetting } from "../../../utils/stores.ts";
 import { PopupModal } from "../../Modal.ts";
 import About, { useUpdateStatus } from "./About.tsx";
 import { advancedSection } from "./AdvancedSection.tsx";
@@ -75,6 +76,47 @@ function SettingRow({ def, query }: { def: SettingDef; query: string }) {
     >
       <Control disabled={!!reason} label={def.label} />
     </Row>
+  );
+}
+
+/**
+ * Puts every row in the tab back to its default. Asks once more before doing it, by
+ * turning into a confirm button for a few seconds.
+ */
+function SectionReset({ section }: { section: SectionDef }) {
+  const [armed, setArmed] = useState(false);
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    if (!armed && !done) return;
+    const t = setTimeout(() => {
+      setArmed(false);
+      setDone(false);
+    }, armed ? 4000 : 2000);
+    return () => clearTimeout(t);
+  }, [armed, done]);
+
+  const reset = () => {
+    for (const group of section.groups?.() ?? []) {
+      for (const def of group.settings) {
+        if (def.reset) def.reset();
+        else ResetSetting(def.id);
+      }
+    }
+    setArmed(false);
+    setDone(true);
+  };
+
+  return (
+    <div className="sl-sp-reset">
+      <button
+        type="button"
+        className="sl-sp-btn"
+        data-armed={armed || undefined}
+        onClick={() => (armed ? reset() : setArmed(true))}
+      >
+        {done ? "Reset" : armed ? `Reset all ${section.title} settings?` : `Reset ${section.title} to defaults`}
+      </button>
+    </div>
   );
 }
 
@@ -394,16 +436,19 @@ export default function SettingsPanel() {
               <>
                 {section.intro && <p className="sl-sp-intro">{section.intro}</p>}
                 {hasRows ? (
-                  groups.map((group, i) => (
-                    <div className="sl-sp-group" key={group.title ?? i}>
-                      {group.title && <h3 className="sl-sp-group-title">{group.title}</h3>}
-                      <div className="sl-sp-card">
-                        {group.settings.map((def) => (
-                          <SettingRow key={def.id} def={def} query="" />
-                        ))}
+                  <>
+                    {groups.map((group, i) => (
+                      <div className="sl-sp-group" key={group.title ?? i}>
+                        {group.title && <h3 className="sl-sp-group-title">{group.title}</h3>}
+                        <div className="sl-sp-card">
+                          {group.settings.map((def) => (
+                            <SettingRow key={def.id} def={def} query="" />
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                    {section.resettable && <SectionReset section={section} />}
+                  </>
                 ) : (
                   <div className="sl-sp-empty">
                     <p className="sl-sp-empty-title">{section.emptyText ?? "Nothing here yet."}</p>

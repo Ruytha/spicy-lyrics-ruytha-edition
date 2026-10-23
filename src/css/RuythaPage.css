@@ -28,6 +28,31 @@
   opacity: 1;
 }
 
+/* While an album's Apple Music cover converts (first play only), a band of light sweeps
+   across the still cover, so the wait reads as loading rather than nothing happening. */
+#SpicyLyricsPage .MediaImageContainer.SL_CoverLoading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.22) 50%, transparent 65%) no-repeat;
+  background-size: 250% 100%;
+  animation: SL_CoverShimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes SL_CoverShimmer {
+  from { background-position: 130% 0; }
+  to { background-position: -30% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #SpicyLyricsPage .MediaImageContainer.SL_CoverLoading::after {
+    animation: none;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
 /* ─── Cover moves to the beat ─────────────────────────────────────────────── */
 
 #SpicyLyricsPage.SL_CoverBeat .ContentBox .NowBar .Header .MediaBox .MediaImageContainer {
@@ -58,4 +83,36 @@
 
 #SpicyLyricsPage.SL_CoverOnly:not(.CompactMode):has(.ContentBox.LyricsHidden) {
   --NowBarWidth: min(46cqw, 62cqh) !important;
+}
+
+/* ─── Background follows the cover (AnimatedCover.ts) ─────────────────────── */
+/* The cover's frames, blurred, fill the page while an Apple Music cover plays; the page's
+   own background steps aside underneath (opacity only, so it fades back when it ends). */
+
+#SpicyLyricsPage .ContentBox > canvas.SL_CoverAmbient {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  filter: var(--sl_bg-tune, brightness(1));
+  transition: opacity 0.9s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+#SpicyLyricsPage.SL_MotionBackground .ContentBox > canvas.SL_CoverAmbient {
+  opacity: 1;
+}
+
+#SpicyLyricsPage.SL_MotionBackground .ContentBox > .spicy-dynamic-bg {
+  opacity: 0 !important;
+}
+
+/* ─── Lyric Glow on the AMLL renderer ─────────────────────────────────────── */
+/* AMLL draws sung words with masks, which would clip a text-shadow, so the playing line
+   glows through a drop-shadow on the line instead: soft at 100%, off at 0%. AMLL's class
+   names carry a build prefix, hence the [class*=] matches. */
+
+#SpicyLyricsPage.AmllLyrics:not(.SL_NoGlow) .amll-lyric-player [class*="_lyricMainLine"][class*="_active"] {
+  filter: drop-shadow(0 0 calc(12px * var(--sl_glow-size, 1)) rgba(255, 255, 255, calc(0.28 * var(--sl_glow, 1))));
 }
