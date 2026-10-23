@@ -1,4 +1,5 @@
 import {
+  $backgroundBeatPulse,
   $backgroundBlur,
   $backgroundStyle,
   BACKGROUND_STYLES,
@@ -883,4 +884,81 @@ Global.Event.listen("playback:progress", async () => {
 
   pruneAudioAnalysisCache(songUri);
   setAnimationSpeed(animSpeedController.getSpeedMultiplier(SpotifyPlayer.GetPosition() / 1000, audioAnalysisData));
+});
+
+// ─── Beat pulse ──────────────────────────────────────────────────────────────
+//
+// The lyrics page background swells and brightens on each beat of the audio analysis,
+// then eases back. Only `--sl_beat` (0..1) is set on the layer; spicy-dynamic-bg.css
+// folds it into each look's own scale and brightness. The AMLL mesh also gets the beat
+// as its low-frequency volume.
+
+/** Seconds to reach the peak, then the exponential decay rate (per second) back down. */
+const BEAT_PULSE_ATTACK = 0.04;
+const BEAT_PULSE_DECAY = 7;
+const PAGE_BG_LAYERS = ":scope .ContentBox > .spicy-dynamic-bg";
+
+let pulseAnalysis: { uri: string; data: AudioAnalysisData } | null = null;
+let pulseRequestedUri: string | null = null;
+let lastPulse = 0;
+
+/** Index of the last element starting at or before `time`, or -1. */
+function lastStartedAt(elements: { start: number }[], time: number): number {
+  let lo = 0;
+  let hi = elements.length - 1;
+  let found = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (elements[mid].start <= time) {
+      found = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return found;
+}
+
+/** 0..1: how hard the background is pulsing at `time` (seconds into the track). */
+function beatPulseAt(data: AudioAnalysisData, time: number): number {
+  const beat = data.beats[lastStartedAt(data.beats, time)];
+  if (!beat) return 0;
+  const since = time - beat.start;
+  if (since > beat.duration * 1.5) return 0;
+  const envelope =
+    since < BEAT_PULSE_ATTACK
+      ? since / BEAT_PULSE_ATTACK
+      : Math.exp(-(since - BEAT_PULSE_ATTACK) * BEAT_PULSE_DECAY);
+  // Quiet sections pulse softly; -30 dB and below is the floor, -5 dB and up is full.
+  const section = data.sections[lastStartedAt(data.sections, time)];
+  const loudness = section?.loudness ?? data.track.loudness;
+  const level = Math.min(1, Math.max(0.35, (loudness + 30) / 25));
+  return envelope * Math.sqrt(Math.max(0, beat.confidence)) * level;
+}
+
+onAnimationFrame(() => {
+  const page = document.getElementById("SpicyLyricsPage");
+  let pulse = 0;
+  if (page && $backgroundBeatPulse.get() && !reducedMotion.matches && SpotifyPlayer.IsPlaying) {
+    const uri = SpotifyPlayer.GetUri();
+    if (uri && uri !== pulseRequestedUri && !uri.startsWith("spotify:local:")) {
+      pulseRequestedUri = uri;
+      getAudioAnalysisForTrack(uri).then((data) => {
+        if (data && SpotifyPlayer.GetUri() === uri) pulseAnalysis = { uri, data };
+      });
+    }
+    if (pulseAnalysis && pulseAnalysis.uri === uri) {
+      pulse = beatPulseAt(pulseAnalysis.data, SpotifyPlayer.GetPosition() / 1000);
+    }
+  }
+  // Skip the style writes while nothing visible changes (between beats, or paused).
+  if (Math.abs(pulse - lastPulse) < 0.002 && (pulse !== 0 || lastPulse === 0)) return;
+  lastPulse = pulse;
+  if (page) {
+    for (const layer of page.querySelectorAll<HTMLElement>(PAGE_BG_LAYERS)) {
+      if (pulse) layer.style.setProperty("--sl_beat", pulse.toFixed(3));
+      else layer.style.removeProperty("--sl_beat");
+    }
+  }
+  AMLLBackgroundMap.get(PAGE_BACKGROUND_KEY)?.setLowFreqVolume(pulse);
 });

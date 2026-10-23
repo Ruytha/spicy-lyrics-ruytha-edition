@@ -79,6 +79,8 @@ export const $backgroundStyle = persistAtom<BackgroundStyle>("backgroundStyle", 
 // AMLL style: flow speed multiplier, and whether it holds still once each cover is in.
 export const $amllBgFlowSpeed = persistAtom<number>("amllBgFlowSpeed", 1);
 export const $amllBgStaticMode = persistAtom<boolean>("amllBgStaticMode", false);
+// The lyrics page background swells on each beat (from Spotify's audio analysis).
+export const $backgroundBeatPulse = persistAtom<boolean>("backgroundBeatPulse", true);
 // Blur radius (px) for the two image styles, "artist" and "cover".
 export const $backgroundBlur = persistAtom<number>("backgroundBlur", 0);
 // Who draws synced lyrics: "spicy" (the built-in renderer) or "amll" (the AMLL player).

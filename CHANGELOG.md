@@ -9,6 +9,11 @@ Installed copies update on their own the next time Spotify starts.
 
 ### Added
 
+- **Pulse to the Beat.** The lyrics page background swells and brightens on every beat,
+  harder on confident beats in loud sections, then eases back. It follows Spotify's beat
+  data for the song, works with every background style, and pauses with the music. Turn
+  it off under Settings → Background → **Pulse to the Beat**; it also stays off when
+  Windows' reduce-motion setting is on.
 - **Profile viewer.** Clicking **Made by** or **Uploaded by** under the lyrics opens the
   maker's or uploader's Spicy Lyrics profile in a window inside Spotify instead of your
   browser. Their makes and uploads, views, search and sort are all there, and **Listen**

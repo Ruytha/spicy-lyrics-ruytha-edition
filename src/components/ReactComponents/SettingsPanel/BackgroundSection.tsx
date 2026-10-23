@@ -2,6 +2,7 @@ import { useStore } from "@nanostores/react";
 import {
   $amllBgFlowSpeed,
   $amllBgStaticMode,
+  $backgroundBeatPulse,
   $backgroundBlur,
   $backgroundStyle,
   $showNpvDynamicBg,
@@ -73,6 +74,22 @@ const groups: GroupDef[] = [
             defaultValue={0}
             unit="px"
             onChange={(v) => $backgroundBlur.set(v)}
+            disabled={disabled}
+          />
+        ),
+      },
+      {
+        id: "backgroundBeatPulse",
+        label: "Pulse to the Beat",
+        description:
+          "The background swells a little on each beat and eases back. It follows Spotify's beat data, so songs without it stay still.",
+        keywords: "beat pulse throb music bass rhythm background",
+        useDisabled: () => useStore($backgroundStyle) === "none" && "There's no background to pulse.",
+        Control: ({ disabled, label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($backgroundBeatPulse)}
+            onChange={(v) => $backgroundBeatPulse.set(v)}
             disabled={disabled}
           />
         ),
