@@ -13,6 +13,9 @@ import "./css/Loaders/LyricsSkeleton.css";
 import "./css/font-pack/font-pack.css";
 import "./css/RuythaTheme.css";
 import "./components/Utils/BackToLineButton.ts";
+import "./components/Utils/TimingOverlay.ts";
+import "./components/DynamicBG/RuythaSpotlight.ts";
+import { ShowForkWhatsNew } from "./utils/Ruytha/WhatsNew.tsx";
 
 import ApplyDynamicBackground, {
   getBackgroundStyle,
@@ -488,9 +491,10 @@ async function main() {
     );
 
     // A fresh install has no previous version, and there is nothing to announce.
+    // The fork's own What's New wins when both are due: only one notice shows at a time.
     const fromVersion = $fromVersion.get();
     const toVersion = $spicyLyricsVersion.get();
-    if (fromVersion && toVersion && fromVersion !== toVersion) {
+    if (!ShowForkWhatsNew() && fromVersion && toVersion && fromVersion !== toVersion) {
       showUpdatedDialog(fromVersion, toVersion);
     }
 

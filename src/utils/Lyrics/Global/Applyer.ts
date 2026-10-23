@@ -34,6 +34,10 @@ export type LyricsData = {
 let currentAbortController: AbortController | null = null;
 let applyToken = 0;
 
+/** The lyrics on screen now (null while a notice or nothing is showing). */
+let appliedLyrics: LyricsData | null = null;
+export const GetAppliedLyrics = () => appliedLyrics;
+
 export const cleanupApplyLyricsAbortController = () => {
   if (currentAbortController) {
     currentAbortController.abort();
@@ -84,6 +88,7 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
 
   DisposeAmllLyrics();
   DestroyAllLyricsContainers();
+  appliedLyrics = null;
 
   ClearLyricsContentArrays();
   ClearScrollSimplebar();
@@ -147,6 +152,7 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
   }
 
   const lyrics = descriptor as LyricsData;
+  appliedLyrics = lyrics;
 
   // Lyrics replace any notice, whichever path applied them (a TTML upload re-applies
   // without going through fetchLyrics), so a later layout sync can't hide them.

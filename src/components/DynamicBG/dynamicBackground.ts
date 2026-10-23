@@ -2,8 +2,10 @@ import {
   $backgroundBeatPulse,
   $backgroundBlur,
   $backgroundStyle,
+  $beatPulseStrength,
   BACKGROUND_STYLES,
   type BackgroundStyle,
+  type BeatPulseStrength,
 } from "../../utils/stores.ts";
 import { isExperimentEnabled } from "../../utils/experiments.ts";
 import BlobURLMaker from "../../utils/BlobURLMaker.ts";
@@ -896,11 +898,16 @@ Global.Event.listen("playback:progress", async () => {
 /** Seconds to reach the peak, then the exponential decay rate (per second) back down. */
 const BEAT_PULSE_ATTACK = 0.04;
 const BEAT_PULSE_DECAY = 7;
+/** Multiplier on the pulse for each Pulse Strength setting. */
+const BEAT_PULSE_STRENGTHS: Record<BeatPulseStrength, number> = { subtle: 0.5, normal: 1, strong: 1.6 };
 const PAGE_BG_LAYERS = ":scope .ContentBox > .spicy-dynamic-bg";
 
 let pulseAnalysis: { uri: string; data: AudioAnalysisData } | null = null;
 let pulseRequestedUri: string | null = null;
 let lastPulse = 0;
+
+/** How hard the background is pulsing right now (0 when it isn't), for effects that follow the beat. */
+export const GetBeatPulse = () => lastPulse;
 
 /** Index of the last element starting at or before `time`, or -1. */
 function lastStartedAt(elements: { start: number }[], time: number): number {
@@ -948,7 +955,9 @@ onAnimationFrame(() => {
       });
     }
     if (pulseAnalysis && pulseAnalysis.uri === uri) {
-      pulse = beatPulseAt(pulseAnalysis.data, SpotifyPlayer.GetPosition() / 1000);
+      pulse =
+        beatPulseAt(pulseAnalysis.data, SpotifyPlayer.GetPosition() / 1000) *
+        (BEAT_PULSE_STRENGTHS[$beatPulseStrength.get()] ?? 1);
     }
   }
   // Skip the style writes while nothing visible changes (between beats, or paused).

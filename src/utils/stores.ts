@@ -81,11 +81,24 @@ export const $amllBgFlowSpeed = persistAtom<number>("amllBgFlowSpeed", 1);
 export const $amllBgStaticMode = persistAtom<boolean>("amllBgStaticMode", false);
 // The lyrics page background swells on each beat (from Spotify's audio analysis).
 export const $backgroundBeatPulse = persistAtom<boolean>("backgroundBeatPulse", true);
+export type BeatPulseStrength = "subtle" | "normal" | "strong";
+export const $beatPulseStrength = persistAtom<BeatPulseStrength>("beatPulseStrength", "normal");
 // Blur radius (px) for the two image styles, "artist" and "cover".
 export const $backgroundBlur = persistAtom<number>("backgroundBlur", 0);
 // Who draws synced lyrics: "spicy" (the built-in renderer) or "amll" (the AMLL player).
 // Unsynced lyrics always use the built-in one.
 export const $lyricsRenderer = persistAtom<string>("lyricsRenderer", "spicy");
+// AMLL lyrics: the player's own effects, and where the playing line sits ("upper" is
+// AMLL's default, a third of the way down; "center" is the middle).
+export const $amllLyricsBlur = persistAtom<boolean>("amllLyricsBlur", true);
+export const $amllLyricsSpring = persistAtom<boolean>("amllLyricsSpring", true);
+export const $amllLyricsScale = persistAtom<boolean>("amllLyricsScale", true);
+export const $amllLyricsPosition = persistAtom<"upper" | "center">("amllLyricsPosition", "upper");
+export const $amllHidePassedLines = persistAtom<boolean>("amllHidePassedLines", false);
+// For syncers: a readout of the playback time and the playing line's and word's timings.
+export const $timingOverlay = persistAtom<boolean>("timingOverlay", false);
+// Songs synced by Ruytha (the fork's maker) get shooting stars, a banner and a credit ring.
+export const $ruythaSpotlight = persistAtom<boolean>("ruythaSpotlight", true);
 export const $simpleLyricsMode = persistAtom<boolean>("simpleLyricsMode", false);
 export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", false);
 // Shows a word sung in syllables as one word when its parts line up evenly.

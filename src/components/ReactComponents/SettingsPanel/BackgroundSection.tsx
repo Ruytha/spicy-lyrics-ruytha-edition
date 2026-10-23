@@ -5,9 +5,12 @@ import {
   $backgroundBeatPulse,
   $backgroundBlur,
   $backgroundStyle,
+  $beatPulseStrength,
+  $ruythaSpotlight,
   $showNpvDynamicBg,
   BACKGROUND_STYLES,
   type BackgroundStyle,
+  type BeatPulseStrength,
 } from "../../../utils/stores.ts";
 import { $experiment, getExperiment } from "../../../utils/experiments.ts";
 import { Select, Slider, Toggle } from "./components.tsx";
@@ -92,6 +95,37 @@ const groups: GroupDef[] = [
             onChange={(v) => $backgroundBeatPulse.set(v)}
             disabled={disabled}
           />
+        ),
+      },
+      {
+        id: "beatPulseStrength",
+        label: "Pulse Strength",
+        description: "How far the background swells and brightens on each beat.",
+        keywords: "beat pulse strength intensity amount subtle strong",
+        useDisabled: () => {
+          const on = useStore($backgroundBeatPulse);
+          const style = useStore($backgroundStyle);
+          return (!on || style === "none") && "Turn on Pulse to the Beat first.";
+        },
+        Control: ({ disabled, label }) => (
+          <Select
+            label={label}
+            value={useStore($beatPulseStrength)}
+            options={["subtle", "normal", "strong"]}
+            labels={["Subtle", "Normal", "Strong"]}
+            onChange={(v) => $beatPulseStrength.set(v as BeatPulseStrength)}
+            disabled={disabled}
+          />
+        ),
+      },
+      {
+        id: "ruythaSpotlight",
+        label: "Spotlight Ruytha's Syncs",
+        description:
+          "Songs synced by Ruytha, who makes this fork, get shooting stars across the background, a banner when they start, and a ring around Ruytha in the credits.",
+        keywords: "ruytha spotlight shooting stars banner credits effect fork",
+        Control: ({ label }) => (
+          <Toggle label={label} checked={useStore($ruythaSpotlight)} onChange={(v) => $ruythaSpotlight.set(v)} />
         ),
       },
       {

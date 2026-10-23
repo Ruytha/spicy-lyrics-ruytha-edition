@@ -3,7 +3,32 @@
 Changes in **Spicy Lyrics: Ruytha Edition**, newest first. Everything not listed here
 works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyrics).
 
-Installed copies update on their own the next time Spotify starts.
+Installed copies update on their own the next time Spotify starts, and the first start
+after an update shows what's new.
+
+## 2026-10-23, second update
+
+### Added
+
+- **Spotlight on Ruytha's syncs.** Songs synced by Ruytha, who makes this fork, greet
+  you with a banner, send shooting stars across the background on the beat, and ring
+  Ruytha's name in the credits. Turn it off under Settings → Background → **Spotlight
+  Ruytha's Syncs**.
+- **What's new.** After the fork updates, the first Spotify start shows the newest
+  changes from this changelog, once.
+- **AMLL lyric options.** Settings → Lyrics → AMLL Lyrics can turn off the blur on other
+  lines, the springy motion and the enlarged playing line, hide lines once they're sung,
+  and move the playing line to the middle of the page.
+- **Pulse Strength.** Choose Subtle, Normal or Strong for Pulse to the Beat under
+  Settings → Background.
+- **Timing overlay.** For syncers: Settings → Lyrics → For Syncers → **Timing Overlay**
+  shows the playback time to the millisecond, with the start and end of the line and
+  word playing. Click it to copy the time.
+- **Report a bug.** Settings → About has a button that opens a new GitHub issue for the
+  fork with your versions and main settings filled in. Nothing is sent until you submit
+  it.
+- **Back to the current line with L.** Press L on the lyrics page to jump back to the
+  line playing, same as the button.
 
 ## 2026-10-23
 

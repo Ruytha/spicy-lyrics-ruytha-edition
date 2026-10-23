@@ -6,7 +6,15 @@ import {
   type LyricLineMouseEvent,
   type LyricWord,
 } from "@applemusic-like-lyrics/core";
-import { $joinSplitWords, $lyricsRenderer } from "../../stores.ts";
+import {
+  $amllHidePassedLines,
+  $amllLyricsBlur,
+  $amllLyricsPosition,
+  $amllLyricsScale,
+  $amllLyricsSpring,
+  $joinSplitWords,
+  $lyricsRenderer,
+} from "../../stores.ts";
 import { PageContainer } from "../../../components/Pages/PageView.ts";
 import { SpotifyPlayer } from "../../../components/Global/SpotifyPlayer.ts";
 import { onAnimationFrame } from "../../AnimationFrameLoop.ts";
@@ -140,6 +148,32 @@ export function AmllScrollBack() {
   player.calcLayout(LayoutReason.PlaybackTick);
 }
 
+/** Where the playing line sits, as a fraction of the lyrics area's height. */
+const ALIGN_POSITIONS = { upper: 0.35, center: 0.5 };
+
+function applyPlayerOptions(instance: InstanceType<typeof LyricPlayer>) {
+  instance.setEnableBlur($amllLyricsBlur.get());
+  instance.setEnableSpring($amllLyricsSpring.get());
+  instance.setEnableScale($amllLyricsScale.get());
+  instance.setAlignPosition(ALIGN_POSITIONS[$amllLyricsPosition.get()] ?? ALIGN_POSITIONS.upper);
+  instance.setHidePassedLines($amllHidePassedLines.get());
+}
+
+for (const store of [
+  $amllLyricsBlur,
+  $amllLyricsSpring,
+  $amllLyricsScale,
+  $amllLyricsPosition,
+  $amllHidePassedLines,
+]) {
+  store.listen(() => {
+    if (!player) return;
+    applyPlayerOptions(player);
+    // Position changes only land on the next layout; do it now so a paused song moves too.
+    player.calcLayout(LayoutReason.PlaybackTick);
+  });
+}
+
 export function DisposeAmllLyrics() {
   PageContainer?.classList.remove(PAGE_CLASS);
   if (!player) return;
@@ -183,6 +217,7 @@ export function ApplyAmllLyrics(
   }
 
   const instance = new LyricPlayer();
+  applyPlayerOptions(instance);
   try {
     instance.setLyricLines(lines, SpotifyPlayer.GetPosition());
   } catch (err) {

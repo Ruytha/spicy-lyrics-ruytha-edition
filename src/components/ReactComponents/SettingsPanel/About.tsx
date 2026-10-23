@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import Session from "../../Global/Session.ts";
 import App from "../../../utils/app.ts";
 import { $spicyLyricsVersion } from "../../../utils/stores.ts";
+import { OpenBugReport } from "../../../utils/Ruytha/BugReport.ts";
+import { CHANGELOG_URL, FORK_URL, GetForkRelease } from "../../../utils/Ruytha/ForkRelease.ts";
 
 interface Link {
   label: string;
@@ -87,9 +89,17 @@ function ExternalArrow() {
   );
 }
 
+/** The fork's own row: its bugs go to its GitHub, not to Spicy Lyrics' Discord. */
+const FORK_LINKS = [
+  { label: "Report a bug", onClick: OpenBugReport },
+  { label: "Changelog", onClick: () => window.open(CHANGELOG_URL, "_blank") },
+  { label: "Ruytha Edition on GitHub", onClick: () => window.open(FORK_URL, "_blank") },
+];
+
 export default function About({ status }: { status: UpdateStatus }) {
   const version = useStore($spicyLyricsVersion);
   const build = App.isDev() ? "dev" : "public";
+  const forkRelease = GetForkRelease();
 
   return (
     <div className="sl-sp-about">
@@ -120,6 +130,20 @@ export default function About({ status }: { status: UpdateStatus }) {
         <span className="sl-sp-about-build">
           Build <span className="sl-sp-about-build-value">{build}</span>
         </span>
+        {forkRelease && (
+          <span className="sl-sp-about-build">
+            Ruytha Edition <span className="sl-sp-about-build-value">{forkRelease.name}</span>
+          </span>
+        )}
+      </div>
+
+      <div className="sl-sp-about-links">
+        {FORK_LINKS.map(({ label, onClick }) => (
+          <button key={label} type="button" className="sl-sp-about-link" onClick={onClick}>
+            <span>{label}</span>
+            <ExternalArrow />
+          </button>
+        ))}
       </div>
 
       <div className="sl-sp-about-links">

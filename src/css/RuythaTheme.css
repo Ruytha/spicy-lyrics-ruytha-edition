@@ -202,3 +202,20 @@ sl-generic-modal.SpicyLyricsModal .sl-modal {
   height: 34px;
   border-radius: 11px;
 }
+
+/* The fork's What's New list (utils/Ruytha/WhatsNew.tsx), inside Spicy's notice dialog. */
+.sl-notice .sl-whatsnew-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 1.15em;
+}
+
+.sl-notice .sl-whatsnew-list li::marker {
+  color: var(--ry-accent);
+}
+
+.sl-notice .sl-whatsnew-list strong {
+  color: var(--ry-text);
+  font-weight: 650;
+}

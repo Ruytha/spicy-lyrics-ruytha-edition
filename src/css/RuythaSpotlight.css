@@ -1,0 +1,128 @@
+/* Spotlight on songs synced by Ruytha (RuythaSpotlight.ts), for everyone using the fork. */
+
+/* Shooting stars: above the background layers (z-index auto), under the lyrics (4). */
+#SpicyLyricsPage .SL_RuythaSky {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* The arrival banner, top centre of the lyrics page, under the view controls. */
+.SL_RuythaBanner {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  z-index: 102;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px 10px 14px;
+  border-radius: 999px;
+  color: var(--ry-text, #eef1fa);
+  background:
+    linear-gradient(120deg, rgba(156, 199, 242, 0.22), rgba(255, 158, 203, 0.2)),
+    rgba(6, 10, 32, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(190, 205, 255, 0.2),
+    0 12px 30px rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  translate: -50% 0;
+  pointer-events: none;
+  animation: SL_RuythaBanner_In 0.7s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+.SL_RuythaBanner svg {
+  color: #ffd98a;
+  filter: drop-shadow(0 0 6px rgba(255, 217, 138, 0.7));
+}
+
+.SL_RuythaBanner_Title {
+  font-family: var(--ry-display, "Bricolage Grotesque", sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.SL_RuythaBanner_Name {
+  font-family: var(--ry-font, "Geist", sans-serif);
+  font-size: 0.85rem;
+  color: var(--ry-accent-3, #c9def5);
+}
+
+.SL_RuythaBanner.Leaving {
+  animation: SL_RuythaBanner_Out 0.6s ease both;
+}
+
+@keyframes SL_RuythaBanner_In {
+  from {
+    opacity: 0;
+    translate: -50% -16px;
+    scale: 0.92;
+  }
+}
+
+@keyframes SL_RuythaBanner_Out {
+  to {
+    opacity: 0;
+    translate: -50% -10px;
+  }
+}
+
+/* Ruytha's name in the credits: a slowly turning gradient ring and a "fork dev" tag. */
+@property --sl_ruytha-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.song-info-profile-section.IsRuytha {
+  position: relative;
+  isolation: isolate;
+}
+
+.song-info-profile-section.IsRuytha::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  padding: 1.5px;
+  border-radius: 999px;
+  background: conic-gradient(from var(--sl_ruytha-angle), #9cc7f2, #c9a4ff, #ff9ecb, #ffd98a, #9cc7f2);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  animation: SL_RuythaSync_Spin 4s linear infinite;
+  pointer-events: none;
+}
+
+.song-info-profile-section.IsRuytha::after {
+  content: "fork dev";
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #08142e;
+  background: linear-gradient(120deg, #9cc7f2, #ff9ecb);
+}
+
+@keyframes SL_RuythaSync_Spin {
+  to {
+    --sl_ruytha-angle: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .SL_RuythaBanner,
+  .SL_RuythaBanner.Leaving,
+  .song-info-profile-section.IsRuytha::before {
+    animation: none;
+  }
+}

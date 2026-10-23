@@ -12,5 +12,7 @@ export default defineConfig({
   devModeVarName: "__SLdev__m",
   esbuildOptions: {
     legalComments: "inline",
+    // CHANGELOG.md is bundled as text for the fork's What's New popup.
+    loader: { ".md": "text" },
   },
 });

@@ -1,0 +1,44 @@
+/* Timing readout for syncers (TimingOverlay.ts). Sits over the page's bottom-left corner. */
+.SL_TimingOverlay {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 102;
+  display: grid;
+  gap: 2px;
+  min-width: 15rem;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 14px;
+  text-align: left;
+  cursor: copy;
+  color: var(--ry-text, #eef1fa);
+  background: rgba(6, 10, 32, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 0 1px rgba(190, 205, 255, 0.13);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  pointer-events: auto;
+}
+
+.SL_TimingOverlay_Time {
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.SL_TimingOverlay_Row {
+  max-width: 26rem;
+  overflow: hidden;
+  font-size: 0.78rem;
+  color: var(--ry-muted, #9aa3bf);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.SL_TimingOverlay:hover {
+  background: rgba(10, 18, 52, 0.75);
+}
