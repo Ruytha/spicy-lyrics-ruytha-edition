@@ -179,6 +179,18 @@ sl-generic-modal.SpicyLyricsModal .sl-modal {
 }
 
 /* The NPV lyrics card is small; keep the button out of the way there. */
+/* The cover's side has the player controls (fullscreen, Cinema View, the popup), so with
+   the cover on the right the button moves to the left corner, clear of them. */
+#SpicyLyricsPage.NowBarSide__Right .SL_BackToLine {
+  right: auto;
+  left: 20px;
+}
+
+/* No lyrics showing (Cover Only, or a song without them): nothing to go back to. */
+#SpicyLyricsPage .ContentBox.LyricsHidden .SL_BackToLine {
+  display: none;
+}
+
 #SpicyLyricsPage.CardMode .SL_BackToLine {
   right: 10px;
   bottom: 10px;
@@ -205,11 +217,11 @@ sl-generic-modal.SpicyLyricsModal .sl-modal {
 }
 
 /* ─── Settings, Ruytha Edition layout ─────────────────────────────────────── */
-/* Each section gets its own tinted icon tile, like Apple's System Settings, so a section
-   can be found by colour before its name is read. */
+/* Each section's icon sits on a tile, like Apple's System Settings, all in the theme's
+   blue (people asked for one colour over a tile per section). */
 
 sl-generic-modal.SpicyLyricsModal .sl-sp {
-  --sl-tint: 156, 199, 242;
+  --sl-tint: 122, 166, 220;
 }
 
 sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon {
@@ -230,15 +242,6 @@ sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon svg {
   height: 14px;
 }
 
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="lyrics"] { --sl-tint: 255, 94, 122; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="background"] { --sl-tint: 94, 124, 255; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="cover"] { --sl-tint: 255, 149, 0; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="playback"] { --sl-tint: 52, 199, 89; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="interface"] { --sl-tint: 50, 173, 230; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="appearance"] { --sl-tint: 175, 82, 222; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="experiments"] { --sl-tint: 230, 168, 0; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="advanced"] { --sl-tint: 128, 134, 152; }
-sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab-icon[data-section="about"] { --sl-tint: 122, 166, 220; }
 
 sl-generic-modal.SpicyLyricsModal .sl-sp .sl-sp-tab {
   height: 38px;

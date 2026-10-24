@@ -1,5 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import Session from "../Global/Session.ts";
+import { InstallFontsIn } from "../../utils/Ruytha/PageOptions.ts";
+import { AttachMiddleScroll } from "./MiddleScroll.ts";
 import PageView, { PageContainer } from "../Pages/PageView.ts";
 import Fullscreen from "./Fullscreen.ts";
 import { NPVCardOwnsPage, DeRenderNPVCard, RequestNPVCardEvaluate } from "./NPVLyrics.ts";
@@ -328,6 +330,11 @@ const OpenPopupLyricsFlow = async () => {
   `.replace(/\s+/g, ' ').replace(/;\s*/g, ';').replace(/{\s*/g, '{').replace(/\s*}/g, '}').trim();
 
   currentPipWindow.document.head.appendChild(additionalStylingElement);
+
+  // Fonts loaded after the stylesheets above (Google fonts, the theme's, a font file) and
+  // middle-click scrolling don't come along by themselves.
+  InstallFontsIn(currentPipWindow.document);
+  AttachMiddleScroll(currentPipWindow.document);
 
   // The awaits above (requestWindow, the style fetch) leave room for the main
   // page to open, or for the user to close the still-empty window. Either way

@@ -161,10 +161,14 @@ export const $duetLinePadding = persistAtom<boolean>("duetLinePadding", true);
 export const $creditsFollowLastLine = persistAtom<boolean>("creditsFollowLastLine", false);
 export const $skipSpicyFont = persistAtom<boolean>("skipSpicyFont", false);
 // The page's font. Starts from the old Use System Font switch so nobody's font changes.
-export type LyricsFont = "spicy" | "system" | "sf" | "geist" | "inter" | "bricolage" | "poppins" | "custom";
+export type LyricsFont = "spicy" | "system" | "sf" | "geist" | "inter" | "bricolage" | "poppins" | "custom" | "file";
 export const $lyricsFont = persistAtom<LyricsFont>("lyricsFont", $skipSpicyFont.get() ? "system" : "spicy");
 // Any Google Fonts family name, used when the font is "custom".
 export const $customFontName = persistAtom<string>("customFontName", "");
+// The name of the font file picked for "file" (the file itself is in IndexedDB), and a
+// count that goes up with each new pick, so the page re-registers it.
+export const $fontFileName = persistAtom<string>("fontFileName", "");
+export const $fontFileVersion = atom<number>(0);
 export const $showNpvDynamicBg = persistAtom<boolean>("showNpvDynamicBg", true);
 // Never inject the lyrics card into the Now Playing sidebar at all.
 export const $disableNpvLyrics = persistAtom<boolean>("disableNpvLyrics", false);

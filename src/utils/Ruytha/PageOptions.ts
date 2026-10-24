@@ -16,11 +16,13 @@ import {
   $coverBlend,
   $coverOnlyMode,
   $customFontName,
+  $fontFileVersion,
   $lyricGlow,
   $lyricsFont,
   $skipSpicyFont,
   type LyricsFont,
 } from "../stores.ts";
+import { FONT_FILE_FAMILY, RegisterFontFile } from "./FontFile.ts";
 
 const GOOGLE_FONTS = "https://fonts.googleapis.com/css2";
 
@@ -34,6 +36,34 @@ const FONT_STACKS: Partial<Record<LyricsFont, { family: string; load?: string }>
 };
 
 const loadedFonts = new Map<string, Promise<boolean>>();
+// The CSS of each Google font loaded, by name, to copy into Popup Lyrics' window too.
+const fontCss = new Map<string, string>();
+
+function addFontCss(doc: Document, name: string, css: string) {
+  if ([...doc.querySelectorAll<HTMLStyleElement>("style[data-sl-font]")].some((s) => s.dataset.slFont === name)) return;
+  const style = doc.createElement("style");
+  style.dataset.slFont = name;
+  style.textContent = css;
+  doc.head.append(style);
+}
+
+/**
+ * Every font the page can use, in `doc`: the Google fonts loaded so far, the theme's own
+ * (Geist and Bricolage), and the font file. Popup Lyrics opens its own window, which only
+ * gets Spicy's stylesheets, so it calls this; so does applyFont, for a change while it's open.
+ */
+export function InstallFontsIn(doc: Document) {
+  if (doc === document) return;
+  for (const [name, css] of fontCss) addFontCss(doc, name, css);
+  for (const link of document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"][href^="https://fonts.googleapis.com"]')) {
+    if (doc.querySelector(`link[href="${CSS.escape(link.href)}"]`)) continue;
+    const copy = doc.createElement("link");
+    copy.rel = "stylesheet";
+    copy.href = link.href;
+    doc.head.append(copy);
+  }
+  if ($lyricsFont.get() === "file") void RegisterFontFile(doc);
+}
 
 /**
  * Load a Google Fonts family. Tries the weights the lyrics use, then the family's
@@ -53,10 +83,10 @@ function loadGoogleFont(name: string): Promise<boolean> {
       try {
         const res = await fetch(url);
         if (!res.ok) continue;
-        const style = document.createElement("style");
-        style.dataset.slFont = name;
-        style.textContent = await res.text();
-        document.head.append(style);
+        const css = await res.text();
+        fontCss.set(name, css);
+        addFontCss(document, name, css);
+        if (PageContainer) InstallFontsIn(PageContainer.ownerDocument);
         return true;
       } catch {
         // Offline or blocked: the next URL won't fare better.
@@ -69,13 +99,21 @@ function loadGoogleFont(name: string): Promise<boolean> {
   return request;
 }
 
-/** Whether the name looks like a font family, so nothing odd reaches the CSS. */
-const isSafeFamilyName = (name: string) => /^[\p{L}\p{N} _-]{1,64}$/u.test(name.trim());
+/**
+ * Whether the name can go in a quoted CSS family. Installed fonts have all sorts of names
+ * ("Gotham Rounded Bk", "Neue Haas Grotesk Display Pro 55 Rg"); only the characters that
+ * could end the quoted string or the declaration are turned away.
+ */
+const isSafeFamilyName = (name: string) => /^[^"'\\;{}<>]{1,80}$/u.test(name.trim());
 
 function applyFont(page: HTMLElement) {
   const font = $lyricsFont.get();
   let family: string | null = null;
-  if (font === "custom") {
+  if (font === "file") {
+    family = `"${FONT_FILE_FAMILY}"`;
+    void RegisterFontFile(document);
+    void RegisterFontFile(page.ownerDocument);
+  } else if (font === "custom") {
     const name = $customFontName.get().trim();
     if (name && isSafeFamilyName(name)) {
       family = `"${name}"`;
@@ -88,6 +126,7 @@ function applyFont(page: HTMLElement) {
       if (stack.load) void loadGoogleFont(stack.load);
     }
   }
+  InstallFontsIn(page.ownerDocument);
   page.classList.toggle("UseSpicyFont", font === "spicy" || (font === "custom" && !family));
   page.classList.toggle("SL_CustomFont", !!family);
   if (family) page.style.setProperty("--sl_font", family);
@@ -145,6 +184,7 @@ const withPage = (apply: (page: HTMLElement) => void) => () => {
 Global.Event.listen("page:open", applyAll);
 $lyricsFont.listen(withPage(applyFont));
 $customFontName.listen(withPage(applyFont));
+$fontFileVersion.listen(withPage(applyFont));
 // The old switch still works for anyone who reaches it some other way.
 $skipSpicyFont.listen((skip) => $lyricsFont.set(skip ? "system" : "spicy"));
 for (const store of [$bgBrightness, $bgSaturation, $bgContrast, $bgBloom, $lyricGlow]) {

@@ -3,12 +3,37 @@ import {
   $animationFpsCap,
   $animationFpsCapEnabled,
   $customFontName,
+  $fontFileName,
+  $fontFileVersion,
   $lyricsFont,
   type LyricsFont,
 } from "../../../utils/stores.ts";
 import { Select, Slider, TextInput, Toggle } from "./components.tsx";
 import { AppearanceIcon } from "./icons.tsx";
 import { ApplyAppleMusicLook } from "../../../utils/Ruytha/Presets.ts";
+import { SaveFontFile } from "../../../utils/Ruytha/FontFile.ts";
+import { toast } from "sonner";
+
+/** Asks for a font file, keeps it, and switches the page to it. */
+function pickFontFile() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".ttf,.otf,.woff,.woff2,font/*";
+  input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const saved = await SaveFontFile(file);
+      $fontFileName.set(saved.name);
+      $fontFileVersion.set($fontFileVersion.get() + 1);
+      $lyricsFont.set("file");
+      toast.success(`Using ${saved.name}`);
+    } catch (err) {
+      toast.error("Couldn't use that font", { description: (err as Error).message });
+    }
+  });
+  input.click();
+}
 import type { GroupDef, SectionDef } from "./model.ts";
 
 // Built once: the Control components must keep their identity across renders.
@@ -38,22 +63,39 @@ const groups: GroupDef[] = [
         id: "lyricsFont",
         label: "Font",
         description:
-          "The font for the lyrics and the song info. SF Pro only shows if it's installed; otherwise Segoe UI stands in. Custom takes any Google Fonts name.",
+          "The font for the lyrics and the song info. SF Pro only shows if it's installed; otherwise Segoe UI stands in. Custom takes a Google Fonts name or an installed font's name. From a File uses a font file you pick, without installing it.",
         keywords: "font typeface system custom google sf pro apple geist inter poppins bricolage spicy",
         Control: ({ label }) => (
           <Select
             label={label}
             value={useStore($lyricsFont)}
-            options={["spicy", "system", "sf", "geist", "inter", "bricolage", "poppins", "custom"]}
-            labels={["Spicy Lyrics", "Spotify's font", "SF Pro (Apple)", "Geist", "Inter", "Bricolage Grotesque", "Poppins", "Custom"]}
+            options={["spicy", "system", "sf", "geist", "inter", "bricolage", "poppins", "custom", "file"]}
+            labels={["Spicy Lyrics", "Spotify's font", "SF Pro (Apple)", "Geist", "Inter", "Bricolage Grotesque", "Poppins", "Custom", "From a File"]}
             onChange={(v) => $lyricsFont.set(v as LyricsFont)}
           />
         ),
       },
       {
+        id: "fontFile",
+        label: "Font File",
+        description: "A .ttf, .otf, .woff or .woff2 file. It's kept by Spotify, so the file can be moved or deleted afterwards.",
+        keywords: "font file upload ttf otf woff custom local",
+        reset: () => undefined,
+        useNote: () => {
+          const name = useStore($fontFileName);
+          return useStore($lyricsFont) === "file" && !!name && `Using ${name}.`;
+        },
+        Control: () => (
+          <button type="button" className="sl-sp-btn" onClick={pickFontFile}>
+            {useStore($fontFileName) ? "Change File" : "Choose File"}
+          </button>
+        ),
+      },
+      {
         id: "customFontName",
         label: "Custom Font",
-        description: "A font name from fonts.google.com, or one installed on this computer. Press Enter to apply.",
+        description:
+          "A font name from fonts.google.com, or the name of a font installed on this computer, as Windows' Fonts settings list it. Press Enter to apply.",
         keywords: "custom font google fonts name family",
         useDisabled: () => useStore($lyricsFont) !== "custom" && "Pick Custom under Font first.",
         Control: ({ disabled, label }) => (

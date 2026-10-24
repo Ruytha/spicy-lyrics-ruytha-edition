@@ -1660,10 +1660,16 @@ function ApplySideSwap() {
 
 // The side the page shows: the stored one, except that compact mode and the centred
 // no-lyrics layout always lay out on the left. The stored side is left alone, so it
-// comes back once they end.
+// comes back once they end. Cover Only keeps the stored side: it's centred either way,
+// and switching it off then doesn't send the cover sliding across.
 function ResolveNowBarSide(page: HTMLElement): "left" | "right" {
   if (page.classList.contains("CompactMode")) return "left";
-  if (page.querySelector(".ContentBox")?.classList.contains("LyricsHidden")) return "left";
+  if (
+    page.querySelector(".ContentBox")?.classList.contains("LyricsHidden") &&
+    !page.classList.contains("SL_CoverOnly")
+  ) {
+    return "left";
+  }
   return $nowBarSide.get() === "right" ? "right" : "left";
 }
 

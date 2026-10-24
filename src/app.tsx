@@ -14,6 +14,7 @@ import "./css/font-pack/font-pack.css";
 import "./css/RuythaTheme.css";
 import "./components/Utils/BackToLineButton.ts";
 import "./components/Utils/TimingOverlay.ts";
+import "./components/Utils/MiddleScroll.ts";
 import "./components/DynamicBG/RuythaSpotlight.ts";
 import "./components/DynamicBG/AnimatedCover.ts";
 import "./utils/Ruytha/PageOptions.ts";

@@ -8,6 +8,7 @@ import {
   type RenderQuality,
 } from "../../utils/stores.ts";
 import Logger from "../../utils/Logger.ts";
+import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
 
 const amllBgLogger = new Logger("AMLL Background");
 
@@ -25,6 +26,11 @@ const AMLL_PAUSED_FPS = 15;
 export const AMLLBackgroundMap = new Map<string, AMLLBackgroundInstance>();
 
 let amllInitFailed = false;
+
+/** Popup Lyrics is open: its window keeps showing the page while Spotify's is minimised. */
+const popupOpen = (): boolean => !!(globalThis as any).documentPictureInPicture?.window;
+/** Nothing of the page is on screen, so the mesh can stop. */
+const offScreen = (): boolean => document.hidden && !popupOpen();
 let animationSpeed = 1;
 let playbackPaused = false;
 
@@ -67,7 +73,7 @@ export function CreateAMLLBackground(): AMLLBackgroundInstance | null {
   // BackgroundRender pins z-index: -1, which would put it behind the page's own background.
   canvas.style.zIndex = "";
   applySettings(instance);
-  if (document.hidden) instance.pause();
+  if (offScreen()) instance.pause();
   return instance;
 }
 
@@ -140,13 +146,24 @@ $animationFpsCap.listen(applySettingsToAll);
 $animationFpsCapEnabled.listen(applySettingsToAll);
 $bgRenderQuality.listen(applySettingsToAll);
 
-// AMLL runs its own frame loop, so stop it outright while Spotify is hidden.
+// AMLL runs its own frame loop, so stop it outright while nothing of the page shows.
 document.addEventListener("visibilitychange", () => {
   AMLLBackgroundMap.forEach((instance) => {
-    if (document.hidden) {
+    if (offScreen()) {
       instance.pause();
     } else {
       instance.resume();
     }
+  });
+});
+
+// AMLL schedules its frames on Spotify's main window, which gets none while minimised, even
+// with the popup showing the page. Then the popup's frames (the shared loop runs on them)
+// drive it instead. Its own pending frame stays queued and takes over again on restore.
+onAnimationFrame(() => {
+  if (!document.hidden || !popupOpen()) return;
+  const now = performance.now();
+  AMLLBackgroundMap.forEach((instance) => {
+    (instance as unknown as { renderer?: { onTickBinded?: (t: number) => void } }).renderer?.onTickBinded?.(now);
   });
 });

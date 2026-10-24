@@ -1,0 +1,49 @@
+/* Middle-click autoscroll (components/Utils/MiddleScroll.ts): a small disc where the wheel
+   was pressed, with arrows; the one for the way it's scrolling lights up. */
+
+html.SL_MiddleScrolling,
+html.SL_MiddleScrolling * {
+  cursor: ns-resize !important;
+}
+
+.SL_MiddleScrollMarker {
+  position: fixed;
+  z-index: 2147483000;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: rgba(16, 18, 30, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.SL_MiddleScrollMarker::before,
+.SL_MiddleScrollMarker::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 0;
+  height: 0;
+  margin-left: -4px;
+  border: 4px solid transparent;
+  opacity: 0.55;
+  transition: opacity 0.12s ease;
+}
+
+.SL_MiddleScrollMarker::before {
+  top: 3px;
+  border-bottom: 5px solid #fff;
+}
+
+.SL_MiddleScrollMarker::after {
+  bottom: 3px;
+  border-top: 5px solid #fff;
+}
+
+.SL_MiddleScrollMarker[data-direction="up"]::before,
+.SL_MiddleScrollMarker[data-direction="down"]::after {
+  opacity: 1;
+}

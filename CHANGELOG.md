@@ -6,6 +6,33 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-24
+
+### Added
+
+- **Middle-click scrolling.** Press the mouse wheel on the lyrics and move the pointer up
+  or down to scroll, faster the further it goes, like in a browser. A quick click keeps
+  it going until the next click; holding and dragging stops on release.
+- **Fonts from a file.** Settings → Appearance → Font → **From a File** uses a .ttf, .otf,
+  .woff or .woff2 you pick, without installing it on the computer. The Custom font field
+  also takes more installed-font names now.
+
+### Changed
+
+- **Settings icons in one colour.** The section icons all use the theme's blue.
+
+### Fixed
+
+- Cover Only in Cinema View and fullscreen hid the lyrics but left the cover in its
+  corner. It now moves to the middle and grows, like on the normal page.
+- Turning Cover Only on or off sent the cover sliding to the left when it was on the
+  right. It keeps its side now.
+- The back-to-the-line button sat over the player controls when the cover was on the
+  right; it moves to the left corner then. It also hides while the lyrics are hidden.
+- Popup Lyrics showed Spotify's font instead of the one picked in Settings.
+- Popup Lyrics' AMLL background and Apple Music covers stopped while Spotify's main window
+  was hidden.
+
 ## 2026-10-23, fourth update
 
 ### Added

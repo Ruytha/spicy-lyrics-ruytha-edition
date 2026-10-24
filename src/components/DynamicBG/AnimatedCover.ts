@@ -167,12 +167,14 @@ function syncAmbient() {
   SetKawarpSuspended(PAGE_BACKGROUND_KEY, show);
   const amll = AMLLBackgroundMap.get(PAGE_BACKGROUND_KEY);
   if (show) amll?.pause();
-  else if (!document.hidden) amll?.resume();
+  else if (!page?.ownerDocument.hidden) amll?.resume();
 }
 
 function syncPlayback() {
   if (!video) return;
-  if (SpotifyPlayer.IsPlaying && !document.hidden && !stageShowing()) {
+  // The video's own document: the popup's when Popup Lyrics is open, which stays on screen
+  // while Spotify's main window is minimised.
+  if (SpotifyPlayer.IsPlaying && !video.ownerDocument.hidden && !stageShowing()) {
     video.play().catch(() => undefined);
   } else {
     video.pause();
