@@ -98,6 +98,12 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated.Active .sl-modal::b
     0 26px 60px rgba(0, 0, 0, 0.55);
 }
 
+/* Peeking clears the glass so the lyrics behind show (settings-panel.css), but only its
+   colour, blur and shadow; the sky painted above would still cover them. */
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.Active[data-peek] .sl-modal.slmodal-settingsPanel::before {
+  background-image: none;
+}
+
 sl-generic-modal.SpicyLyricsModal .sl-modal-title,
 .slmodal-settingsPanel .sl-modal-header h1 {
   font-family: var(--ry-display);
