@@ -39,7 +39,14 @@ export class BackgroundAnimationController {
     private readonly BEAT_PULSE_MAX = 1.5;
     private readonly BEAT_PULSE_DECAY = 5.0;
     private readonly MIN_BEAT_CONFIDENCE = 0.4;
-    
+
+    // Beat-driven motion: a slower drift between beats and a bigger, longer kick on each
+    // one, so the speed visibly swings with the music.
+    private readonly DRIVEN_RESTING_FACTOR = 0.55;
+    private readonly DRIVEN_BEAT_PULSE_MAX = 2.6;
+    private readonly DRIVEN_BEAT_PULSE_DECAY = 3.5;
+    private readonly DRIVEN_MAX_SPEED = 3.5;
+
     /**
      * Finds the active element in a time-based array (Sections, Beats, Segments)
      */
@@ -62,9 +69,10 @@ export class BackgroundAnimationController {
      * Calculates the dynamic speed multiplier for the current frame
      * * @param currentTime Current playback time of the song in seconds
      * @param data The parsed audio analysis JSON object
+     * @param beatDriven Widen the swing: slower between beats, faster on them
      * @returns A float multiplier (e.g., 1.0 is normal, 2.5 is very fast, 0.5 is slow)
      */
-    public getSpeedMultiplier(currentTime: number, data: AudioAnalysisData): number {
+    public getSpeedMultiplier(currentTime: number, data: AudioAnalysisData, beatDriven = false): number {
         let currentSpeed = 1.0;
 
         const currentSection = this.getActiveElement(data.sections, currentTime);
@@ -77,12 +85,16 @@ export class BackgroundAnimationController {
             currentSpeed = (data.track.tempo / this.BASE_TEMPO) * this.getLoudnessFactor(data.track.loudness);
         }
 
+        if (beatDriven) currentSpeed *= this.DRIVEN_RESTING_FACTOR;
+
         const currentBeat = this.getActiveElement(data.beats, currentTime);
         if (currentBeat && currentBeat.confidence > this.MIN_BEAT_CONFIDENCE) {
             const progressIntoBeat = (currentTime - currentBeat.start) / currentBeat.duration;
-            const pulseDecay = Math.exp(-this.BEAT_PULSE_DECAY * progressIntoBeat);
-            const beatPulseAddition = this.BEAT_PULSE_MAX * pulseDecay * currentBeat.confidence;
-            
+            const decayRate = beatDriven ? this.DRIVEN_BEAT_PULSE_DECAY : this.BEAT_PULSE_DECAY;
+            const pulseMax = beatDriven ? this.DRIVEN_BEAT_PULSE_MAX : this.BEAT_PULSE_MAX;
+            const pulseDecay = Math.exp(-decayRate * progressIntoBeat);
+            const beatPulseAddition = pulseMax * pulseDecay * currentBeat.confidence;
+
             currentSpeed += beatPulseAddition;
         }
 
@@ -94,6 +106,6 @@ export class BackgroundAnimationController {
             }
         } */
 
-        return Math.max(0.1, Math.min(currentSpeed, 3.0));
+        return Math.max(0.1, Math.min(currentSpeed, beatDriven ? this.DRIVEN_MAX_SPEED : 3.0));
     }
 }

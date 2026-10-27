@@ -166,6 +166,13 @@ export const EXPERIMENTS = [
     default: true,
     pageClass: "Exp_DockMenu",
   },
+  {
+    id: "beatDrivenMotion",
+    label: "Beat-Driven Background Motion",
+    description:
+      "The background moves faster on each beat of the song and drifts slower in between, so its motion follows the music more closely. Disable to restore the previous, steadier speed changes.",
+    default: true,
+  },
 ] as const satisfies readonly Experiment[];
 
 /** A registry entry, narrowed to its literal `id`. */
