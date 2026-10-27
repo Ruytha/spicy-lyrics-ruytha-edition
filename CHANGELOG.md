@@ -6,6 +6,38 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-27
+
+### Added
+
+- **Controls menu.** The lyrics page buttons fold behind one glass button that opens a
+  menu, one labelled row per action, with a tick on the ones that are on. It opens
+  toward whichever side has room, and closes on a click outside or Escape. Settings →
+  Experiments → **Controls Menu** brings the row of buttons back.
+- **Single Line Mode.** Settings → Lyrics → **Single Line Mode** shows only the line being
+  sung and hides the rest, leaving the screen empty between lines. Unsynced lyrics still
+  show in full.
+- **Prefer the Animated Cover.** With Moving Artwork set to Spotify Canvas, Settings →
+  Cover → **Prefer the Animated Cover** plays an album's Apple Music animated cover
+  instead of the song's Canvas. Songs from albums without one keep their Canvas.
+- **Copy Debug Info.** Settings → Advanced → **Copy Debug Info** copies versions, settings,
+  the playing song and recent errors, to paste into a bug report. Nothing is sent
+  anywhere and no account details are included.
+
+### Changed
+
+- **The background moves with the beat.** It speeds up on each beat and drifts slower in
+  between, so its motion follows the music. Settings → Experiments → **Beat-Driven
+  Background Motion** turns it off.
+
+### Fixed
+
+- Duet lines from TTML files sat on the main side. Lines sung by the second singer (v2)
+  now go on the duet side, in line-synced files too, and in files that don't list their
+  singers.
+- Holding the eye button in Settings didn't show the lyrics behind the panel; the starry
+  background stayed in front.
+
 ## 2026-10-24
 
 ### Added

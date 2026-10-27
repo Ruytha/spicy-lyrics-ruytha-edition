@@ -83,6 +83,11 @@ export function ResetSetting(key: string): boolean {
 }
 
 /** The saved settings as JSON, for a backup file. */
+/** A copy of every saved setting (those changed from their default at some point), by key. */
+export function GetSavedSettings(): Record<string, unknown> {
+  return { ..._settings };
+}
+
 export function ExportSettings(): string {
   return JSON.stringify({ format: "spicy-lyrics-ruytha-settings", version: 1, settings: _settings }, null, 2);
 }
@@ -144,6 +149,8 @@ export const $lyricGlow = persistAtom<number>("lyricGlow", 100);
 export const $animatedCovers = persistAtom<boolean>("animatedCovers", true);
 // While an Apple Music animated cover plays, the page background is drawn from it.
 export const $coverMotionBackground = persistAtom<boolean>("coverMotionBackground", true);
+// With Canvas Stage on, an album with an Apple Music animated cover plays that instead of the Canvas.
+export const $preferAnimatedCover = persistAtom<boolean>("preferAnimatedCover", false);
 export const $coverBeatPulse = persistAtom<boolean>("coverBeatPulse", false);
 export const $coverBlend = persistAtom<boolean>("coverBlend", false);
 export const $coverOnlyMode = persistAtom<boolean>("coverOnlyMode", false);

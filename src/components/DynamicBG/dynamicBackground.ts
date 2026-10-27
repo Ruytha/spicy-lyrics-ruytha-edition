@@ -886,7 +886,13 @@ Global.Event.listen("playback:progress", async () => {
   if (SpotifyPlayer.GetUri() !== songUri || latestPlaybackTrackUri !== songUri) return;
 
   pruneAudioAnalysisCache(songUri);
-  setAnimationSpeed(animSpeedController.getSpeedMultiplier(SpotifyPlayer.GetPosition() / 1000, audioAnalysisData));
+  setAnimationSpeed(
+    animSpeedController.getSpeedMultiplier(
+      SpotifyPlayer.GetPosition() / 1000,
+      audioAnalysisData,
+      isExperimentEnabled("beatDrivenMotion")
+    )
+  );
 });
 
 // ─── Beat pulse ──────────────────────────────────────────────────────────────

@@ -158,6 +158,21 @@ export const EXPERIMENTS = [
     default: true,
     pageClass: "Exp_KeepOverlappingLines",
   },
+  {
+    id: "dockMenu",
+    label: "Controls Menu",
+    description:
+      "The lyrics page controls fold behind a single button that opens a glass menu, one labelled row per action. Disable to show every control in the dock at all times.",
+    default: true,
+    pageClass: "Exp_DockMenu",
+  },
+  {
+    id: "beatDrivenMotion",
+    label: "Beat-Driven Background Motion",
+    description:
+      "The background moves faster on each beat of the song and drifts slower in between, so its motion follows the music more closely. Disable to restore the previous, steadier speed changes.",
+    default: true,
+  },
 ] as const satisfies readonly Experiment[];
 
 /** A registry entry, narrowed to its literal `id`. */

@@ -533,14 +533,14 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
   const Agents = ttml.tt.head?.metadata?.["ttm:agent"];
   const PostAgents = toArray(Agents).filter((agent): agent is TtmlAgent => agent != null && typeof agent === 'object');
 
-  const isOppositeAlignedAgent = (agent: TtmlAgent): boolean => {
-    const agentId = agent["xml:id"];
+  const isOppositeAlignedId = (agentId: string | undefined): boolean => {
     // v1 is always the main vocal track
     if (agentId === "v1") return false;
     // v2000 and v2 are usually OppositeAligned
     if (agentId === "v2000" || agentId === "v2") return true;
     return false;
   };
+  const isOppositeAlignedAgent = (agent: TtmlAgent): boolean => isOppositeAlignedId(agent["xml:id"]);
 
   const TrackAgents: TrackAgent[] = PostAgents.map((agent) => {
     return {
@@ -549,6 +549,19 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
       OppositeAligned: isOppositeAlignedAgent(agent)
     }
   });
+
+  // The singer a line belongs to: its own agent, else its div's, else the body's. An agent
+  // the head doesn't declare (common in hand-made files) is judged by its id alone, so
+  // v2 lines still go on the duet side.
+  const isOppositeLine = (p: TtmlPNode, div: { "ttm:agent"?: string } | undefined): boolean => {
+    const pAgentId =
+      (p != null && typeof p === 'object' ? p["ttm:agent"] : undefined) ||
+      div?.["ttm:agent"] ||
+      ttml.tt.body["ttm:agent"];
+    if (!pAgentId) return false;
+    const trackAgent = TrackAgents.find((a) => a.Id === pAgentId);
+    return trackAgent ? trackAgent.OppositeAligned : isOppositeAlignedId(pAgentId);
+  };
 
   switch (lyricsType) {
     case 'Static': {
@@ -594,7 +607,7 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
       ttmlLogger.debug('Processing line-synced lyrics');
       const transliterationLineTexts = extractTransliterationLineTexts(ttmlInput);
 
-      const buildLine = (p: TtmlPNode): ParsedLineVocal => {
+      const buildLine = (p: TtmlPNode, div: (typeof divs)[number]): ParsedLineVocal => {
         const pSpans = p != null && typeof p === 'object' && p.span ? toArray(p.span) : [];
         const vocalSpans = pSpans.filter(isVocalSpan);
         const begin = (typeof p === 'object' ? p?.begin : undefined) ?? vocalSpans[0]?.begin;
@@ -602,7 +615,7 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
 
         const line: ParsedLineVocal = {
           Type: 'Vocal',
-          OppositeAligned: false,
+          OppositeAligned: isOppositeLine(p, div),
           Text: getLineText(p),
           StartTime: convertTimeToSeconds(begin),
           EndTime: convertTimeToSeconds(end),
@@ -644,7 +657,7 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
 
       const timedDivs = divs.filter((div) => div["itunes:songPart"] !== "Instrumental");
       lineLyrics.Content = timedDivs
-        .flatMap((div) => toArray(div.p).filter((p) => p != null).map(buildLine))
+        .flatMap((div) => toArray(div.p).filter((p) => p != null).map((p) => buildLine(p, div)))
         .filter((line) => HasRenderableText(line));
 
       const firstDiv = timedDivs[0] ?? divs[0];
@@ -678,9 +691,7 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
         const ps = toArray(div.p);
         ps.forEach((p) => {
           if (!p || typeof p !== 'object') return;
-          const pAgentId = p["ttm:agent"] || div["ttm:agent"] || ttml.tt.body["ttm:agent"];
-          const trackAgent = pAgentId ? TrackAgents.find((a) => a.Id === pAgentId) : undefined;
-          const isOpposite = trackAgent ? trackAgent.OppositeAligned : false;
+          const isOpposite = isOppositeLine(p, div);
           const lineKey = p['itunes:key'];
           const lineTranslitEntry = lineKey ? Transliterations?.get(lineKey) : undefined;
           const lineTranslit = lineTranslitEntry?.spans;
