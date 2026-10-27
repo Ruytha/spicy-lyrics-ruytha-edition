@@ -76,6 +76,7 @@ import Logger from "../../utils/Logger.ts";
 import { setStockPlaybarPage } from "../../utils/themeMatcher.ts";
 import {
   ApplyExperimentClasses,
+  isExperimentEnabled,
   onExperimentChange,
   onExperimentDefinitionChange,
 } from "../../utils/experiments.ts";
@@ -508,6 +509,121 @@ Global.Event.listen("lyrics:apply", ({ Type }: { Type: string }) => {
   setTimeout(() => triggerRemeasureLV(), 1500);
 });
 
+function DestroyViewControlTooltips() {
+  Object.keys(Tooltips).forEach((key) => {
+    const tippy = Tooltips[key as keyof typeof Tooltips];
+    if (tippy?.destroy && typeof tippy.destroy === "function") {
+      tippy.destroy();
+      Tooltips[key as keyof typeof Tooltips] = null;
+    }
+  });
+}
+
+/** Closes the open controls menu and drops its document listeners; null while closed. */
+let closeDockMenu: (() => void) | null = null;
+/** Whether the controls were last built as the menu; null before the first build. */
+let dockBuiltAsMenu: boolean | null = null;
+
+/**
+ * The controls menu (dockMenu experiment): the toggle opens the menu toward whichever
+ * side of the window has more room, nudged sideways to stay inside it. Clicking a row,
+ * clicking outside, Escape, or a rebuild of the controls closes it.
+ */
+function SetupDockMenu(controls: HTMLElement) {
+  const toggle = controls.querySelector<HTMLButtonElement>("#DockMenuToggle");
+  const menu = controls.querySelector<HTMLElement>(".SL_DockMenu");
+  if (!toggle || !menu) return;
+  const doc = controls.ownerDocument;
+  const win = doc.defaultView ?? window;
+  const items = () => Array.from(menu.querySelectorAll<HTMLElement>("[role^='menuitem']"));
+
+  const close = (refocus = false) => {
+    controls.removeAttribute("data-menu-open");
+    toggle.setAttribute("aria-expanded", "false");
+    doc.removeEventListener("pointerdown", onOutsidePointer, true);
+    doc.removeEventListener("keydown", onKey, true);
+    closeDockMenu = null;
+    if (refocus) toggle.focus();
+  };
+
+  const onOutsidePointer = (event: PointerEvent) => {
+    if (!controls.contains(event.target as Node)) close();
+  };
+
+  const onKey = (event: KeyboardEvent) => {
+    if (event.key === "Escape") {
+      // Keeps Escape from also leaving Fullscreen or the page.
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      close(true);
+      return;
+    }
+    if (event.key === "Tab") {
+      close();
+      return;
+    }
+    const list = items();
+    const at = list.indexOf(doc.activeElement as HTMLElement);
+    const next =
+      event.key === "ArrowDown"
+        ? list[(at + 1) % list.length]
+        : event.key === "ArrowUp"
+          ? list[(at - 1 + list.length) % list.length]
+          : event.key === "Home"
+            ? list[0]
+            : event.key === "End"
+              ? list[list.length - 1]
+              : null;
+    if (!next) return;
+    event.preventDefault();
+    next.focus();
+  };
+
+  const open = (viaKeyboard: boolean) => {
+    closeDockMenu?.();
+    const rect = toggle.getBoundingClientRect();
+    controls.dataset.menuDir = rect.top + rect.height / 2 > win.innerHeight / 2 ? "up" : "down";
+    controls.style.setProperty("--dock-menu-shift", "0px");
+    controls.setAttribute("data-menu-open", "");
+    toggle.setAttribute("aria-expanded", "true");
+
+    // offsetWidth, not the bounding rect: the opening scale would shrink the rect.
+    const width = menu.offsetWidth;
+    const centre = rect.left + rect.width / 2;
+    const margin = 12;
+    const left = centre - width / 2;
+    const shift =
+      left < margin
+        ? margin - left
+        : left + width > win.innerWidth - margin
+          ? win.innerWidth - margin - (left + width)
+          : 0;
+    controls.style.setProperty("--dock-menu-shift", `${Math.round(shift)}px`);
+
+    doc.addEventListener("pointerdown", onOutsidePointer, true);
+    doc.addEventListener("keydown", onKey, true);
+    closeDockMenu = () => close();
+    if (viaKeyboard) items()[0]?.focus();
+  };
+
+  toggle.addEventListener("click", (event) => {
+    if (controls.hasAttribute("data-menu-open")) close();
+    // detail is 0 for a click made with Enter or Space.
+    else open(event.detail === 0);
+  });
+
+  toggle.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    event.preventDefault();
+    if (!controls.hasAttribute("data-menu-open")) open(true);
+  });
+
+  // A row's own handler runs first (bound in SetupTippy); this only puts the menu away.
+  menu.addEventListener("click", (event) => {
+    if ((event.target as HTMLElement).closest("[role^='menuitem']")) close();
+  });
+}
+
 function AppendViewControls(ReAppend: boolean = false) {
   if (IsCardMode) return;
   if (!PageContainer) return;
@@ -517,14 +633,9 @@ function AppendViewControls(ReAppend: boolean = false) {
   );
   if (!elem) return;
 
-  // Safely destroy existing tooltips first
-  Object.keys(Tooltips).forEach((key) => {
-    const tippy = Tooltips[key as keyof typeof Tooltips];
-    if (tippy?.destroy && typeof tippy.destroy === "function") {
-      tippy.destroy();
-      Tooltips[key as keyof typeof Tooltips] = null;
-    }
-  });
+  DestroyViewControlTooltips();
+  // A rebuild replaces the menu's contents, so drop the open one and its listeners.
+  closeDockMenu?.();
 
   if (ReAppend) elem.innerHTML = "";
   const isNoLyrics =
@@ -532,33 +643,57 @@ function AppendViewControls(ReAppend: boolean = false) {
   const isTTMLMakerMode = $ttmlMakerMode.get();
   // The dock (RuythaDock.css): what the page shows, then what it does with the lyrics,
   // then settings and close, each group split by a hairline. Empty groups drop out.
+  // With the dockMenu experiment the same buttons become labelled rows of a menu
+  // behind one button; the handlers below find them either way.
   const inFullscreen = Fullscreen.IsOpen || Fullscreen.CinemaViewOpen;
-  const button = (id: string, icon: string, pressed?: boolean) =>
-    `<button id="${id}" class="ViewControl"${pressed === undefined ? "" : ` aria-pressed="${pressed}"`}>${icon}</button>`;
+  const asMenu = isExperimentEnabled("dockMenu");
+  dockBuiltAsMenu = asMenu;
+  const button =(id: string, icon: string, label: string, pressed?: boolean, extraClass = "") => {
+    const className = `ViewControl${extraClass ? ` ${extraClass}` : ""}`;
+    if (!asMenu) {
+      return `<button id="${id}" class="${className}"${pressed === undefined ? "" : ` aria-pressed="${pressed}"`}>${icon}</button>`;
+    }
+    const role =
+      pressed === undefined ? `role="menuitem"` : `role="menuitemcheckbox" aria-checked="${pressed}"`;
+    return `<button id="${id}" class="${className}" ${role} tabindex="-1">${icon}<span class="SL_DockLabel">${label}</span>${pressed ? `<span class="SL_DockCheck">${DockIcons.Check}</span>` : ""}</button>`;
+  };
   const viewGroup = [
-    !inFullscreen && !IsPIP ? button("CinemaView", DockIcons.CinemaView) : "",
+    !inFullscreen && !IsPIP ? button("CinemaView", DockIcons.CinemaView, "Cinema View") : "",
     Fullscreen.IsOpen && !IsPIP
-      ? button("FullscreenToggle", Fullscreen.CinemaViewOpen ? DockIcons.Fullscreen : DockIcons.CloseFullscreen)
+      ? button(
+          "FullscreenToggle",
+          Fullscreen.CinemaViewOpen ? DockIcons.Fullscreen : DockIcons.CloseFullscreen,
+          Fullscreen.CinemaViewOpen ? "Fullscreen" : "Exit Fullscreen"
+        )
       : "",
     inFullscreen && !IsPIP
-      ? button("CompactModeToggle", IsCompactMode() ? DockIcons.DisableCompactMode : DockIcons.EnableCompactMode)
+      ? button(
+          "CompactModeToggle",
+          IsCompactMode() ? DockIcons.DisableCompactMode : DockIcons.EnableCompactMode,
+          "Compact Mode",
+          IsCompactMode()
+        )
       : "",
-    !inFullscreen && !IsPIP ? button("NowBarToggle", DockIcons.NowBar, NowBarObj.Open) : "",
-    NowBarObj.Open && !IsPIP ? button("NowBarSideToggle", DockIcons.NowBarSideSwap) : "",
-    !IsPIP ? button("CoverOnlyToggle", DockIcons.CoverOnly, $coverOnlyMode.get()) : "",
+    !inFullscreen && !IsPIP ? button("NowBarToggle", DockIcons.NowBar, "NowBar", NowBarObj.Open) : "",
+    NowBarObj.Open && !IsPIP ? button("NowBarSideToggle", DockIcons.NowBarSideSwap, "Swap NowBar Side") : "",
+    !IsPIP ? button("CoverOnlyToggle", DockIcons.CoverOnly, "Cover Only", $coverOnlyMode.get()) : "",
   ].join("");
   const lyricsGroup = [
-    button("RomanizationToggle", DockIcons.Romanization, isRomanized),
-    isTTMLMakerMode ? button("LyricsManager", DockIcons.LyricsManager) : "",
-    button("ClearCurrentCache", DockIcons.ClearCache),
+    button("RomanizationToggle", DockIcons.Romanization, "Romanization", isRomanized),
+    isTTMLMakerMode ? button("LyricsManager", DockIcons.LyricsManager, "Lyrics Manager") : "",
+    button("ClearCurrentCache", DockIcons.ClearCache, "Clear Cached Lyrics"),
   ].join("");
   const appGroup = [
-    !IsPIP ? button("SettingsToggle", DockIcons.Settings) : "",
-    `<button id="Close" class="ViewControl SL_DockClose">${DockIcons.Close}</button>`,
+    !IsPIP ? button("SettingsToggle", DockIcons.Settings, "Settings") : "",
+    button("Close", DockIcons.Close, "Close Page", undefined, "SL_DockClose"),
   ].join("");
-  elem.innerHTML = [viewGroup, lyricsGroup, appGroup]
-    .filter(Boolean)
-    .join(`<span class="SL_DockDivider" aria-hidden="true"></span>`);
+  const groups = [viewGroup, lyricsGroup, appGroup].filter(Boolean);
+  elem.innerHTML = asMenu
+    ? `<button id="DockMenuToggle" class="ViewControl SL_DockMenuToggle" aria-haspopup="menu" aria-expanded="false" aria-label="Controls">${DockIcons.More}</button>` +
+      `<div class="SL_DockMenu" role="menu" aria-label="Lyrics page controls">${groups.join(
+        `<span class="SL_DockMenuSeparator" role="separator"></span>`
+      )}</div>`
+    : groups.join(`<span class="SL_DockDivider" aria-hidden="true"></span>`);
 
   let targetElem: HTMLElement | null = elem;
   if (Fullscreen.IsOpen) {
@@ -587,6 +722,11 @@ function AppendViewControls(ReAppend: boolean = false) {
 
   if (targetElem) {
     SetupTippy(targetElem);
+    if (asMenu) {
+      // Every row carries its own label, so hover tooltips would only repeat it.
+      DestroyViewControlTooltips();
+      SetupDockMenu(targetElem);
+    }
   }
 
   function SetupTippy(elem: HTMLElement) {
@@ -903,6 +1043,8 @@ $showVolumeSlider.listen((v) => {
 onExperimentChange((experiment) => {
   if (!PageContainer) return;
   ApplyExperimentClasses(PageContainer);
+  // The controls are built as a dock or as a menu, so build them again.
+  if (experiment.id === "dockMenu") AppendViewControls(true);
   // Its letter split and word springs are fixed when the lyrics are built, so rebuild them.
   if (experiment.id === "refreshedSimpleLyrics" && $simpleLyricsMode.get()) {
     const uri = SpotifyPlayer.GetUri();
@@ -913,6 +1055,10 @@ onExperimentChange((experiment) => {
 onExperimentDefinitionChange(() => {
   if (!PageContainer) return;
   ApplyExperimentClasses(PageContainer);
+  // A remote default or forceState can flip the menu without a stored value changing.
+  if (dockBuiltAsMenu !== null && isExperimentEnabled("dockMenu") !== dockBuiltAsMenu) {
+    AppendViewControls(true);
+  }
 });
 
 $viewControlsPosition.listen((v) => {

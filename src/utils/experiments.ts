@@ -158,6 +158,14 @@ export const EXPERIMENTS = [
     default: true,
     pageClass: "Exp_KeepOverlappingLines",
   },
+  {
+    id: "dockMenu",
+    label: "Controls Menu",
+    description:
+      "The lyrics page controls fold behind a single button that opens a glass menu, one labelled row per action. Disable to show every control in the dock at all times.",
+    default: true,
+    pageClass: "Exp_DockMenu",
+  },
 ] as const satisfies readonly Experiment[];
 
 /** A registry entry, narrowed to its literal `id`. */
