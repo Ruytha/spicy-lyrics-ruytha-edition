@@ -149,6 +149,8 @@ export const $coverBlend = persistAtom<boolean>("coverBlend", false);
 export const $coverOnlyMode = persistAtom<boolean>("coverOnlyMode", false);
 export const $simpleLyricsMode = persistAtom<boolean>("simpleLyricsMode", false);
 export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", false);
+// Only the line being sung is shown; everything else is hidden.
+export const $singleLineMode = persistAtom<boolean>("singleLineMode", false);
 // Shows a word sung in syllables as one word when its parts line up evenly.
 export const $joinSplitWords = persistAtom<boolean>("joinSplitWords", false);
 // Tinted box drawn behind a lyrics line while the pointer is over it.

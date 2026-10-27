@@ -37,6 +37,7 @@ import {
   $minimalLyricsMode,
   $showVolumeSlider,
   $simpleLyricsMode,
+  $singleLineMode,
   $lyricsFont,
   $coverOnlyMode,
   $ttmlMakerMode,
@@ -303,6 +304,10 @@ async function OpenPage(
 
   if ($minimalLyricsMode.get()) {
     elem.classList.add("MinimalLyricsMode");
+  }
+
+  if ($singleLineMode.get()) {
+    elem.classList.add("SingleLineMode");
   }
 
   if (!$lineHoverBackground.get()) {
@@ -862,6 +867,11 @@ $minimalLyricsMode.listen((v) => {
   const uri = SpotifyPlayer.GetUri();
   $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);
+});
+
+// Pure CSS (Mixed.css), so the lyrics don't need rebuilding.
+$singleLineMode.listen((v) => {
+  PageContainer?.classList.toggle("SingleLineMode", v);
 });
 
 $joinSplitWords.listen(() => {

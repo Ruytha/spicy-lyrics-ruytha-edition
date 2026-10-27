@@ -1295,3 +1295,22 @@
   scale: 1.05;
   backdrop-filter: blur(2px);
 }
+
+/* ── Single Line Mode ────────────────────────────────────────────────────
+   Only the line being sung shows (instrumental dots included, they go Active
+   during a break). A line fades out, then visibility drops so it can't be
+   hovered or clicked; one becoming Active is visible at once and fades in on
+   the line's own opacity transition. Unsynced lyrics never go Active, so they
+   are left out. */
+#SpicyLyricsPage.SpicyRenderer.SingleLineMode
+  .LyricsContainer
+  .LyricsContent
+  .SpicyLyricsScrollContainer:not([data-lyrics-type="Static"])
+  .line:not(.Active) {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s cubic-bezier(0.61, 1, 0.88, 1),
+    visibility 0s linear 0.2s;
+}
