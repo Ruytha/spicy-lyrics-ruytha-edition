@@ -15,6 +15,7 @@ import {
   $lyricsRenderer,
   $minimalLyricsMode,
   $simpleLyricsMode,
+  $singleLineMode,
 } from "../../../utils/stores.ts";
 import { Select, Slider, Toggle } from "./components.tsx";
 import { LyricsIcon } from "./icons.tsx";
@@ -106,6 +107,20 @@ const groups: GroupDef[] = [
             label={label}
             checked={useStore($minimalLyricsMode)}
             onChange={(v) => $minimalLyricsMode.set(v)}
+          />
+        ),
+      },
+      {
+        id: "singleLineMode",
+        label: "Single Line Mode",
+        description:
+          "Show only the line being sung and hide the rest, leaving the screen empty between lines. Unsynced lyrics still show in full.",
+        keywords: "one line current focus",
+        Control: ({ label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($singleLineMode)}
+            onChange={(v) => $singleLineMode.set(v)}
           />
         ),
       },
