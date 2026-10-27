@@ -886,13 +886,47 @@ Global.Event.listen("playback:progress", async () => {
   if (SpotifyPlayer.GetUri() !== songUri || latestPlaybackTrackUri !== songUri) return;
 
   pruneAudioAnalysisCache(songUri);
-  setAnimationSpeed(
-    animSpeedController.getSpeedMultiplier(
-      SpotifyPlayer.GetPosition() / 1000,
-      audioAnalysisData,
-      isExperimentEnabled("beatDrivenMotion")
-    )
+  if (isExperimentEnabled("beatDrivenMotion")) {
+    // Progress events come too far apart to land on each beat; the frame loop below takes over.
+    beatSpeedAnalysis = { uri: songUri, data: audioAnalysisData };
+    return;
+  }
+  beatSpeedAnalysis = null;
+  setAnimationSpeed(animSpeedController.getSpeedMultiplier(SpotifyPlayer.GetPosition() / 1000, audioAnalysisData));
+});
+
+// Beat-driven motion: the speed follows the beats from the frame loop, sampled at
+// BEAT_SPEED_INTERVAL_MS and rounded to BEAT_SPEED_STEP, so the backgrounds are only
+// handed a new speed when it visibly changes rather than on every frame.
+const BEAT_SPEED_INTERVAL_MS = 50;
+const BEAT_SPEED_STEP = 0.05;
+let beatSpeedAnalysis: { uri: string; data: AudioAnalysisData } | null = null;
+let lastBeatSpeedSample = 0;
+let lastBeatSpeed = -1;
+
+onAnimationFrame((timestamp) => {
+  if (!beatSpeedAnalysis || timestamp - lastBeatSpeedSample < BEAT_SPEED_INTERVAL_MS) return;
+  // Paused keeps PAUSED_SPEED from the playpause handler; nothing drawn needs no speed.
+  // The playpause handler sets its own speed, so forget the last step: resuming re-sends it.
+  if (!SpotifyPlayer.IsPlaying || (KawarpMap.size === 0 && AMLLBackgroundMap.size === 0)) {
+    lastBeatSpeed = -1;
+    return;
+  }
+  if (!isExperimentEnabled("beatDrivenMotion") || SpotifyPlayer.GetUri() !== beatSpeedAnalysis.uri) {
+    beatSpeedAnalysis = null;
+    return;
+  }
+  lastBeatSpeedSample = timestamp;
+  const speed = animSpeedController.getSpeedMultiplier(
+    SpotifyPlayer.GetPosition() / 1000,
+    beatSpeedAnalysis.data,
+    true
   );
+  const stepped = Math.round(speed / BEAT_SPEED_STEP) * BEAT_SPEED_STEP;
+  // setAnimationSpeed always reaches the AMLL mesh, so an unchanged step stops here.
+  if (stepped === lastBeatSpeed) return;
+  lastBeatSpeed = stepped;
+  setAnimationSpeed(stepped);
 });
 
 // ─── Beat pulse ──────────────────────────────────────────────────────────────
