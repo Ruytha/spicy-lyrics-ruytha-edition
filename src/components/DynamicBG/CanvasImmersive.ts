@@ -13,7 +13,7 @@ import { SetSideSwapTransition } from "../Utils/NowBar.ts";
 import { getBackgroundStyle, PAGE_BACKGROUND_KEY, SetKawarpSuspended } from "./dynamicBackground.ts";
 import { AMLLBackgroundMap } from "./AMLLBackground.ts";
 import { AttachCanvasMedia, GetPlayingCanvasInfo, LoadCanvasMedia } from "./CanvasVideo.ts";
-import { PlayingAlbumHasAnimatedCover } from "./AnimatedCover.ts";
+import { OnAnimatedCoverUnavailable, PlayingAlbumHasAnimatedCover } from "./AnimatedCover.ts";
 
 const immersiveLogger = new Logger("Canvas Immersive");
 
@@ -600,5 +600,7 @@ onExperimentChange((experiment) => {
 $backgroundStyle.listen(() => void Refresh());
 $preferAnimatedCover.listen(() => void Refresh());
 $animatedCovers.listen(() => void Refresh());
+// Prefer the Animated Cover stepped aside for a cover that then failed to load; take the cover's side back.
+OnAnimatedCoverUnavailable(() => void Refresh());
 SetSideSwapTransition(transitionSideSwap);
 document.addEventListener("visibilitychange", syncPlayback);
