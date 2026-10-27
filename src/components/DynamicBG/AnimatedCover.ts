@@ -127,6 +127,33 @@ function loadMotion(album: Album, onConverting: () => void): Promise<string | nu
   return request;
 }
 
+// Per album: whether it has an animated cover, from the quick check alone. Kept for the session.
+const hasCoverCache = new Map<string, Promise<boolean>>();
+
+/**
+ * Whether the playing album has an animated cover the cover square would play, so Canvas
+ * Stage can step aside for it (Prefer the Animated Cover). Only the quick check, never
+ * the conversion; false when animated covers are off or the check fails.
+ */
+export function PlayingAlbumHasAnimatedCover(): Promise<boolean> {
+  const album = $animatedCovers.get() ? playingAlbum() : null;
+  if (!album) return Promise.resolve(false);
+  const cached = hasCoverCache.get(album.key);
+  if (cached) return cached;
+  const request = (async () => {
+    const res = await fetch(await motionUrl(album, true), { signal: AbortSignal.timeout(15_000) });
+    if (!res.ok) throw new Error(`Check HTTP ${res.status}`);
+    return !!((await res.json()) as { found?: boolean }).found;
+  })().catch((err) => {
+    // Not remembered, so the next play of the album checks again; the Canvas shows meanwhile.
+    coverLogger.warn("Animated cover check failed", album.artist, album.name, err);
+    hasCoverCache.delete(album.key);
+    return false;
+  });
+  hasCoverCache.set(album.key, request);
+  return request;
+}
+
 function release() {
   albumKey = null;
   if (video) {

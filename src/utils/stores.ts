@@ -144,6 +144,8 @@ export const $lyricGlow = persistAtom<number>("lyricGlow", 100);
 export const $animatedCovers = persistAtom<boolean>("animatedCovers", true);
 // While an Apple Music animated cover plays, the page background is drawn from it.
 export const $coverMotionBackground = persistAtom<boolean>("coverMotionBackground", true);
+// With Canvas Stage on, an album with an Apple Music animated cover plays that instead of the Canvas.
+export const $preferAnimatedCover = persistAtom<boolean>("preferAnimatedCover", false);
 export const $coverBeatPulse = persistAtom<boolean>("coverBeatPulse", false);
 export const $coverBlend = persistAtom<boolean>("coverBlend", false);
 export const $coverOnlyMode = persistAtom<boolean>("coverOnlyMode", false);

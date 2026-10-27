@@ -1,5 +1,5 @@
 import "../../css/CanvasImmersive.css";
-import { $backgroundStyle } from "../../utils/stores.ts";
+import { $animatedCovers, $backgroundStyle, $preferAnimatedCover } from "../../utils/stores.ts";
 import { isExperimentEnabled, onExperimentChange } from "../../utils/experiments.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
 import Logger from "../../utils/Logger.ts";
@@ -13,6 +13,7 @@ import { SetSideSwapTransition } from "../Utils/NowBar.ts";
 import { getBackgroundStyle, PAGE_BACKGROUND_KEY, SetKawarpSuspended } from "./dynamicBackground.ts";
 import { AMLLBackgroundMap } from "./AMLLBackground.ts";
 import { AttachCanvasMedia, GetPlayingCanvasInfo, LoadCanvasMedia } from "./CanvasVideo.ts";
+import { PlayingAlbumHasAnimatedCover } from "./AnimatedCover.ts";
 
 const immersiveLogger = new Logger("Canvas Immersive");
 
@@ -487,6 +488,14 @@ async function Refresh(isRetry = false) {
     return;
   }
 
+  // Prefer the Animated Cover: an album that has one plays it in the cover square instead.
+  // Leaving drops the stage's page class, which AnimatedCover.ts watches to take over.
+  if ($preferAnimatedCover.get() && (await PlayingAlbumHasAnimatedCover())) {
+    if (gen === generation) deactivate();
+    return;
+  }
+  if (gen !== generation) return;
+
   const m = mount;
   const currentLayer = m.layers[m.current];
   if (currentLayer.fileId === info.fileId) {
@@ -589,5 +598,7 @@ onExperimentChange((experiment) => {
   if (experiment.id === "canvasImmersive") void Refresh();
 });
 $backgroundStyle.listen(() => void Refresh());
+$preferAnimatedCover.listen(() => void Refresh());
+$animatedCovers.listen(() => void Refresh());
 SetSideSwapTransition(transitionSideSwap);
 document.addEventListener("visibilitychange", syncPlayback);

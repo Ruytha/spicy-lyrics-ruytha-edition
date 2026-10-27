@@ -6,6 +6,7 @@ import {
   $coverBeatPulse,
   $coverBlend,
   $coverOnlyMode,
+  $preferAnimatedCover,
 } from "../../../utils/stores.ts";
 import { Select, Toggle } from "./components.tsx";
 import { CoverIcon } from "./icons.tsx";
@@ -45,6 +46,23 @@ const groups: GroupDef[] = [
             options={["stage", "cover", "off"]}
             labels={["Spotify Canvas", "Apple Music Cover", "Off"]}
             onChange={(v) => setCanvasMode(v as CanvasMode)}
+          />
+        ),
+      },
+      {
+        id: "preferAnimatedCover",
+        label: "Prefer the Animated Cover",
+        description:
+          "When an album has an Apple Music animated cover, play that in the cover square instead of the song's Canvas. Songs without one still get their Canvas.",
+        keywords: "canvas animated cover apple music prefer instead priority hide canvas",
+        useDisabled: () =>
+          useCanvasMode() !== "stage" && "Set Moving Artwork to Spotify Canvas first.",
+        Control: ({ disabled, label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($preferAnimatedCover)}
+            onChange={(v) => $preferAnimatedCover.set(v)}
+            disabled={disabled}
           />
         ),
       },
