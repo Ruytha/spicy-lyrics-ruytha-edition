@@ -13,6 +13,7 @@ import "./css/Loaders/LyricsSkeleton.css";
 import "./css/font-pack/font-pack.css";
 import "./css/RuythaTheme.css";
 import "./components/Utils/BackToLineButton.ts";
+import "./components/Utils/TemporaryLyricsBadge.ts";
 import "./components/Utils/TimingOverlay.ts";
 import "./components/Utils/MiddleScroll.ts";
 import "./components/DynamicBG/RuythaSpotlight.ts";

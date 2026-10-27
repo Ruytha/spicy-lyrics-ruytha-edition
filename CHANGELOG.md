@@ -25,7 +25,9 @@ after an update shows what's new.
   anywhere and no account details are included.
 - **Load a TTML file in one click.** With TTML Maker Mode on, the lyrics page has a **Load
   TTML File** button: pick a .ttml and it shows on the playing song right away, without
-  saving it to the Local Lyrics DB. The song's own lyrics come back the next time it plays.
+  saving it to the Local Lyrics DB. Dropping a .ttml on the lyrics or pasting one with
+  Ctrl+V does the same. A badge says the lyrics are temporary, and its **Revert** button
+  brings the song's own lyrics back; otherwise they come back the next time it plays.
 
 ### Changed
 

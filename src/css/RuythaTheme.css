@@ -158,6 +158,81 @@ sl-generic-modal.SpicyLyricsModal .sl-modal {
     background 0.2s ease;
 }
 
+/* ─── Temporary lyrics ───────────────────────────────────────────────────── */
+/* A glass pill in the lyrics area's top-right corner while a temporary TTML shows, with
+   Revert. Right, because lyrics read from the left. */
+#SpicyLyricsPage .SL_TemporaryLyrics {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 5px 5px 12px;
+  border-radius: 999px;
+  background: var(--ry-glass), rgba(10, 18, 52, 0.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow:
+    var(--ry-glass-shine),
+    inset 0 0 0 1px var(--ry-line),
+    0 12px 30px -10px rgba(2, 5, 19, 0.7);
+  color: var(--ry-text);
+  font-family: var(--ry-font, inherit);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0;
+  translate: 0 -8px;
+  pointer-events: none;
+  transition:
+    opacity 0.25s var(--ry-ease),
+    translate 0.35s var(--ry-ease);
+}
+
+#SpicyLyricsPage .SL_TemporaryLyrics.Visible {
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+}
+
+#SpicyLyricsPage .SL_TemporaryLyricsLabel::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: #f5c26b;
+  box-shadow: 0 0 6px rgba(245, 194, 107, 0.8);
+}
+
+#SpicyLyricsPage .SL_TemporaryLyricsRevert {
+  padding: 6px 11px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+#SpicyLyricsPage .SL_TemporaryLyricsRevert:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+#SpicyLyricsPage .SL_TemporaryLyricsRevert:focus-visible {
+  outline: 2px solid var(--ry-accent, #9cc7f2);
+  outline-offset: 1px;
+}
+
+#SpicyLyricsPage.CardMode .SL_TemporaryLyrics {
+  display: none;
+}
+
 #SpicyLyricsPage .SL_BackToLine.Visible {
   opacity: 1;
   translate: 0 0;
