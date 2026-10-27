@@ -154,6 +154,13 @@ export function PlayingAlbumHasAnimatedCover(): Promise<boolean> {
   return request;
 }
 
+const unavailableListeners = new Set<() => void>();
+
+/** Runs `cb` when a cover the quick check reported turns out not to load. */
+export function OnAnimatedCoverUnavailable(cb: () => void) {
+  unavailableListeners.add(cb);
+}
+
 function release() {
   albumKey = null;
   if (video) {
@@ -253,7 +260,15 @@ async function Refresh() {
   if (gen !== generation) return;
   container.classList.remove(LOADING_CLASS);
   release();
-  if (!src) return;
+  if (!src) {
+    // The quick check found a cover but it didn't load: for the rest of the session the
+    // album counts as having none, so a Canvas Stage that stepped aside for it comes back.
+    if (await hasCoverCache.get(album.key)) {
+      hasCoverCache.set(album.key, Promise.resolve(false));
+      for (const listener of unavailableListeners) listener();
+    }
+    return;
+  }
 
   const el = document.createElement("video");
   el.className = VIDEO_CLASS;

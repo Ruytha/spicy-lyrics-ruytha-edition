@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { getExperiments, isExperimentEnabled } from "../experiments.ts";
-import { GetRecentLogProblems } from "../Logger.ts";
+import { GetRecentLogProblems, GetRecentUncaughtErrors } from "../Logger.ts";
 import { getRemoteConfig } from "../remoteConfig.ts";
 import { $currentLyricsData, $currentLyricsType, $spicyLyricsVersion, GetSavedSettings } from "../stores.ts";
 import { GetForkRelease } from "./ForkRelease.ts";
@@ -114,6 +114,11 @@ export function CollectDebugInfo(): string {
   section("Recent warnings and errors");
   const problems = GetRecentLogProblems();
   if (problems.length) lines.push("```", ...problems, "```");
+  else lines.push("None this session.");
+
+  section("Uncaught errors (any code in the window, Spotify's too)");
+  const crashes = GetRecentUncaughtErrors();
+  if (crashes.length) lines.push("```", ...crashes, "```");
   else lines.push("None this session.");
 
   return lines.join("\n");

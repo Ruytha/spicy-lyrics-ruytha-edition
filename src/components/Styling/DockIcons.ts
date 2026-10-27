@@ -24,6 +24,8 @@ export const DockIcons = {
   NowBarSideSwap: Glyph(`<path d="M4.5 8.5h14"/><path d="m15 5 3.5 3.5L15 12"/><path d="M19.5 15.5h-14"/><path d="m9 12-3.5 3.5L9 19"/>`),
   // A page with lines and a pen: the lyrics manager.
   LyricsManager: Glyph(`<path d="M13 3.5H7.25A2.25 2.25 0 0 0 5 5.75v12.5a2.25 2.25 0 0 0 2.25 2.25h4.25"/><path d="M8.5 8h6"/><path d="M8.5 11.5h4"/><path d="m14.5 20.5.5-2.75 5.25-5.25a1.6 1.6 0 0 1 2.25 2.25l-5.25 5.25z"/>`),
+  // A page with an arrow coming up into it: load a TTML file for now.
+  LoadTTML: Glyph(`<path d="M13.5 3.5H7.25A2.25 2.25 0 0 0 5 5.75v12.5a2.25 2.25 0 0 0 2.25 2.25h9.5A2.25 2.25 0 0 0 19 18.25V9"/><path d="M13.5 3.5V7a2 2 0 0 0 2 2H19"/><path d="M13.5 3.5 19 9"/><path d="M12 17.5v-6"/><path d="m9.5 14 2.5-2.5 2.5 2.5"/>`),
   // A record in its sleeve: Cover Only.
   CoverOnly: Glyph(`<rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="currentColor"/>`),
   // A turning arrow: drop the cached lyrics and load them again.

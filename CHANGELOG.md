@@ -6,6 +6,30 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-27, second update
+
+### Added
+
+- **Load a TTML file in one click.** With TTML Maker Mode on, the lyrics page controls have
+  **Load TTML File**: pick a .ttml and it shows on the playing song right away, without
+  saving it to the Local Lyrics DB. Dropping a .ttml on the lyrics or pasting one with
+  Ctrl+V does the same.
+- **Temporary lyrics are marked.** While a TTML loaded just for now is showing, a badge in
+  the lyrics' top corner says so, and its **Revert** button brings the song's own lyrics
+  back. Otherwise they come back the next time the song plays.
+- **Crashes in Copy Debug Info.** The copied debug info now also lists the latest uncaught
+  errors, with where they happened, so bug reports show what broke.
+
+### Changed
+
+- **Smoother beat-driven background.** The background's speed now follows each beat closely
+  instead of catching only some of them, so the kick on every beat is clear.
+
+### Fixed
+
+- With Prefer the Animated Cover on, an album whose animated cover failed to load showed a
+  still cover. It shows the song's Canvas instead now.
+
 ## 2026-10-27
 
 ### Added

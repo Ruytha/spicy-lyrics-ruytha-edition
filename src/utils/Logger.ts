@@ -28,6 +28,34 @@ export function GetRecentLogProblems(): readonly string[] {
   return recentProblems;
 }
 
+// Uncaught errors and unhandled rejections, from anything running in the window: Spotify's
+// own code included, so they're kept apart and can't push the extension's out.
+const UNCAUGHT_MAX = 20;
+const uncaught: string[] = [];
+
+function rememberUncaught(kind: string, detail: string) {
+  const time = new Date().toISOString().slice(11, 19);
+  uncaught.push(`${time} ${kind} ${detail.length > 400 ? `${detail.slice(0, 400)}…` : detail}`);
+  if (uncaught.length > UNCAUGHT_MAX) uncaught.shift();
+}
+
+/** The latest uncaught errors and unhandled rejections in the window, oldest first. */
+export function GetRecentUncaughtErrors(): readonly string[] {
+  return uncaught;
+}
+
+window.addEventListener("error", (e) => {
+  // Where it was thrown tells the extension's errors from Spotify's.
+  const where = e.filename ? ` (${e.filename.split("/").pop()}:${e.lineno}:${e.colno})` : "";
+  rememberUncaught("error", `${e.error instanceof Error ? describeArg(e.error) : e.message}${where}`);
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  const reason = e.reason;
+  const top = reason instanceof Error ? reason.stack?.split("\n")[1]?.trim() : undefined;
+  rememberUncaught("rejection", `${describeArg(reason)}${top ? ` (${top})` : ""}`);
+});
+
 class Logger {
   private maid: Maid;
 
