@@ -83,6 +83,11 @@ export function ResetSetting(key: string): boolean {
 }
 
 /** The saved settings as JSON, for a backup file. */
+/** A copy of every saved setting (those changed from their default at some point), by key. */
+export function GetSavedSettings(): Record<string, unknown> {
+  return { ..._settings };
+}
+
 export function ExportSettings(): string {
   return JSON.stringify({ format: "spicy-lyrics-ruytha-settings", version: 1, settings: _settings }, null, 2);
 }
