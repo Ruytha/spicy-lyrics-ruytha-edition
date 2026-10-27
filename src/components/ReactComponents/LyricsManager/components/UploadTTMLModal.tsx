@@ -4,8 +4,7 @@ import { toast } from "sonner";
 import { SpotifyPlayer } from "../../../../components/Global/SpotifyPlayer";
 import fetchLyrics from "../../../../utils/Lyrics/fetchLyrics";
 import ApplyLyrics from "../../../../utils/Lyrics/Global/Applyer";
-import { ParseTTML } from "../../../../utils/Lyrics/manager/parseTTML";
-import { ProcessLyrics } from "../../../../utils/Lyrics/ProcessLyrics";
+import { ApplyTemporaryTTML } from "../../../../utils/Lyrics/manager/temporaryTTML";
 import { $currentLyricsData, $ttmlUploadMode } from "../../../../utils/stores";
 import { LocalLyricsManager } from "../../../../utils/Lyrics/manager";
 import { ArrowLeftIcon, ClockIcon, DatabaseIcon, SpinnerIcon, UploadIcon } from "./Icons";
@@ -88,26 +87,10 @@ export default function UploadTTMLModal({ onBack, onDone }: UploadTTMLModalProps
             toast.success("TTML saved to Local DB!", { duration: 5000 });
             onDone("persistent");
           } else {
-            const result = ParseTTML(ttml);
-            if (!result) {
-              toast.error("Failed to parse TTML.", { duration: 5000 });
+            if (!(await ApplyTemporaryTTML(ttml, uri))) {
               setUploading(false);
               return;
             }
-            const dataToSave = { ...result, uri };
-            await ProcessLyrics(dataToSave);
-            $currentLyricsData.set(JSON.stringify(dataToSave));
-            setTimeout(() => {
-              fetchLyrics(uri)
-                .then((lyrics) => {
-                  ApplyLyrics(lyrics);
-                  toast.success("Lyrics Parsed and Applied!", { duration: 5000 });
-                })
-                .catch((err) => {
-                  toast.error("Error applying lyrics", { duration: 5000 });
-                  console.error("Error applying lyrics:", err);
-                });
-            }, 25);
             onDone("temporary");
           }
         } catch (err) {

@@ -69,6 +69,7 @@ import { IsPIP, _IsPIP_after, ClosePopupLyrics } from "../Utils/PopupLyrics.ts";
 import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
 import { CleanUpIsByCommunity } from "../../utils/Lyrics/Applyer/Credits/ApplyIsByCommunity.tsx";
 import { OpenLyricsDBPanel } from "../../utils/openLyricsDBPanel.tsx";
+import { PickTemporaryTTML } from "../../utils/Lyrics/manager/temporaryTTML.ts";
 import { openSettingsPanel } from "../../utils/settings.ts";
 import { ToggleCoverOnly } from "../../utils/Ruytha/PageOptions.ts";
 import { DockIcons } from "../Styling/DockIcons.ts";
@@ -100,6 +101,7 @@ export const Tooltips: {
   CinemaView: TippyInstance | null;
   NowBarSideToggle: TippyInstance | null;
   LyricsManager: TippyInstance | null;
+  LoadTTML: TippyInstance | null;
   ClearCurrentCache: TippyInstance | null;
   CoverOnlyToggle: TippyInstance | null;
   Settings: TippyInstance | null;
@@ -112,6 +114,7 @@ export const Tooltips: {
   CinemaView: null,
   NowBarSideToggle: null,
   LyricsManager: null,
+  LoadTTML: null,
   ClearCurrentCache: null,
   CoverOnlyToggle: null,
   Settings: null,
@@ -685,6 +688,7 @@ function AppendViewControls(ReAppend: boolean = false) {
   ].join("");
   const lyricsGroup = [
     button("RomanizationToggle", DockIcons.Romanization, "Romanization", isRomanized),
+    isTTMLMakerMode ? button("LoadTTML", DockIcons.LoadTTML, "Load TTML File") : "",
     isTTMLMakerMode ? button("LyricsManager", DockIcons.LyricsManager, "Lyrics Manager") : "",
     button("ClearCurrentCache", DockIcons.ClearCache, "Clear Cached Lyrics"),
   ].join("");
@@ -965,6 +969,22 @@ function AppendViewControls(ReAppend: boolean = false) {
         });
       } catch (err) {
         controlsLogger.warn("Failed to setup Settings tooltip", err);
+      }
+    }
+
+    const loadTTMLButton = elem.querySelector("#LoadTTML");
+    if (loadTTMLButton && isTTMLMakerMode) {
+      try {
+        if (!isPip) {
+          Tooltips.LoadTTML = createTooltip(loadTTMLButton, {
+            ...Spicetify.TippyProps,
+            content: `Load a TTML File for This Song`,
+          });
+        }
+        // The picker opens in the button's own window: Popup Lyrics has its own document.
+        loadTTMLButton.addEventListener("click", () => PickTemporaryTTML(loadTTMLButton.ownerDocument));
+      } catch (err) {
+        controlsLogger.warn("Failed to setup Load TTML button", err);
       }
     }
 
