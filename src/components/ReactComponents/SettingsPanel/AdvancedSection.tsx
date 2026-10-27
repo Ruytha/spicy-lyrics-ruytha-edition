@@ -8,6 +8,7 @@ import { $developerMode } from "../../../utils/stores.ts";
 import { Toggle } from "./components.tsx";
 import { AdvancedIcon } from "./icons.tsx";
 import { DownloadSettingsBackup, RestoreSettingsBackup } from "../../../utils/Ruytha/Presets.ts";
+import { CopyDebugInfo } from "../../../utils/Ruytha/DebugInfo.ts";
 import type { GroupDef, SectionDef } from "./model.ts";
 
 // Built once: the Control components must keep their identity across renders.
@@ -88,6 +89,18 @@ const groups: GroupDef[] = [
   {
     title: "Developer",
     settings: [
+      {
+        id: "copyDebugInfo",
+        label: "Copy Debug Info",
+        description:
+          "Copy versions, settings, experiments, the playing song and recent errors, to paste into a bug report. Nothing is sent anywhere.",
+        keywords: "debug info diagnostics bug report copy clipboard logs errors support",
+        Control: () => (
+          <button type="button" className="sl-sp-btn" onClick={() => void CopyDebugInfo()}>
+            Copy
+          </button>
+        ),
+      },
       {
         id: "developerMode",
         label: "Developer Mode",
