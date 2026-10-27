@@ -1,6 +1,9 @@
 const React = Spicetify.React;
 const { useState } = React;
-const ReactDOM = Spicetify.ReactDOM;
+// Spotify's ReactDOM still has the legacy render(); the bundled types only know the client API.
+const ReactDOM = Spicetify.ReactDOM as unknown as {
+  render: (element: React.ReactElement, container: Element) => void;
+};
 
 import type {
   ISettingsField,
@@ -170,7 +173,6 @@ class SettingsSection {
   };
 
   private FieldsContainer = () => {
-    // @ts-expect-error
     const [rerender, setRerender] = useState<number>(0);
     this.setRerender = setRerender;
 
