@@ -45,7 +45,7 @@ const groups: GroupDef[] = [
         id: "appleMusicLook",
         label: "Apple Music Look",
         description:
-          "Sets everything up like Apple Music's player in one go: AMLL lyrics and background, Apple Music animated covers with the background following them, the melted cover and SF Pro. Undo is on the message that pops up.",
+          "Sets everything up like Apple Music's player in one go: AMLL lyrics and background, Apple Music animated covers with the background following them, the melted cover and SF Pro. With Spotify Canvas on, songs whose album has no animated cover keep their Canvas. Undo is on the message that pops up.",
         keywords: "preset apple music look theme one click style",
         reset: () => undefined,
         Control: () => (
