@@ -1,0 +1,93 @@
+name: Release build
+
+# Rebuilds builds/ruytha/spicy-lyrics.js, the file the installed loader serves, after
+# every change to main and commits it, so merging a PR is all it takes to ship. On the
+# ci/release-build branch it only builds and uploads the result, to test this workflow.
+
+on:
+  push:
+    branches: [main, ci/release-build]
+    paths:
+      - "src/**"
+      - "project/**"
+      - "CHANGELOG.md"
+      - "package.json"
+      - "bun.lock"
+      - "spice.config.ts"
+      - "tsconfig.json"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# One build at a time, so two quick merges can't race to push the bundle.
+concurrency:
+  group: release-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+
+      - run: bun install --frozen-lockfile
+
+      # The build tool checks for a working Spicetify setup before it builds. There's no
+      # Spotify on the runner, so Spicetify gets stand-in Spotify folders to point at;
+      # nothing is applied to them.
+      - name: Install Spicetify CLI
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo spicetify/cli --json tagName --jq .tagName)
+          version=${tag#v}
+          echo "Spicetify CLI $version"
+          mkdir -p "$HOME/.spicetify"
+          curl -fsSL "https://github.com/spicetify/cli/releases/download/v$version/spicetify-$version-linux-amd64.tar.gz" \
+            | tar xz -C "$HOME/.spicetify"
+          echo "$HOME/.spicetify" >> "$GITHUB_PATH"
+
+      - name: Configure Spicetify
+        run: |
+          mkdir -p "$HOME/spotify/Apps" "$HOME/.config/spotify"
+          touch "$HOME/.config/spotify/prefs"
+          spicetify --version
+          config=$(spicetify -c)
+          echo "Config file: $config"
+          spicetify config spotify_path "$HOME/spotify" prefs_path "$HOME/.config/spotify/prefs" --bypass-admin || true
+          cat "$config"
+
+      - name: Build
+        run: bun run release
+
+      - name: Check the bundle
+        run: |
+          test -s builds/ruytha/spicy-lyrics.js
+          ls -l builds/ruytha/spicy-lyrics.js
+          git status --short
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: spicy-lyrics-bundle
+          path: builds/ruytha/spicy-lyrics.js
+
+      - name: Commit the bundle
+        if: github.ref == 'refs/heads/main'
+        run: |
+          if git diff --quiet -- builds/ruytha/spicy-lyrics.js; then
+            echo "The bundle is unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add builds/ruytha/spicy-lyrics.js
+          git commit -m "Update build for ${GITHUB_SHA::7}"
+          # main may have moved while this ran; the bundle only ever comes from this job.
+          git pull --rebase origin main
+          git push origin HEAD:main

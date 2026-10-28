@@ -149,11 +149,12 @@ dist_legacy/
 
 src/utils/SpicyHasher.ts
 
-# Everything under .github stays out except the fork's own CI workflow.
+# Everything under .github stays out except the fork's own workflows.
 .github/*
 !.github/workflows/
 .github/workflows/*
 !.github/workflows/ci.yml
+!.github/workflows/release.yml
 
 src/components/PopupModal/
 src/components/PopupModal/PopupModal.ts
