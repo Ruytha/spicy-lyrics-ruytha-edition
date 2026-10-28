@@ -66,10 +66,16 @@ jobs:
       - name: Build
         run: bun run release
 
+      # The newest changelog heading is bundled for What's New, so finding it shows the
+      # bundle was built from this commit and not left over.
       - name: Check the bundle
         run: |
-          test -s builds/ruytha/spicy-lyrics.js
-          ls -l builds/ruytha/spicy-lyrics.js
+          bundle=builds/ruytha/spicy-lyrics.js
+          test -s "$bundle"
+          ls -l "$bundle"
+          heading=$(grep -m1 '^## ' CHANGELOG.md)
+          echo "Newest changelog section: $heading"
+          grep -qF "$heading" "$bundle" || { echo "::error::The bundle doesn't contain \"$heading\""; exit 1; }
           git status --short
 
       - uses: actions/upload-artifact@v4
