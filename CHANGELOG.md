@@ -6,6 +6,17 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-28
+
+### Fixed
+
+- **Apple Music Look keeps your Spotify Canvas.** It used to switch Canvas off. Now albums
+  with an Apple Music animated cover play that, and every other song keeps its Canvas. If
+  the look already turned your Canvas off, set Settings → Cover → Moving Artwork back to
+  **Spotify Canvas**.
+- Settings → Experiments said Canvas Stage only works with the Dynamic background. It
+  works with every background except None, and the note now says so.
+
 ## 2026-10-27, second update
 
 ### Added

@@ -1,7 +1,6 @@
 // One-click looks for the settings panel, and settings backups. A look sets a group of
 // settings at once; the toast after it can put every one of them back.
 import { toast } from "sonner";
-import { isExperimentEnabled, setExperiment } from "../experiments.ts";
 import {
   $amllHidePassedLines,
   $amllLyricsBlur,
@@ -17,6 +16,7 @@ import {
   $coverMotionBackground,
   $lyricsFont,
   $lyricsRenderer,
+  $preferAnimatedCover,
   ExportSettings,
   ImportSettings,
 } from "../stores.ts";
@@ -26,12 +26,15 @@ type Setter = { get: () => unknown; set: (v: never) => void };
 /**
  * Apple Music's player: AMLL drawing the lyrics and the background, the album's Apple
  * Music animated cover with the page following it, the cover melted in, Apple's font,
- * and no beat effects (Apple Music doesn't pulse).
+ * and no beat effects (Apple Music doesn't pulse). Spotify Canvas is left as it was:
+ * with it on, albums that have an animated cover play that instead and the rest keep
+ * their Canvas.
  */
 const APPLE_MUSIC_LOOK: [Setter, unknown][] = [
   [$lyricsRenderer, "amll"],
   [$backgroundStyle, "amll"],
   [$animatedCovers, true],
+  [$preferAnimatedCover, true],
   [$coverMotionBackground, true],
   [$coverBlend, true],
   [$lyricsFont, "sf"],
@@ -47,18 +50,14 @@ const APPLE_MUSIC_LOOK: [Setter, unknown][] = [
 
 export function ApplyAppleMusicLook() {
   const before = APPLE_MUSIC_LOOK.map(([store]) => [store, store.get()] as const);
-  const stageBefore = isExperimentEnabled("canvasImmersive");
   for (const [store, value] of APPLE_MUSIC_LOOK) store.set(value as never);
-  // The animated cover plays in the cover square, which Canvas Stage would replace.
-  setExperiment("canvasImmersive", false);
 
   toast.success("Apple Music look on", {
-    description: "AMLL, Apple Music animated covers, the melted cover and SF Pro.",
+    description: "AMLL, Apple Music animated covers (Canvas for the rest), the melted cover and SF Pro.",
     action: {
       label: "Undo",
       onClick: () => {
         for (const [store, value] of before) store.set(value as never);
-        setExperiment("canvasImmersive", stageBefore);
       },
     },
   });

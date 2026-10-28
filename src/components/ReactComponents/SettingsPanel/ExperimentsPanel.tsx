@@ -103,8 +103,8 @@ const CONFLICTS: Partial<Record<ExperimentId, () => string | false>> = {
   canvasImmersive: () => {
     const style = useStore($backgroundStyle);
     return (
-      style !== "dynamic" &&
-      `Not showing: Background is set to ${BACKGROUND_STYLE_LABELS[style] ?? style}. Switch it to Dynamic (Kawarp) to use this.`
+      style === "none" &&
+      `Not showing: Background is set to ${BACKGROUND_STYLE_LABELS[style] ?? style}. Any other background works.`
     );
   },
 };
