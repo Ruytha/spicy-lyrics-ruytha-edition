@@ -133,6 +133,9 @@ export const $amllHidePassedLines = persistAtom<boolean>("amllHidePassedLines", 
 export const $timingOverlay = persistAtom<boolean>("timingOverlay", false);
 // Songs synced by Ruytha (the fork's maker) get shooting stars, a banner and a credit ring.
 export const $ruythaSpotlight = persistAtom<boolean>("ruythaSpotlight", true);
+// Songs by Tame Impala (or written by Kevin Parker) get the Currents line field and a
+// red/cyan split on the playing lyric.
+export const $tameImpalaMode = persistAtom<boolean>("tameImpalaMode", true);
 // Background render controls, applied on top of whichever style is picked. Percentages:
 // 100 is the style as designed. Bloom adds a glow on the bright parts (0 is off).
 export const $bgBrightness = persistAtom<number>("bgBrightness", 100);

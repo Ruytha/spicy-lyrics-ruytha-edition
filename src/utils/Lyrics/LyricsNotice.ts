@@ -134,13 +134,29 @@ function shouldHideLyricsArea(): boolean {
  * decides it: call after anything that changes the notice, compact mode, fullscreen
  * or the setting.
  */
-export function SyncNoLyricsLayout(): void {
+export function SyncNoLyricsLayout(redrawIfShownAgain = true): void {
   const page = PageContainer;
   if (!page) return;
   const hide = shouldHideLyricsArea();
-  page.querySelector(".ContentBox .LyricsContainer")?.classList.toggle("Hidden", hide);
+  const container = page.querySelector(".ContentBox .LyricsContainer");
+  const wasHidden = !!container?.classList.contains("Hidden");
+  container?.classList.toggle("Hidden", hide);
   page.querySelector(".ContentBox")?.classList.toggle("LyricsHidden", hide);
   SyncNowBarSide();
+  // The hidden area is display: none, so both renderers measure every line as zero while
+  // it's away; lyrics laid out then (or before it hid) come back with their timing and
+  // scrolling off. When it shows again, they're drawn afresh. An apply that is about to
+  // draw them anyway passes false.
+  if (wasHidden && !hide && redrawIfShownAgain) {
+    for (const redraw of shownAgainListeners) redraw();
+  }
+}
+
+const shownAgainListeners = new Set<() => void>();
+
+/** Runs when the hidden lyrics area shows again (Cover Only off, say). */
+export function OnLyricsAreaShownAgain(redraw: () => void): void {
+  shownAgainListeners.add(redraw);
 }
 
 $showNoLyricsNotice.listen(() => queueMicrotask(SyncNoLyricsLayout));

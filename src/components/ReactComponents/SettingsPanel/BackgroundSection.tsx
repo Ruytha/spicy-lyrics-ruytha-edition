@@ -12,6 +12,7 @@ import {
   $bgRenderQuality,
   $bgSaturation,
   $ruythaSpotlight,
+  $tameImpalaMode,
   $showNpvDynamicBg,
   BACKGROUND_STYLES,
   type BackgroundStyle,
@@ -168,6 +169,16 @@ const groups: GroupDef[] = [
         keywords: "ruytha spotlight shooting stars banner credits effect fork",
         Control: ({ label }) => (
           <Toggle label={label} checked={useStore($ruythaSpotlight)} onChange={(v) => $ruythaSpotlight.set(v)} />
+        ),
+      },
+      {
+        id: "tameImpalaMode",
+        label: "Tame Impala Mode",
+        description:
+          "Songs by Tame Impala, featuring them, or written by Kevin Parker get flowing Currents-style lines across the background that ripple on the beat, and a colour split on the playing lyric.",
+        keywords: "tame impala kevin parker currents psychedelic effect lines artist",
+        Control: ({ label }) => (
+          <Toggle label={label} checked={useStore($tameImpalaMode)} onChange={(v) => $tameImpalaMode.set(v)} />
         ),
       },
       {

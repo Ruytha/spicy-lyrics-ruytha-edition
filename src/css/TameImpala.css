@@ -1,0 +1,92 @@
+/*
+ * Tame Impala mode (components/DynamicBG/TameImpala.ts): the Currents line field over the
+ * background, a red/cyan split on the playing lyric, and a banner when the song starts.
+ */
+
+#SpicyLyricsPage .ContentBox > canvas.SL_TameCurrents {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Above the background, under the lyrics (4) and the cover side (10). */
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+#SpicyLyricsPage .ContentBox > canvas.SL_TameCurrents.Visible {
+  opacity: 1;
+}
+
+/* The playing line, printed slightly out of register: magenta one way, cyan the other.
+   The doubled id outranks Lyric Glow's rule (RuythaPage.css), whose glow is kept here. */
+#SpicyLyricsPage#SpicyLyricsPage.TameImpala.AmllLyrics .amll-lyric-player [class*="_lyricMainLine"][class*="_active"] {
+  filter: drop-shadow(-2px 0 rgba(255, 64, 170, 0.6)) drop-shadow(2px 0 rgba(64, 210, 255, 0.6))
+    drop-shadow(0 0 calc(12px * var(--sl_glow-size, 1)) rgba(255, 255, 255, calc(0.28 * var(--sl_glow, 1))));
+}
+
+#SpicyLyricsPage#SpicyLyricsPage.TameImpala.AmllLyrics.SL_NoGlow .amll-lyric-player [class*="_lyricMainLine"][class*="_active"],
+#SpicyLyricsPage#SpicyLyricsPage.TameImpala.SpicyRenderer:not(.AmllLyrics) .LyricsContainer .LyricsContent .line.Active {
+  filter: drop-shadow(-2px 0 rgba(255, 64, 170, 0.55)) drop-shadow(2px 0 rgba(64, 210, 255, 0.55));
+}
+
+/* The banner, under the dock like the Ruytha one, its title in the Currents colours. */
+#SpicyLyricsPage .SL_TameBanner {
+  position: absolute;
+  top: 104px;
+  left: 50%;
+  z-index: 103;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px 9px 14px;
+  border-radius: 999px;
+  color: #ffb36b;
+  background: rgba(14, 8, 26, 0.55);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 140, 200, 0.28),
+    0 12px 32px -12px rgba(140, 60, 255, 0.6);
+  translate: -50% 0;
+  pointer-events: none;
+  animation: SL_TameBannerIn 0.7s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+#SpicyLyricsPage .SL_TameBanner.Leaving {
+  animation: SL_TameBannerOut 0.7s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+#SpicyLyricsPage .SL_TameBanner_Title {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  background: linear-gradient(90deg, #a46bff, #ff4fa8, #ffb36b, #a46bff);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: SL_TameShift 4s linear infinite;
+}
+
+@keyframes SL_TameBannerIn {
+  from { opacity: 0; translate: -50% -10px; filter: blur(6px); }
+  to { opacity: 1; translate: -50% 0; filter: blur(0); }
+}
+
+@keyframes SL_TameBannerOut {
+  to { opacity: 0; translate: -50% -8px; filter: blur(6px); }
+}
+
+@keyframes SL_TameShift {
+  to { background-position: 300% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #SpicyLyricsPage .SL_TameBanner,
+  #SpicyLyricsPage .SL_TameBanner.Leaving,
+  #SpicyLyricsPage .SL_TameBanner_Title {
+    animation: none;
+  }
+}

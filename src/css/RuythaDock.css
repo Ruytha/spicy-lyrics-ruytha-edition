@@ -79,7 +79,7 @@
   height: 46%;
   position: relative;
   z-index: 1;
-  transition: translate 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
+  transition: translate 0.45s var(--sl-spring);
 }
 
 /* Hover: a rounded square lights up inside the capsule, and the glyph lifts. */
@@ -93,7 +93,7 @@
   scale: 0.8;
   transition:
     opacity 0.18s ease,
-    scale 0.3s cubic-bezier(0.34, 1.5, 0.64, 1);
+    scale 0.45s var(--sl-spring);
 }
 
 #SpicyLyricsPage#SpicyLyricsPage .ViewControls .ViewControl:hover {
@@ -182,7 +182,7 @@
   transition:
     color 0.18s ease,
     opacity 0.3s ease,
-    scale 0.3s cubic-bezier(0.34, 1.5, 0.64, 1) !important;
+    scale 0.45s var(--sl-spring) !important;
 }
 
 /* Outside Fullscreen the controls wait until the pointer is over the page, as the dock did. */
@@ -258,7 +258,7 @@
   pointer-events: auto;
   transition:
     opacity 0.18s ease-out,
-    scale 0.36s cubic-bezier(0.32, 1.28, 0.5, 1),
+    scale 0.45s var(--sl-spring),
     visibility 0s;
 }
 

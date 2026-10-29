@@ -6,6 +6,32 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-29
+
+### Added
+
+- **Tame Impala mode.** Songs by Tame Impala, featuring them, or written by Kevin Parker
+  get the look of the Currents cover: thin violet-to-orange lines flow across the
+  background and bend around a slowly drifting sphere, rippling harder on each beat. The
+  playing lyric splits into magenta and cyan like a psychedelic print, and a banner says
+  so when the song starts. Turn it off under Settings → Background → **Tame Impala Mode**.
+
+### Changed
+
+- **Smoother scrolling with AMLL.** The mouse wheel used to move AMLL's lyrics a whole
+  notch at once and let them spring after it, so they trailed the wheel and wobbled to a
+  stop. Now they glide straight to where the wheel puts them, following it closely.
+- **A light spring on the interface.** Settings and other windows, the lyrics page
+  controls and their menu, the cover sliding in and swapping sides, the back-to-the-line
+  button and the arrival banners now settle with a slight spring. With Windows'
+  reduce-motion setting on they keep the plain ease.
+
+### Fixed
+
+- **Lyrics stay in time after Cover Only.** Turning Cover Only off could leave the lyrics
+  out of sync, with the playing line in the wrong place or highlighting at the wrong
+  moment. They're drawn afresh when they come back, with either renderer.
+
 ## 2026-10-28
 
 ### Fixed

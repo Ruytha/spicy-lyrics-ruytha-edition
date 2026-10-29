@@ -1,0 +1,44 @@
+/*
+ * Ruytha Edition motion: one light spring for the interface's moves. It overshoots by
+ * about 4.6% and settles without bouncing back (a damped spring, ζ 0.7), sampled into
+ * linear(). Loaded after the other stylesheets; lyric lines keep their own motion.
+ *
+ * With reduced motion it falls back to the plain ease-out the rest of Spicy uses.
+ */
+
+:root {
+  --sl-spring: linear(0, 0.041, 0.141, 0.272, 0.412, 0.548, 0.672, 0.777, 0.862, 0.928, 0.976,
+    1.010, 1.030, 1.042, 1.046, 1.045, 1.041, 1.035, 1.029, 1.022, 1.017, 1.012, 1.007, 1.004,
+    1.002, 1.000, 0.999, 0.998, 0.998, 0.998, 0.998, 0.998, 1);
+  /* A spring needs a little longer than an ease-out to play out. */
+  --sl-spring-dur: 0.5s;
+  /* The shared curves for entrances and state swaps (settings, theme, icons) become it. */
+  --ease-out: var(--sl-spring);
+  --ry-ease: var(--sl-spring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sl-spring: cubic-bezier(0.23, 1, 0.32, 1);
+    --ry-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+}
+
+/* The cover's side sliding in, swapping sides, and centring for Cover Only. */
+#SpicyLyricsPage#SpicyLyricsPage .ContentBox .NowBar {
+  transition: left 0.6s var(--sl-spring);
+}
+
+/* Settings and every other Spicy Lyrics window: the glass and its contents spring open. */
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated .sl-modal::before,
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated .sl-modal-container,
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay-animated .sl-modal-container-large {
+  transition: transform 0.42s var(--sl-spring);
+}
+
+/* The arrival banners (Ruytha's syncs, Tame Impala). */
+#SpicyLyricsPage .SL_RuythaBanner:not(.Leaving),
+#SpicyLyricsPage .SL_TameBanner:not(.Leaving) {
+  animation-duration: 0.6s;
+  animation-timing-function: var(--sl-spring);
+}

@@ -176,6 +176,9 @@ for (const store of [
 
 export function DisposeAmllLyrics() {
   PageContainer?.classList.remove(PAGE_CLASS);
+  wheelTarget = null;
+  if (wheelEndTimer) clearTimeout(wheelEndTimer);
+  wheelEndTimer = null;
   if (!player) return;
   player.dispose();
   player = null;
@@ -248,6 +251,91 @@ export function ApplyAmllLyrics(
   return true;
 }
 
+// ─── Smooth wheel scrolling ──────────────────────────────────────────────────
+//
+// AMLL moves a whole wheel notch (about 100 px) at once and lets each line's position
+// spring chase it, with the slow spring tuned for the playing line gliding between lyrics.
+// So the lyrics trail the wheel and wobble to a stop on every notch. Instead the wheel
+// sets a target here, the offset glides to it each frame, and AMLL lays the lines out
+// exactly there, the way it does while a finger drags (a "continuous" scroll). It still
+// counts as the listener scrolling: following the playing line pauses as before.
+
+type ScrollEngine = {
+  offset: number;
+  clampOffset: (offset: number) => number;
+  clearTimers: () => void;
+  startInteraction: (type: "wheel" | "touch") => void;
+  endInteraction: () => void;
+  hooks: { onScrollUpdate: (isContinuous: boolean) => void };
+};
+
+/** How fast the offset closes on the target, per second (higher is snappier). */
+const WHEEL_GLIDE = 16;
+/** Quiet time after the last wheel step before the scroll counts as finished. */
+const WHEEL_END_MS = 220;
+
+let wheelTarget: number | null = null;
+let wheelEndTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** AMLL's scroll engine, when this AMLL build has the parts used here. */
+function scrollEngine(): ScrollEngine | null {
+  const engine = (player as unknown as { scrollEngine?: Partial<ScrollEngine> } | null)?.scrollEngine;
+  return engine &&
+    typeof engine.offset === "number" &&
+    typeof engine.clampOffset === "function" &&
+    typeof engine.startInteraction === "function" &&
+    typeof engine.endInteraction === "function" &&
+    typeof engine.hooks?.onScrollUpdate === "function"
+    ? (engine as ScrollEngine)
+    : null;
+}
+
+function onWheelCapture(e: WheelEvent) {
+  const engine = scrollEngine();
+  if (!engine || !player || !player.getElement().contains(e.target as Node)) return;
+  // AMLL's own handler would take the step at once; this one glides to it.
+  e.preventDefault();
+  e.stopPropagation();
+  const step = e.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? e.deltaY : e.deltaY * 50;
+  if (wheelTarget === null) {
+    engine.clearTimers();
+    engine.startInteraction("wheel");
+    wheelTarget = engine.offset;
+  }
+  wheelTarget = engine.clampOffset(wheelTarget + step);
+  if (wheelEndTimer) clearTimeout(wheelEndTimer);
+  wheelEndTimer = setTimeout(() => {
+    wheelEndTimer = null;
+    // Still gliding: the frame loop finishes it once the offset arrives.
+    if (wheelTarget === null) scrollEngine()?.endInteraction();
+  }, WHEEL_END_MS);
+}
+
+/** Moves the offset part of the way to the wheel's target, and finishes the scroll on arrival. */
+function glideWheel(dtMs: number) {
+  const engine = scrollEngine();
+  if (wheelTarget === null || !engine) return;
+  const gap = wheelTarget - engine.offset;
+  if (Math.abs(gap) < 0.5) {
+    engine.offset = wheelTarget;
+    engine.hooks.onScrollUpdate(true);
+    wheelTarget = null;
+    if (!wheelEndTimer) engine.endInteraction();
+    return;
+  }
+  engine.offset = engine.clampOffset(engine.offset + gap * (1 - Math.exp((-WHEEL_GLIDE * dtMs) / 1000)));
+  engine.hooks.onScrollUpdate(true);
+}
+
+const wheelHosts = new WeakSet<Document>();
+
+/** Listens on the player's document, ahead of AMLL's own wheel handler. */
+function watchWheel(doc: Document) {
+  if (wheelHosts.has(doc)) return;
+  wheelHosts.add(doc);
+  doc.addEventListener("wheel", onWheelCapture, { capture: true, passive: false });
+}
+
 onAnimationFrame((timestamp) => {
   if (!player) return;
   // Anything that clears the lyrics area (a new fetch's loader, a notice) drops the element.
@@ -263,6 +351,8 @@ onAnimationFrame((timestamp) => {
     else player.pause();
   }
 
+  watchWheel(player.getElement().ownerDocument);
+  glideWheel(Math.min(64, Math.max(0, timestamp - lastFrameTime)));
   player.setCurrentTime(SpotifyPlayer.GetPosition());
   player.update(Math.max(0, timestamp - lastFrameTime));
   lastFrameTime = timestamp;

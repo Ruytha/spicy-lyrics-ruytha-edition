@@ -15,7 +15,7 @@ import fetchLyrics, {
   ShowQueueLoader,
   type FetchLyricsResult,
 } from "../fetchLyrics.ts";
-import { BuildLyricsNotice, HasNotice, SetShownNotice, SyncNoLyricsLayout } from "../LyricsNotice.ts";
+import { BuildLyricsNotice, HasNotice, OnLyricsAreaShownAgain, SetShownNotice, SyncNoLyricsLayout } from "../LyricsNotice.ts";
 import { ClearLyricsContentArrays, isRomanized } from "../lyrics.ts";
 import { PageContainer } from "../../../components/Pages/PageView.ts";
 import { CleanUpIsByCommunity } from "../Applyer/Credits/ApplyIsByCommunity.tsx";
@@ -37,6 +37,14 @@ let applyToken = 0;
 /** The lyrics on screen now (null while a notice or nothing is showing). */
 let appliedLyrics: LyricsData | null = null;
 export const GetAppliedLyrics = () => appliedLyrics;
+
+// Lyrics drawn while the lyrics area was hidden (Cover Only) measured as zero-size lines;
+// when it shows again, the same lyrics are drawn afresh. Temporary lyrics (a loaded TTML)
+// stay, since these are whatever is on screen rather than a new fetch.
+OnLyricsAreaShownAgain(() => {
+  const lyrics = appliedLyrics;
+  if (lyrics) void ApplyLyrics([lyrics, 200, SpotifyPlayer.GetUri() ?? undefined]);
+});
 
 export const cleanupApplyLyricsAbortController = () => {
   if (currentAbortController) {
@@ -155,9 +163,10 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
   appliedLyrics = lyrics;
 
   // Lyrics replace any notice, whichever path applied them (a TTML upload re-applies
-  // without going through fetchLyrics), so a later layout sync can't hide them.
+  // without going through fetchLyrics), so a later layout sync can't hide them. They're
+  // drawn just below, so showing the area mustn't ask for another draw.
   SetShownNotice(null);
-  SyncNoLyricsLayout();
+  SyncNoLyricsLayout(false);
 
   const romanize = isRomanized;
 
