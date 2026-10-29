@@ -25,8 +25,6 @@
 
 #SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header > .Metadata {
   order: 1;
-  height: auto;
-  gap: 0.8cqw;
   margin: 4.5cqw 0 0;
 }
 
@@ -315,4 +313,45 @@
    no lyrics) the cover takes less of the page's height. */
 #SpicyLyricsPage.SL_DeckLayout:is(.SL_CoverOnly, .SL_AutoCover):not(.CompactMode):has(.ContentBox.LyricsHidden) {
   --NowBarWidth: min(40cqw, 47cqh) !important;
+}
+
+/* ─── Resting ─────────────────────────────────────────────────────────────── */
+/* While the mouse rests the timeline and deck fold away, leaving the cover and the title;
+   in the centred layouts the cover grows back to Cover Only's size. Moving the mouse
+   unfolds them and the cover makes room again, both on the same curve. */
+
+#SpicyLyricsPage#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar {
+  transition:
+    left 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    width 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header > :is(.Timeline, .SL_Deck) {
+  max-height: 40cqw;
+  transition:
+    max-height 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    margin-top 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    padding 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.35s ease;
+}
+
+#SpicyLyricsPage.SL_DeckLayout:not(.SL_DeckAwake) .ContentBox .NowBar .Header > :is(.Timeline, .SL_Deck) {
+  max-height: 0;
+  margin-top: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#SpicyLyricsPage.SL_DeckLayout:not(.SL_DeckAwake):is(.SL_CoverOnly, .SL_AutoCover):not(.CompactMode):has(.ContentBox.LyricsHidden) {
+  --NowBarWidth: min(46cqw, 62cqh) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #SpicyLyricsPage#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar,
+  #SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header > :is(.Timeline, .SL_Deck) {
+    transition: opacity 0.2s ease;
+  }
 }

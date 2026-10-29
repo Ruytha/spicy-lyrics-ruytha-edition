@@ -21,8 +21,10 @@ after an update shows what's new.
   the cover: a big heart in the middle, the buttons along its bottom edge and the volume
   down its side. They now sit under the cover like a music player: the title, the
   timeline, shuffle, skip and repeat around a solid play button, then the heart beside a
-  flat volume slider. The cover stays clear, and the controls fade when the mouse rests.
-  Compact mode, the popup and Canvas Stage keep their own layouts.
+  flat volume slider. The cover stays clear. When the mouse rests, the timeline and
+  controls fold away and the cover grows back, leaving just the cover and the title;
+  moving the mouse brings them back. Compact mode, the popup and Canvas Stage keep their
+  own layouts.
 
 ## 2026-10-29, second update
 
