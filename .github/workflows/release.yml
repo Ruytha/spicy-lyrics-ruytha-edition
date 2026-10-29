@@ -63,6 +63,9 @@ jobs:
           [ "$size" -ge 500000 ] && [ "$size" -le 20000000 ] || { echo "::error::Bundle size $size is outside 500 KB to 20 MB"; exit 1; }
           grep -q Spicetify "$f" || { echo "::error::Bundle doesn't reference Spicetify"; exit 1; }
           grep -qi 'spicy.\?lyrics' "$f" || { echo "::error::Bundle doesn't reference Spicy Lyrics"; exit 1; }
+          # The changelog is bundled for What's New, so its newest heading proves the build is current.
+          heading=$(grep -m1 '^## ' CHANGELOG.md)
+          grep -qF "$heading" "$f" || { echo "::error::Bundle doesn't contain the newest changelog section \"$heading\""; exit 1; }
       - name: Commit the bundle
         run: |
           cp dist/spicy-lyrics.js builds/ruytha/spicy-lyrics.js
