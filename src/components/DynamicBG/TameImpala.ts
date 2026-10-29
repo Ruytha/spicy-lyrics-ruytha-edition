@@ -28,6 +28,7 @@ const HUE_SPAN = 125;
 const HUE_DRIFT = 6;
 
 let lastKey = "";
+let lastLyrics: LyricsData | null = null;
 let active = false;
 let canvas: HTMLCanvasElement | null = null;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -46,7 +47,10 @@ function isTameImpala(lyrics: LyricsData | null): boolean {
   // Spotify's metadata also lists every artist's uri, for songs where `artists` is cut short.
   const meta = item?.metadata ?? {};
   if (Object.entries(meta).some(([k, v]) => k.startsWith("artist_uri") && v.endsWith(`:${TAME_IMPALA_ID}`))) return true;
-  const writers = (lyrics as { SongWriters?: string[] } | null)?.SongWriters ?? [];
+  // Only the playing song's own lyrics count: right after a skip the last song's are still up.
+  const uri = SpotifyPlayer.GetUri();
+  if (!lyrics || (lyrics.uri && uri && lyrics.uri !== uri)) return false;
+  const writers = (lyrics as { SongWriters?: string[] }).SongWriters ?? [];
   return writers.some((w) => KEVIN_PARKER.test(w));
 }
 
@@ -167,13 +171,15 @@ onAnimationFrame((timestamp) => {
     canvas = null;
     ctx = null;
     lastKey = "";
+    lastLyrics = null;
   }
   if (!PageContainer) return;
   // Re-checked when the song or its lyrics (with their songwriters) change.
   const lyrics = GetAppliedLyrics();
-  const key = `${SpotifyPlayer.GetUri() ?? ""}|${lyrics ? "lyrics" : "none"}|${$tameImpalaMode.get()}`;
-  if (key !== lastKey) {
+  const key = `${SpotifyPlayer.GetUri() ?? ""}|${$tameImpalaMode.get()}`;
+  if (key !== lastKey || lyrics !== lastLyrics) {
     lastKey = key;
+    lastLyrics = lyrics;
     setActive($tameImpalaMode.get() && isTameImpala(lyrics));
   }
   if (!active || PageContainer.ownerDocument.hidden) return;

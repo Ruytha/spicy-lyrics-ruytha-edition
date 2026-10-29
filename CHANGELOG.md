@@ -31,6 +31,8 @@ after an update shows what's new.
 - **Lyrics stay in time after Cover Only.** Turning Cover Only off could leave the lyrics
   out of sync, with the playing line in the wrong place or highlighting at the wrong
   moment. They're drawn afresh when they come back, with either renderer.
+- Skipping from a Tame Impala song to another song could leave Tame Impala mode on for
+  the new one. It now turns off unless the new song is theirs too.
 
 ## 2026-10-28
 
