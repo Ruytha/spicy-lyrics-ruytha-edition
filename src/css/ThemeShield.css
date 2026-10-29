@@ -1,0 +1,50 @@
+/*
+ * Some Spicetify themes paint every [role="dialog"] and [role="menu"] in the app as a solid,
+ * rounded popup, with !important (GlassHome does). Spicy Lyrics' own windows and menu draw
+ * their surface themselves, so these put it back; the role in each selector makes it outrank
+ * the theme's rule. Without them the theme's grey sat under the settings glass and filled
+ * the window while peeking at the lyrics.
+ */
+
+/* Settings and the other Spicy windows: the surface is the ::before glass, the element bare. */
+sl-generic-modal.SpicyLyricsModal .sl-modal[role="dialog"] {
+  background-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: none !important;
+}
+
+/* Notices (what's new, confirmations). */
+.sl-notice[role="dialog"] {
+  background-color: var(--sl-field) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    inset 0 1px 0 color-mix(in oklab, var(--sl-ink) 22%, transparent),
+    0 20px 48px -20px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* The profile viewer. */
+.SL_ProfileViewer .SL_ProfileViewer_Dialog[role="dialog"] {
+  background-color: #050a22 !important;
+  border-radius: 22px !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 1px rgba(190, 205, 255, 0.13),
+    0 26px 60px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* The lyrics page controls menu: glass, not a solid plate. */
+#SpicyLyricsPage#SpicyLyricsPage.Exp_DockMenu .ViewControls .SL_DockMenu[role="menu"] {
+  padding: 6px !important;
+  border-radius: 20px !important;
+  background-color: rgba(24, 26, 40, 0.55) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(1.9) !important;
+  backdrop-filter: blur(32px) saturate(1.9) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.11),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 8px rgba(0, 0, 0, 0.18),
+    0 28px 64px -18px rgba(0, 0, 0, 0.62) !important;
+}

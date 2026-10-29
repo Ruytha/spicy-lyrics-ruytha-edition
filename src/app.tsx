@@ -69,6 +69,7 @@ import "./css/NPVLyrics.css";
 import "./css/PopupDock.css";
 // Last, so its spring overrides the curves above.
 import "./css/RuythaMotion.css";
+import "./css/ThemeShield.css";
 import { showUpdatedDialog } from "./components/ReactComponents/UpdateDialog.tsx";
 import { IsPIP, OpenPopupLyrics, ClosePopupLyrics } from "./components/Utils/PopupLyrics.ts";
 import { GetNPVCardElement, GetNPVElement, GetNPVObserverRoot, initNPVLyrics } from "./components/Utils/NPVLyrics.ts";

@@ -16,6 +16,12 @@ after an update shows what's new.
   embedded profile page; while it lasts it shows under the card, and once it's gone the
   card stays.
 
+### Fixed
+
+- With themes that paint every popup solid (GlassHome, for one), holding the eye button in
+  Settings turned the window into a grey box instead of showing the lyrics. Spicy Lyrics'
+  windows and the controls menu now keep their own look under those themes.
+
 ## 2026-10-29
 
 ### Added
