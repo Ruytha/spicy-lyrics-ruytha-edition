@@ -5,7 +5,6 @@
     "sc": "spicetify-creator",
     "dev": "spicetify-creator dev",
     "build": "spicetify-creator build",
-    "release": "spicetify-creator build && bun -e \"await Bun.write('builds/ruytha/spicy-lyrics.js', Bun.file('dist/spicy-lyrics.js'))\"",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt"

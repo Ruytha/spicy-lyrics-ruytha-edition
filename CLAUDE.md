@@ -6,7 +6,7 @@
 # Development (watch mode — builds and syncs to Spicetify)
 bun run dev
 
-# Production build (outputs to builds/)
+# Production build (outputs to dist/)
 bun run build
 
 # Lint
@@ -18,6 +18,10 @@ bun run lint:fix
 # Format
 bun run fmt
 ```
+
+## Releasing
+
+Merging to `main` is the release. After CI passes on `main`, `.github/workflows/release.yml` builds the extension and commits `builds/ruytha/spicy-lyrics.js`, which installed loaders fetch at the newest `main` commit. Never build, edit or commit that file by hand: CI fails any pull request that changes it. If one does, restore it with `git checkout origin/main -- builds/ruytha/spicy-lyrics.js`. To re-ship without a code change, run the Release workflow from the Actions tab.
 
 ## Architecture
 
