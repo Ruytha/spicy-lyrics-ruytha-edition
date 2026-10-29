@@ -3,6 +3,9 @@ import { Query } from "../../utils/API/Query.ts";
 
 // spicylyrics.org serves this page for embedding: its CSP allows the Spotify client as a frame ancestor.
 const EMBED_ORIGIN = "https://spicylyrics.org";
+// spicylyrics.org is retiring the embed. While it's up it shows under the card; set this to
+// false once it's gone and the window is just the card.
+const SHOW_EMBED = true;
 const SPOTIFY_URI = /^spotify:[a-z]+:[A-Za-z0-9]+$/;
 
 let closeActive: (() => void) | null = null;
@@ -29,27 +32,84 @@ async function resolveHandle(userId: string): Promise<string | null> {
   }
 }
 
+export type ProfilePerson = { id: string; username?: string; avatar?: string };
+
+const profileUrl = (userId: string) => `${EMBED_ORIGIN}/uid/${encodeURIComponent(userId)}`;
+
 /**
- * Show a TTML maker/uploader's spicylyrics.org profile in a modal over the client,
- * instead of sending them to the browser. `doc` is the document the credit lives in,
- * so it also works from Popup Lyrics.
+ * The card heading the window: avatar, name, the role from the credits, and a button
+ * that opens the full profile in the browser. Built from what the credits carry, so it
+ * shows straight away and works without the embed.
  */
-export function OpenProfileViewer(userId: string, doc: Document = document) {
+function buildCard(doc: Document, person: ProfilePerson, role: string, onOpen: () => void) {
+  const card = doc.createElement("div");
+  card.className = "SL_ProfileViewer_Card";
+
+  const avatar = doc.createElement("div");
+  avatar.className = "SL_ProfileViewer_Avatar";
+  const name = person.username?.trim() || "Unknown";
+  // Shows until the picture loads, or in its place: the name's first letter or digit.
+  avatar.textContent = (name.match(/[\p{L}\p{N}]/u)?.[0] ?? "?").toUpperCase();
+  if (person.avatar) {
+    const img = doc.createElement("img");
+    img.src = person.avatar;
+    img.alt = "";
+    img.onerror = () => img.remove();
+    avatar.appendChild(img);
+  }
+
+  const text = doc.createElement("div");
+  text.className = "SL_ProfileViewer_Text";
+  const roleEl = doc.createElement("span");
+  roleEl.className = "SL_ProfileViewer_Role";
+  roleEl.textContent = role;
+  const nameEl = doc.createElement("span");
+  nameEl.className = "SL_ProfileViewer_Name";
+  nameEl.textContent = `@${name}`;
+  text.append(roleEl, nameEl);
+
+  const open = doc.createElement("button");
+  open.type = "button";
+  open.className = "SL_ProfileViewer_Open";
+  open.innerHTML = `<span>Open profile</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>`;
+  open.title = "Opens spicylyrics.org in your browser";
+  open.addEventListener("click", onOpen);
+
+  card.append(avatar, text, open);
+  return card;
+}
+
+/**
+ * Show a TTML maker/uploader's profile in a window over the client: a card with who they
+ * are and a link to their full profile, and spicylyrics.org's embed under it while that
+ * exists. `role` is how the credits named them ("Made by"). `doc` is the document the
+ * credit lives in, so it also works from Popup Lyrics.
+ */
+export function OpenProfileViewer(person: ProfilePerson, role: string, doc: Document = document) {
   closeActive?.();
   const win = doc.defaultView ?? window;
+  const userId = person.id;
 
   const overlay = doc.createElement("div");
-  overlay.className = "SL_ProfileViewer";
+  overlay.className = SHOW_EMBED ? "SL_ProfileViewer WithEmbed" : "SL_ProfileViewer";
   overlay.innerHTML = `
     <div class="SL_ProfileViewer_Dialog" role="dialog" aria-modal="true" aria-label="TTML profile">
       <button type="button" class="SL_ProfileViewer_Close" aria-label="Close profile">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m5.5 5.5 13 13"/><path d="m18.5 5.5-13 13"/></svg>
       </button>
-      <div class="SL_ProfileViewer_Loading">Loading profile…</div>
-      <iframe title="TTML profile" allow="clipboard-write" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+      ${SHOW_EMBED ? `<div class="SL_ProfileViewer_Embed">
+        <div class="SL_ProfileViewer_Loading">Loading profile…</div>
+        <iframe title="TTML profile" allow="clipboard-write" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+      </div>` : ""}
     </div>`;
 
-  const iframe = overlay.querySelector("iframe")!;
+  const dialog = overlay.querySelector<HTMLElement>(".SL_ProfileViewer_Dialog")!;
+  dialog.prepend(
+    buildCard(doc, person, role, () => {
+      win.open(profileUrl(userId), "_blank", "noopener,noreferrer");
+    })
+  );
+  const iframe = overlay.querySelector("iframe");
 
   const close = () => {
     win.removeEventListener("message", onMessage);
@@ -60,7 +120,7 @@ export function OpenProfileViewer(userId: string, doc: Document = document) {
 
   // The embed asks the client to play a track ("Listen") or to close itself.
   const onMessage = (event: MessageEvent) => {
-    if (event.origin !== EMBED_ORIGIN || event.source !== iframe.contentWindow) return;
+    if (!iframe || event.origin !== EMBED_ORIGIN || event.source !== iframe.contentWindow) return;
     const events = event.data?.type === "events" ? event.data.data?.events : null;
     if (!Array.isArray(events)) return;
     for (const item of events) {
@@ -99,11 +159,12 @@ export function OpenProfileViewer(userId: string, doc: Document = document) {
   doc.body.appendChild(overlay);
   closeActive = close;
 
+  if (!iframe) return;
   void resolveHandle(userId).then((handle) => {
     if (!overlay.isConnected) return;
+    // Without a handle there's no embed to show; the card alone still links the profile.
     if (!handle) {
-      overlay.querySelector(".SL_ProfileViewer_Loading")!.textContent =
-        "This profile couldn't be loaded.";
+      overlay.classList.remove("WithEmbed");
       return;
     }
     iframe.addEventListener("load", () => overlay.classList.add("Loaded"), { once: true });

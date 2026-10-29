@@ -6,6 +6,16 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-29, second update
+
+### Changed
+
+- **Profile card.** Clicking **Made by** or **Uploaded by** opens a window that starts with
+  a card for that person: their picture, name and role, and **Open profile**, which opens
+  their full profile on spicylyrics.org in your browser. spicylyrics.org is retiring the
+  embedded profile page; while it lasts it shows under the card, and once it's gone the
+  card stays.
+
 ## 2026-10-29
 
 ### Added

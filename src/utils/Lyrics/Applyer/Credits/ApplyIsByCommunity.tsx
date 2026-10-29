@@ -119,7 +119,7 @@ export function ApplyIsByCommunity(data: any, LyricsContainer: HTMLElement): voi
       () => {
         // Opened in the document the credit is in, so Popup Lyrics shows it there too.
         if (person.id) {
-          OpenProfileViewer(person.id, profileButton.ownerDocument);
+          OpenProfileViewer(person, labelText, profileButton.ownerDocument);
           return;
         }
         openProfile(person.id);
