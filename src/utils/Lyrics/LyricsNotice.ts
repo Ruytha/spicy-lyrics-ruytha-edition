@@ -3,10 +3,11 @@ import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import { IsCardMode, PageContainer } from "../../components/Pages/PageView.ts";
 import { IsCompactMode } from "../../components/Utils/CompactMode.ts";
 import Fullscreen from "../../components/Utils/Fullscreen.ts";
-import { SyncNowBarSide } from "../../components/Utils/NowBar.ts";
+import { CloseNowBar, OpenNowBar, SyncNowBarSide } from "../../components/Utils/NowBar.ts";
 import { IsOpen as IsBreakerOpen, RetryAfterMs } from "../API/CircuitBreaker.ts";
 import { getExperiments, isExperimentEnabled } from "../experiments.ts";
-import { $coverOnlyMode, $showNoLyricsNotice } from "../stores.ts";
+import { $autoCoverOnly, $coverOnlyMode, $showNoLyricsNotice } from "../stores.ts";
+import { $isNowBarOpen } from "../uiState.ts";
 import { GetLastLyricsFailure } from "./fetchLyrics.ts";
 
 const DISCORD_URL = "https://discord.com/invite/uqgXU5wh8j";
@@ -113,9 +114,21 @@ export function IsCoverOnly(): boolean {
   return $coverOnlyMode.get() && !!PageContainer && !IsCardMode && !IsCompactMode();
 }
 
+/** A song with no lyrics, shown as Cover Only would show it (the setting is on by default). */
+export function IsAutoCover(): boolean {
+  return (
+    $autoCoverOnly.get() &&
+    !!shownNotice &&
+    NO_LYRICS_NOTICES.has(shownNotice) &&
+    !!PageContainer &&
+    !IsCardMode &&
+    !IsCompactMode()
+  );
+}
+
 function shouldHideLyricsArea(): boolean {
   // Cover Only takes the lyrics away whatever they hold, and lays the song out on its own.
-  if (IsCoverOnly()) return true;
+  if (IsCoverOnly() || IsAutoCover()) return true;
   if (!shownNotice || !PageContainer) return false;
   // The NPV card has its own switch (Hide When a Song Has No Lyrics), which removes it.
   if (IsCardMode) return false;
@@ -142,6 +155,7 @@ export function SyncNoLyricsLayout(redrawIfShownAgain = true): void {
   const wasHidden = !!container?.classList.contains("Hidden");
   container?.classList.toggle("Hidden", hide);
   page.querySelector(".ContentBox")?.classList.toggle("LyricsHidden", hide);
+  syncAutoCover(page);
   SyncNowBarSide();
   // The hidden area is display: none, so both renderers measure every line as zero while
   // it's away; lyrics laid out then (or before it hid) come back with their timing and
@@ -149,6 +163,22 @@ export function SyncNoLyricsLayout(redrawIfShownAgain = true): void {
   // draw them anyway passes false.
   if (wasHidden && !hide && redrawIfShownAgain) {
     for (const redraw of shownAgainListeners) redraw();
+  }
+}
+
+// Whether the side with the cover was opened only for a song without lyrics, so it closes
+// again once lyrics come back (the saved choice was to keep it closed).
+let autoOpenedNowBar = false;
+
+function syncAutoCover(page: HTMLElement) {
+  const auto = IsAutoCover() && !IsCoverOnly();
+  page.classList.toggle("SL_AutoCover", auto);
+  if (auto && !$isNowBarOpen.get() && !page.classList.contains("NowBarStatus__Open")) {
+    autoOpenedNowBar = true;
+    OpenNowBar(true);
+  } else if (!auto && autoOpenedNowBar) {
+    autoOpenedNowBar = false;
+    if (!$isNowBarOpen.get() && !IsCoverOnly()) CloseNowBar();
   }
 }
 
@@ -161,6 +191,7 @@ export function OnLyricsAreaShownAgain(redraw: () => void): void {
 
 $showNoLyricsNotice.listen(() => queueMicrotask(SyncNoLyricsLayout));
 $coverOnlyMode.listen(() => queueMicrotask(SyncNoLyricsLayout));
+$autoCoverOnly.listen(() => queueMicrotask(SyncNoLyricsLayout));
 
 function describeView(): string {
   const parts: string[] = [];

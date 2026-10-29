@@ -157,6 +157,8 @@ export const $preferAnimatedCover = persistAtom<boolean>("preferAnimatedCover", 
 export const $coverBeatPulse = persistAtom<boolean>("coverBeatPulse", false);
 export const $coverBlend = persistAtom<boolean>("coverBlend", false);
 export const $coverOnlyMode = persistAtom<boolean>("coverOnlyMode", false);
+// A song with no lyrics shows the cover the way Cover Only does, instead of the notice.
+export const $autoCoverOnly = persistAtom<boolean>("autoCoverOnly", true);
 export const $simpleLyricsMode = persistAtom<boolean>("simpleLyricsMode", false);
 export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", false);
 // Only the line being sung is shown; everything else is hidden.

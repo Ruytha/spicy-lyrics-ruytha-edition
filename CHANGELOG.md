@@ -6,6 +6,24 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-10-30
+
+### Added
+
+- **Cover Only for songs without lyrics.** When a song has no lyrics, the page shows its
+  cover large in the middle, the way Cover Only does, instead of a notice. The lyrics come
+  back with the next song that has them. Turn it off under Settings → Cover → **Cover Only
+  for Songs Without Lyrics**.
+
+### Changed
+
+- **New player controls in Cinema View and fullscreen.** The controls used to sit on top of
+  the cover: a big heart in the middle, the buttons along its bottom edge and the volume
+  down its side. They now sit under the cover like a music player: the title, the
+  timeline, shuffle, skip and repeat around a solid play button, then the heart beside a
+  flat volume slider. The cover stays clear, and the controls fade when the mouse rests.
+  Compact mode, the popup and Canvas Stage keep their own layouts.
+
 ## 2026-10-29, second update
 
 ### Changed

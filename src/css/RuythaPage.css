@@ -79,9 +79,11 @@
 
 /* ─── Cover Only ──────────────────────────────────────────────────────────── */
 /* The lyrics area is hidden through .LyricsHidden (LyricsNotice.ts), which also centres
-   the side; this only lets the cover grow into the room the lyrics left. */
+   the side; this only lets the cover grow into the room the lyrics left. A song with no
+   lyrics gets the same (SL_AutoCover). */
 
-#SpicyLyricsPage.SL_CoverOnly:not(.CompactMode):has(.ContentBox.LyricsHidden) {
+#SpicyLyricsPage.SL_CoverOnly:not(.CompactMode):has(.ContentBox.LyricsHidden),
+#SpicyLyricsPage.SL_AutoCover:not(.CompactMode):has(.ContentBox.LyricsHidden) {
   --NowBarWidth: min(46cqw, 62cqh) !important;
 }
 

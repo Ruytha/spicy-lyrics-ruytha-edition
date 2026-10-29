@@ -20,6 +20,7 @@ import { IsCompactMode } from "./CompactMode.ts";
 import { Maid } from "../../modules/Maid.ts";
 import Scheduler from "../../modules/Scheduler.ts";
 import Whentil from "../../modules/Whentil.ts";
+import { RemovePlayerDeck, SyncPlayerDeck } from "../../utils/Ruytha/PlayerDeck.ts";
 
 // Spicetify's wrapper rescans every element's computed style on each childList
 // mutation, and textContent always replaces the text node. Editing it in place doesn't.
@@ -1065,6 +1066,8 @@ function OpenNowBar(skipSaving: boolean = false) {
           MediaBox.innerHTML = "";
           if (viewControls) MediaBox.appendChild(viewControls);
           MediaBox.appendChild(fragment);
+          // Cinema View and fullscreen lay them out under the cover instead (PlayerDeck.ts).
+          SyncPlayerDeck();
 
           /* AppendQueue.forEach((element) => {
                         if (element.classList.contains("marqueeify")) {
@@ -1234,6 +1237,9 @@ function CleanUpActiveComponents() {
     const volumeControl = MediaContent.querySelector(".VolumeControl");
     if (volumeControl) MediaContent.removeChild(volumeControl);
   }
+
+  // The controls may sit in the deck under the cover rather than on it.
+  RemovePlayerDeck();
 
   // Also remove Timeline if it was placed in the Header
   const headerTimeline = PageContainer?.querySelector(

@@ -5,6 +5,7 @@ import {
   $coverMotionBackground,
   $coverBeatPulse,
   $coverBlend,
+  $autoCoverOnly,
   $coverOnlyMode,
   $preferAnimatedCover,
 } from "../../../utils/stores.ts";
@@ -115,6 +116,16 @@ const groups: GroupDef[] = [
         keywords: "cover only no lyrics hide lyrics artwork big album art mode",
         Control: ({ label }) => (
           <Toggle label={label} checked={useStore($coverOnlyMode)} onChange={(v) => $coverOnlyMode.set(v)} />
+        ),
+      },
+      {
+        id: "autoCoverOnly",
+        label: "Cover Only for Songs Without Lyrics",
+        description:
+          "When a song has no lyrics, show its cover large in the middle of the page instead of a notice. The lyrics come back with the next song that has them.",
+        keywords: "cover only no lyrics automatic auto instrumental notice missing",
+        Control: ({ label }) => (
+          <Toggle label={label} checked={useStore($autoCoverOnly)} onChange={(v) => $autoCoverOnly.set(v)} />
         ),
       },
     ],

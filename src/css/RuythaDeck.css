@@ -1,0 +1,318 @@
+/*
+ * The player deck (utils/Ruytha/PlayerDeck.ts): in Cinema View and fullscreen the controls
+ * leave the cover for a deck under it. Cover, then the title, the timeline, the transport
+ * with a solid play button, and the heart beside a flat volume slider. Sizes are in cqw, the
+ * NowBar's width, so the deck keeps the cover's proportions at any window size.
+ */
+
+/* The cover, title and deck stand as one block, centred on the page's height. */
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-top: 0;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .CenteredView .Header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header > .MediaBox {
+  order: 0;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header > .Metadata {
+  order: 1;
+  height: auto;
+  gap: 0.8cqw;
+  margin: 4.5cqw 0 0;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header > .Timeline {
+  order: 2;
+  margin-top: 2.5cqw;
+}
+
+/* Nothing sits on the cover any more but the page controls, so it isn't dimmed for them. */
+#SpicyLyricsPage.SL_DeckLayout .ContentBox .NowBar .Header .MediaBox .MediaImageContainer {
+  filter: none;
+}
+
+/* ─── The deck ────────────────────────────────────────────────────────────── */
+
+#SpicyLyricsPage .ContentBox .NowBar .Header > .SL_Deck {
+  order: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3cqw;
+  margin-top: 3cqw;
+  opacity: 0;
+  transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+#SpicyLyricsPage.SL_DeckAwake .ContentBox .NowBar .Header > .SL_Deck,
+#SpicyLyricsPage .ContentBox .NowBar .Header > .SL_Deck:is(:hover, :focus-within) {
+  opacity: 1;
+  transition-duration: 0.25s;
+}
+
+/* Transport: shuffle and repeat at the edges, skips either side of play. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControls {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: auto;
+  height: auto;
+  padding: 0 4cqw;
+  margin: 0;
+  opacity: 1;
+  translate: none;
+  transform: none;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 11cqw !important;
+  height: 11cqw;
+  margin: 0;
+  padding: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #fff;
+  fill: #fff;
+  opacity: 1;
+  transform: none;
+  transition:
+    background-color 0.2s ease,
+    scale 0.35s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl svg {
+  width: 5cqw;
+  height: auto;
+  max-height: 5cqw;
+  fill: currentColor;
+  transform: none;
+  opacity: 1;
+  pointer-events: none;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl:active {
+  scale: 0.9;
+}
+
+/* The skips are the second weight: bigger glyphs, no circle until hovered. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.TrackSkip {
+  width: 14cqw !important;
+  height: 14cqw;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.TrackSkip svg {
+  width: 8.5cqw;
+  max-height: none;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.PrevTrack svg {
+  transform: scaleX(-1);
+}
+
+/* Shuffle and repeat sit back until they're on, then take the accent and a dot. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle) {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle).Enabled {
+  color: var(--ry-accent, #9cc7f2);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle).Enabled::after {
+  content: "";
+  position: absolute;
+  bottom: 0.9cqw;
+  left: 50%;
+  width: 0.9cqw;
+  height: 0.9cqw;
+  border-radius: 999px;
+  background: currentColor;
+  translate: -50% 0;
+}
+
+/* Play: the one solid shape in the row. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.PlayStateToggle {
+  width: 19cqw !important;
+  height: 19cqw;
+  color: #0b1026;
+  background-color: #fff;
+  box-shadow: 0 1.5cqw 4cqw -1.5cqw rgba(0, 0, 0, 0.55);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.PlayStateToggle:hover {
+  background-color: #fff;
+  scale: 1.04;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.PlayStateToggle:active {
+  scale: 0.94;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.PlayStateToggle svg {
+  width: 6.4cqw;
+  max-height: 6.4cqw;
+}
+
+/* Play's triangle sits a touch right of centre, so it reads centred in the circle. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl.PlayStateToggle svg.Play {
+  translate: 0.5cqw 0;
+}
+
+/* ─── Heart and volume ────────────────────────────────────────────────────── */
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .SL_DeckLower {
+  display: flex;
+  align-items: center;
+  gap: 3cqw;
+  padding: 0 4cqw;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .SL_DeckLower.NoVolume {
+  justify-content: center;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart {
+  position: relative;
+  inset: auto;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 9cqw;
+  height: 9cqw;
+  margin: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 1;
+  transform: none;
+  transition:
+    background-color 0.2s ease,
+    scale 0.35s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart:active {
+  scale: 0.9;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart svg {
+  width: 5.4cqw;
+  height: 5.4cqw;
+}
+
+/* Outline until liked, then filled; a hover hints at the fill. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart #SpicyLyrics_HeartFill {
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart:not(.Filled):hover #SpicyLyrics_HeartFill {
+  opacity: 0.25;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart.Filled #SpicyLyrics_HeartFill {
+  opacity: 1;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart.press02 svg {
+  scale: 1.18;
+  transition: scale 0.1s ease-out;
+}
+
+/* Flat, filling the rest of the row; NowBar.ts reads the drag axis from this shape. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl {
+  --CapsuleWidth: 2.2cqw;
+  --CapsuleHeight: 100%;
+  position: relative;
+  inset: auto;
+  flex: 1;
+  width: auto;
+  height: 2.2cqw;
+  margin: 0 0 0 7cqw;
+  border-radius: 999px;
+  translate: none;
+  cursor: pointer;
+  overflow: visible;
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: height 0.28s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl:is(:hover, .Dragging) {
+  height: 3.2cqw;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl .VolumeFill {
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #fff;
+  transform: none;
+  clip-path: inset(0 calc((1 - var(--VolumeLevel)) * 100%) 0 0 round 999px);
+  transition: clip-path 0.18s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl.Dragging .VolumeFill {
+  transition: none;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl .Handle {
+  display: none;
+}
+
+/* The mute button hangs off the slider's start, outside it. */
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl .VolumeIcon {
+  top: 50%;
+  bottom: auto;
+  left: -7cqw;
+  width: 5cqw;
+  height: 5cqw;
+  translate: 0 -50%;
+  transform: none;
+  fill: rgba(255, 255, 255, 0.7);
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl .VolumeIcon:hover {
+  fill: #fff;
+}
+
+#SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl .VolumeIcon svg {
+  width: 100%;
+  height: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #SpicyLyricsPage.SL_DeckLayout .SL_Deck .PlaybackControl,
+  #SpicyLyricsPage.SL_DeckLayout .SL_Deck .Heart,
+  #SpicyLyricsPage.SL_DeckLayout .SL_Deck .VolumeControl {
+    transition: none;
+  }
+}
+
+/* The deck needs room under the cover, so in the centred layouts (Cover Only, a song with
+   no lyrics) the cover takes less of the page's height. */
+#SpicyLyricsPage.SL_DeckLayout:is(.SL_CoverOnly, .SL_AutoCover):not(.CompactMode):has(.ContentBox.LyricsHidden) {
+  --NowBarWidth: min(40cqw, 47cqh) !important;
+}
