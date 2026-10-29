@@ -1,0 +1,85 @@
+name: Release
+
+# Builds builds/ruytha/spicy-lyrics.js and commits it to main once CI passes,
+# so merging to main is the whole release. Installed loaders fetch that file at
+# the newest main commit, so the bundle must always live at that path on main.
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    # Only ship commits that passed CI as a push to main (not a pull request).
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      ship: ${{ steps.head.outputs.ship }}
+    steps:
+      - id: head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CHECKED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          main=$(gh api "repos/${{ github.repository }}/commits/main" --jq .sha)
+          if [ "${{ github.event_name }}" = workflow_dispatch ] || [ "$main" = "$CHECKED_SHA" ]; then
+            echo "ship=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::main moved on to ${main:0:7}; the CI run for that commit releases it."
+            echo "ship=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  release:
+    needs: gate
+    if: needs.gate.outputs.ship == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - name: Check the bundle
+        run: |
+          f=dist/spicy-lyrics.js
+          size=$(wc -c < "$f")
+          echo "Bundle is $size bytes"
+          [ "$size" -ge 500000 ] && [ "$size" -le 20000000 ] || { echo "::error::Bundle size $size is outside 500 KB to 20 MB"; exit 1; }
+          grep -q Spicetify "$f" || { echo "::error::Bundle doesn't reference Spicetify"; exit 1; }
+          grep -qi 'spicy.\?lyrics' "$f" || { echo "::error::Bundle doesn't reference Spicy Lyrics"; exit 1; }
+      - name: Commit the bundle
+        run: |
+          cp dist/spicy-lyrics.js builds/ruytha/spicy-lyrics.js
+          if git diff --quiet -- builds/ruytha/spicy-lyrics.js; then
+            echo "Bundle unchanged; nothing to release."
+            exit 0
+          fi
+          base=$(git rev-parse HEAD)
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Build bundle for ${base:0:7}" -- builds/ruytha/spicy-lyrics.js
+          if ! git push origin HEAD:main; then
+            git fetch origin main
+            if [ "$(git rev-parse origin/main)" != "$base" ]; then
+              echo "::notice::main moved on during the build; the CI run for the new commit releases it."
+              exit 0
+            fi
+            exit 1
+          fi
+          echo "::notice::Released $(git rev-parse --short HEAD)"

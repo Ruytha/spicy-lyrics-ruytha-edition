@@ -1,1 +1,4 @@
 dist/* linguist-vendored
+builds/ruytha/spicy-lyrics.js linguist-generated=true
+# Bundled into the build as text; LF keeps builds identical on every OS.
+CHANGELOG.md text eol=lf

@@ -20,3 +20,20 @@ jobs:
         run: bun run lint
       - name: Test
         run: bun test
+
+  bundle-untouched:
+    # builds/ruytha/spicy-lyrics.js is built and committed by the Release workflow.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api --paginate "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --jq '.[].filename' |
+            grep -qx 'builds/ruytha/spicy-lyrics.js'; then
+            echo "::error file=builds/ruytha/spicy-lyrics.js::This file is built and committed automatically after merge. Drop it from this pull request (git checkout origin/main -- builds/ruytha/spicy-lyrics.js)."
+            exit 1
+          fi

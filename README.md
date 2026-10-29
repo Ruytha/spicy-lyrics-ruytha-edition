@@ -94,16 +94,9 @@ bun run fmt
 
 ### Publishing an update
 
-The loader serves whatever is committed at `builds/ruytha/spicy-lyrics.js` on `main`. To ship a change:
+Merge to `main`. That's the whole release.
 
-```bash
-bun run release   # builds and copies the bundle to builds/ruytha/spicy-lyrics.js
-git add builds/ruytha/spicy-lyrics.js
-git commit -m "Update build"
-git push
-```
-
-Installed copies pick it up the next time Spotify starts.
+Once CI passes on `main`, the Release workflow builds the extension and commits `builds/ruytha/spicy-lyrics.js`, the file the loader serves. Installed copies pick it up the next time Spotify starts. Don't build or commit that file yourself: CI rejects pull requests that change it. To re-ship without a code change, run **Actions → Release → Run workflow**.
 
 The AMLL code is in:
 
