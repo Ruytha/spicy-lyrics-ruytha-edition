@@ -10,6 +10,12 @@ after an update shows what's new.
 
 ### Added
 
+- **Apple Music Player.** In Cinema View and fullscreen the player is laid out like Apple
+  Music's Now Playing: the title and artist on the left with the heart across from them, a
+  thin timeline with the times under its ends, large skip and play buttons, and the volume
+  between a quiet and a loud speaker. It's on by default; Settings → Appearance →
+  **Apple Music Player** turns it off for the centred controls with a round play button.
+
 - **Cover Only for songs without lyrics.** When a song has no lyrics, the page shows its
   cover large in the middle, the way Cover Only does, instead of a notice. The lyrics come
   back with the next song that has them. Turn it off under Settings → Cover → **Cover Only

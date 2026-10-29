@@ -2,6 +2,7 @@ import { useStore } from "@nanostores/react";
 import {
   $animationFpsCap,
   $animationFpsCapEnabled,
+  $appleMusicPlayer,
   $customFontName,
   $fontFileName,
   $fontFileVersion,
@@ -52,6 +53,16 @@ const groups: GroupDef[] = [
           <button type="button" className="sl-sp-btn" onClick={ApplyAppleMusicLook}>
             Apply
           </button>
+        ),
+      },
+      {
+        id: "appleMusicPlayer",
+        label: "Apple Music Player",
+        description:
+          "In Cinema View and fullscreen, lays the player out like Apple Music's Now Playing: the title on the left with the heart beside it, a thin timeline with the times underneath, large skip and play buttons, and the volume between two speakers. Off, the controls stay centred with a round play button.",
+        keywords: "apple music player now playing controls layout cinema fullscreen ios",
+        Control: ({ label }) => (
+          <Toggle label={label} checked={useStore($appleMusicPlayer)} onChange={(v) => $appleMusicPlayer.set(v)} />
         ),
       },
     ],

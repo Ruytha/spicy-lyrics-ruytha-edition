@@ -355,3 +355,230 @@
     transition: opacity 0.2s ease;
   }
 }
+
+/* ─── Apple Music Player (on by default) ──────────────────────────────────── */
+/* Laid out like Apple Music's Now Playing: the title on the left with the heart across
+   from it, a thin timeline with the times under its ends, large bare skip and play glyphs,
+   and the volume between a quiet and a loud speaker. The deck's rows step aside
+   (display: contents) so each control takes its own cell in the header's grid. */
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .CenteredView .Header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "cover cover"
+    "meta heart"
+    "time time"
+    "transport transport"
+    "volume volume";
+  align-items: center;
+  column-gap: 3cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .MediaBox {
+  grid-area: cover;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .SL_Deck,
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .SL_Deck > * {
+  display: contents;
+}
+
+/* Title and artist, left-aligned; the artist a step quieter. */
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Metadata {
+  grid-area: meta;
+  align-items: flex-start;
+  margin: 6cqw 0 0;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header .Metadata :is(.SongName, .Artists) {
+  text-align: left;
+  justify-content: flex-start;
+  /* Set close, as one block. */
+  line-height: 1.22 !important;
+  height: auto;
+  margin: 0;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header .Metadata .Artists {
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .Heart {
+  grid-area: heart;
+  align-self: center;
+  margin-top: 6cqw;
+  transition:
+    background-color 0.2s ease,
+    opacity 0.35s ease,
+    scale 0.35s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+/* The timeline: a thin full-width line, elapsed and total under its two ends. */
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline {
+  grid-area: time;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  row-gap: 1.8cqw;
+  padding: 0;
+  margin-top: 6cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .SliderBar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  height: 1.4cqw;
+  margin: 0;
+  overflow: visible;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.78) 0,
+    rgba(255, 255, 255, 0.78) calc(100% * var(--SliderProgress)),
+    rgba(255, 255, 255, 0.2) calc(100% * var(--SliderProgress)),
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: height 0.28s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .SliderBar:is(:hover, .Dragging) {
+  height: 2.6cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .SliderBar::before,
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .SliderBar .Handle {
+  display: none;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .Time {
+  grid-row: 2;
+  min-width: 0;
+  font-size: calc(var(--default-font-size) * 0.85) !important;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .Time.Position {
+  grid-column: 1;
+  justify-self: start;
+  text-align: left;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .Time.Duration {
+  grid-column: 2;
+  justify-self: end;
+  text-align: right;
+}
+
+/* The transport: bare glyphs, play the largest; shuffle and repeat small at the edges. */
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControls {
+  grid-area: transport;
+  max-height: 30cqw;
+  margin-top: 5cqw;
+  padding: 0 1cqw;
+  transition:
+    max-height 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    margin-top 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.35s ease;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.PlayStateToggle {
+  width: 22cqw !important;
+  height: 22cqw;
+  color: #fff;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.PlayStateToggle:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  scale: 1;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.PlayStateToggle svg {
+  width: 10cqw;
+  max-height: 12cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.PlayStateToggle svg.Play {
+  width: 10.5cqw;
+  translate: 0.8cqw 0;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.TrackSkip {
+  width: 18cqw !important;
+  height: 16cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.TrackSkip svg {
+  width: 12cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle) {
+  width: 9cqw !important;
+  height: 9cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle) svg {
+  width: 4.2cqw;
+}
+
+/* The volume: a thin line between a quiet speaker (the mute button) and a loud one. */
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .VolumeControl {
+  grid-area: volume;
+  height: 1.4cqw;
+  max-height: 10cqw;
+  margin: 7cqw 7.5cqw 1cqw;
+  background: rgba(255, 255, 255, 0.2);
+  transition:
+    height 0.28s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1)),
+    max-height 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    margin 0.7s cubic-bezier(0.23, 1, 0.32, 1),
+    opacity 0.35s ease;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .VolumeControl:is(:hover, .Dragging) {
+  height: 2.6cqw;
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .VolumeControl .VolumeFill {
+  background: rgba(255, 255, 255, 0.78);
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .VolumeControl .VolumeIcon {
+  left: -7.5cqw;
+  width: 4.6cqw;
+  height: 4.6cqw;
+  fill: rgba(255, 255, 255, 0.55);
+}
+
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .VolumeControl::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -7.5cqw;
+  width: 5cqw;
+  height: 5cqw;
+  translate: 0 -50%;
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 5 6 9H3v6h3l5 4z' fill='black'/%3E%3Cpath d='M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 5 6 9H3v6h3l5 4z' fill='black'/%3E%3Cpath d='M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+}
+
+/* Resting folds each control away here, the deck having no box of its own. */
+#SpicyLyricsPage.SL_AppleDeck:not(.SL_DeckAwake) .SL_Deck :is(.PlaybackControls, .VolumeControl) {
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#SpicyLyricsPage.SL_AppleDeck:not(.SL_DeckAwake) .SL_Deck .Heart {
+  opacity: 0;
+  pointer-events: none;
+}

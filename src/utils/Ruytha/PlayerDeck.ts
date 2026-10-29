@@ -3,6 +3,7 @@ import Global from "../../components/Global/Global.ts";
 import { PageContainer } from "../../components/Pages/PageView.ts";
 import Fullscreen from "../../components/Utils/Fullscreen.ts";
 import { IsPIP } from "../../components/Utils/PopupLyrics.ts";
+import { $appleMusicPlayer } from "../stores.ts";
 
 // Cinema View and fullscreen draw the player's controls over the cover (NowBar.ts builds
 // them inside .MediaContent). This lifts them off the artwork into a deck under the title,
@@ -12,6 +13,8 @@ import { IsPIP } from "../../components/Utils/PopupLyrics.ts";
 
 const DECK_CLASS = "SL_Deck";
 const PAGE_CLASS = "SL_DeckLayout";
+/** The Apple Music Player look (RuythaDeck.css), on by default. */
+const APPLE_CLASS = "SL_AppleDeck";
 /** Seconds without the mouse moving before the deck fades, like a video player's. */
 const IDLE_MS = 2600;
 
@@ -53,6 +56,7 @@ export function SyncPlayerDeck() {
   lastWanted = wantsDeck(page);
   const on = lastWanted && !!header && !!overlay && !!controls;
   page.classList.toggle(PAGE_CLASS, on);
+  page.classList.toggle(APPLE_CLASS, on && $appleMusicPlayer.get());
 
   if (on) {
     if (!deck) {
@@ -81,8 +85,10 @@ export function SyncPlayerDeck() {
 /** Drops the deck and whatever it holds; NowBar.ts builds the controls afresh after this. */
 export function RemovePlayerDeck() {
   PageContainer?.querySelector(`.${DECK_CLASS}`)?.remove();
-  PageContainer?.classList.remove(PAGE_CLASS);
+  PageContainer?.classList.remove(PAGE_CLASS, APPLE_CLASS);
 }
+
+$appleMusicPlayer.listen(() => SyncPlayerDeck());
 
 // Compact mode and Canvas Stage come and go as page classes, so the page is watched for them.
 let watched: HTMLElement | null = null;
