@@ -71,10 +71,10 @@ const groups: GroupDef[] = [
         id: "coverMotionBackground",
         label: "Background Follows the Cover",
         description:
-          "While an Apple Music animated cover plays, the page background is drawn from it, so the whole page moves with the artwork.",
-        keywords: "apple music animated cover background motion moving video ambient",
-        useDisabled: () =>
-          useCanvasMode() !== "cover" && "Set Moving Artwork to Apple Music Cover first.",
+          "While an Apple Music animated cover plays, the page background is drawn from it, so the whole page moves with the artwork. Turn it off to keep your own background (AMLL, Kawarp and the rest) behind animated covers.",
+        keywords: "apple music animated cover background motion moving video ambient keep amll kawarp change",
+        // Animated covers also play under Spotify Canvas (Prefer the Animated Cover, compact mode).
+        useDisabled: () => useCanvasMode() === "off" && "Turn on Moving Artwork first.",
         Control: ({ disabled, label }) => (
           <Toggle
             label={label}
