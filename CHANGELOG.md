@@ -32,6 +32,14 @@ after an update shows what's new.
   moving the mouse brings them back. Compact mode, the popup and Canvas Stage keep their
   own layouts.
 
+### Fixed
+
+- **Keeping your background behind animated covers.** Settings → Cover → **Background
+  Follows the Cover** could only be switched off with Moving Artwork set to Apple Music
+  Cover, yet animated covers also take over the background with Spotify Canvas and
+  Prefer the Animated Cover on (the Apple Music Look). The switch now works whenever
+  Moving Artwork is on; turn it off to keep AMLL, Kawarp or any other background.
+
 ## 2026-10-29, second update
 
 ### Changed
