@@ -17,7 +17,13 @@ import {
 } from "../lyrics.ts";
 import { CreateLyricsContainer, DestroyAllLyricsContainers } from "./CreateLyricsContainer.ts";
 import { StripZeroWidth } from "./Utils/StripZeroWidth.ts";
-import { PickDisplayText } from "./Utils/PickDisplayText.ts";
+import {
+  PickDisplayText,
+  RomanizeBelow,
+  RomanizedLine,
+  RomanizeInPlace,
+} from "./Utils/PickDisplayText.ts";
+import { AppendRomanLine } from "./Utils/RomanLine.ts";
 import { initLyricsVirtualizer } from "../LyricsVirtualizer.ts";
 import { ApplySongCredits, MarkLastLineSide } from "./Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "./OnApply.ts";
@@ -83,7 +89,7 @@ export function ApplyStaticLyrics(data: StaticLyricsData, UseRomanized: boolean 
     const lineElem = document.createElement("div");
 
     lineElem.textContent = StripZeroWidth(
-      PickDisplayText(line, UseRomanized)
+      PickDisplayText(line, RomanizeInPlace(UseRomanized))
     );
 
     if (isRtl(line.Text) && !lineElem.classList.contains("rtl")) {
@@ -98,6 +104,7 @@ export function ApplyStaticLyrics(data: StaticLyricsData, UseRomanized: boolean 
       HTMLElement: lineElem,
     };
 
+    if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineElem, RomanizedLine(line));
     LyricsObject.Types.Static.Lines.push(staticLine);
     lineElements.push(lineElem);
   });

@@ -14,6 +14,7 @@ import {
   $lyricGlow,
   $lyricsRenderer,
   $minimalLyricsMode,
+  $romanizationBelow,
   $simpleLyricsMode,
   $singleLineMode,
 } from "../../../utils/stores.ts";
@@ -134,6 +135,20 @@ const groups: GroupDef[] = [
             label={label}
             checked={useStore($joinSplitWords)}
             onChange={(v) => $joinSplitWords.set(v)}
+          />
+        ),
+      },
+      {
+        id: "romanizationBelow",
+        label: "Romanization Under the Lyrics",
+        description:
+          "With romanization on (the Romanization button by the lyrics), keep the lyrics as they are and show the romanization as a smaller line under each one, like Apple Music. Off, the romanization replaces the lyrics.",
+        keywords: "romanization romanize romaji pinyin transliteration pronunciation under below apple music japanese korean chinese",
+        Control: ({ label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($romanizationBelow)}
+            onChange={(v) => $romanizationBelow.set(v)}
           />
         ),
       },

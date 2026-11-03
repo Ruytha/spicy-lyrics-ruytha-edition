@@ -167,6 +167,9 @@ export const $minimalLyricsMode = persistAtom<boolean>("minimalLyricsMode", fals
 export const $singleLineMode = persistAtom<boolean>("singleLineMode", false);
 // Shows a word sung in syllables as one word when its parts line up evenly.
 export const $joinSplitWords = persistAtom<boolean>("joinSplitWords", false);
+// With romanization on, it shows as a smaller line under each lyric (like Apple Music)
+// instead of replacing the lyric.
+export const $romanizationBelow = persistAtom<boolean>("romanizationBelow", true);
 // Tinted box drawn behind a lyrics line while the pointer is over it.
 export const $lineHoverBackground = persistAtom<boolean>("lineHoverBackground", true);
 // Wide inset on the side a duet line leans away from, so the two voices read as

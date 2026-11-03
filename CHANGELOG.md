@@ -6,6 +6,16 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-03
+
+### Changed
+
+- **Romanization under the lyrics.** With romanization on, the lyrics now stay in their
+  own script and the romanization shows as a smaller line under each one, like Apple
+  Music, on both the Spicy and AMLL renderers. Lines that are already in Latin letters
+  don't get a copy. Settings → Lyrics → **Romanization Under the Lyrics** turns it off
+  for the old behaviour, where the romanization replaces the lyrics.
+
 ## 2026-10-30
 
 ### Added

@@ -27,7 +27,13 @@ import {
 } from "../../lyrics.ts";
 import { CreateLyricsContainer, DestroyAllLyricsContainers } from "../CreateLyricsContainer.ts";
 import { StripZeroWidth } from "../Utils/StripZeroWidth.ts";
-import { PickDisplayText } from "../Utils/PickDisplayText.ts";
+import {
+  PickDisplayText,
+  RomanizeBelow,
+  RomanizedSyllables,
+  RomanizeInPlace,
+} from "../Utils/PickDisplayText.ts";
+import { AppendRomanLine } from "../Utils/RomanLine.ts";
 import { initLyricsVirtualizer } from "../../LyricsVirtualizer.ts";
 import { ApplySongCredits, MarkLastLineSide } from "../Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
@@ -263,7 +269,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
       const totalDuration = ConvertTime(lead.EndTime) - ConvertTime(lead.StartTime);
 
       const leadRenderText = StripZeroWidth(
-        PickDisplayText(lead, UseRomanized)
+        PickDisplayText(lead, RomanizeInPlace(UseRomanized))
       );
 
       // Too short to split whatever its letters: skip the grapheme split.
@@ -340,6 +346,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
         lineElem.appendChild(word);
       }
     });
+    if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineElem, RomanizedSyllables(line.Lead.Syllables));
 
     if (line.Background) {
       line.Background.filter((bg) => !IsEmptySyllableGroup(bg)).forEach((bg) => {
@@ -372,7 +379,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
           const totalDuration = ConvertTime(bw.EndTime) - ConvertTime(bw.StartTime);
 
           const bgRenderText = StripZeroWidth(
-            PickDisplayText(bw, UseRomanized)
+            PickDisplayText(bw, RomanizeInPlace(UseRomanized))
           );
 
           // Too short to split whatever its letters: skip the grapheme split.
@@ -452,6 +459,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
             lineE.appendChild(bwE);
           }
         });
+        if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineE, RomanizedSyllables(bg.Syllables));
       });
     }
     if (arr[index + 1] && arr[index + 1].Lead.StartTime - line.Lead.EndTime >= getLyricsBetweenShow()) {

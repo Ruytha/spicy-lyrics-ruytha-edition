@@ -31,6 +31,7 @@ import {
   $currentLyricsData,
   $duetLinePadding,
   $joinSplitWords,
+  $romanizationBelow,
   $lineHoverBackground,
   $lyricsContainerExists,
   $lyricsRenderer,
@@ -1035,6 +1036,12 @@ $singleLineMode.listen((v) => {
 });
 
 $joinSplitWords.listen(() => {
+  const uri = SpotifyPlayer.GetUri();
+  $currentLyricsData.set("");
+  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+});
+
+$romanizationBelow.listen(() => {
   const uri = SpotifyPlayer.GetUri();
   $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);

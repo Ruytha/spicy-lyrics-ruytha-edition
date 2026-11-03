@@ -24,7 +24,13 @@ import { SeekToLineStart, setRomanizedStatus } from "../lyrics.ts";
 import { ApplySongCredits } from "./Credits/ApplyLyricsCredits.ts";
 import { EmitApply } from "./OnApply.ts";
 import { JoinSplitWords } from "./Utils/JoinSplitWords.ts";
-import { PickDisplayText } from "./Utils/PickDisplayText.ts";
+import {
+  PickDisplayText,
+  RomanizeBelow,
+  RomanizedLine,
+  RomanizedSyllables,
+  RomanizeInPlace,
+} from "./Utils/PickDisplayText.ts";
 import { StripZeroWidth } from "./Utils/StripZeroWidth.ts";
 
 const amllLyricsLogger = new Logger("AMLL Lyrics");
@@ -74,11 +80,12 @@ export function IsAmllLyricsEnabled(): boolean {
 
 const toMs = (seconds: number) => Math.max(0, Math.round(seconds * 1000));
 
-function toLine(words: LyricWord[], isBG: boolean, isDuet: boolean): LyricLine {
+function toLine(words: LyricWord[], isBG: boolean, isDuet: boolean, romanLyric = ""): LyricLine {
   return {
     words,
     translatedLyric: "",
-    romanLyric: "",
+    // AMLL shows it as a smaller line under the lyric.
+    romanLyric,
     startTime: Math.min(...words.map((w) => w.startTime)),
     endTime: Math.max(...words.map((w) => w.endTime)),
     isBG,
@@ -92,7 +99,7 @@ function toWords(syllables: SyllableData[], romanize: boolean): LyricWord[] {
   );
   return parts.map((syllable, i) => {
     const startTime = toMs(syllable.StartTime);
-    const text = StripZeroWidth(PickDisplayText(syllable, romanize));
+    const text = StripZeroWidth(PickDisplayText(syllable, RomanizeInPlace(romanize)));
     // A syllable that ends a word is followed by a space, except at the end of the line.
     const spaced = syllable.IsPartOfWord || i === parts.length - 1 ? text : `${text} `;
     return { word: spaced, startTime, endTime: Math.max(startTime, toMs(syllable.EndTime)) };
@@ -105,12 +112,16 @@ function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLi
     const isDuet = !!entry.OppositeAligned;
     const lead = toWords(entry.Lead.Syllables, romanize);
     if (lead.length === 0) continue;
-    lines.push(toLine(lead, false, isDuet));
+    const leadRoman = RomanizeBelow(romanize) ? RomanizedSyllables(entry.Lead.Syllables) : "";
+    lines.push(toLine(lead, false, isDuet, leadRoman));
     // The player shows one background line per main line, so several groups become one.
     const background = (entry.Background ?? []).flatMap((group) =>
       toWords(group.Syllables, romanize)
     );
-    if (background.length > 0) lines.push(toLine(background, true, isDuet));
+    const backgroundRoman = RomanizeBelow(romanize)
+      ? (entry.Background ?? []).map((group) => RomanizedSyllables(group.Syllables)).filter(Boolean).join(" ")
+      : "";
+    if (background.length > 0) lines.push(toLine(background, true, isDuet, backgroundRoman));
   }
   return lines;
 }
@@ -118,11 +129,13 @@ function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLi
 function convertLineLyrics(data: LineLyrics, romanize: boolean): LyricLine[] {
   const lines: LyricLine[] = [];
   for (const entry of data.Content) {
-    const text = StripZeroWidth(PickDisplayText(entry, romanize));
+    const text = StripZeroWidth(PickDisplayText(entry, RomanizeInPlace(romanize)));
     if (!HasLyricsText(text)) continue;
     const startTime = toMs(entry.StartTime);
     const word = { word: text, startTime, endTime: Math.max(startTime, toMs(entry.EndTime)) };
-    lines.push(toLine([word], false, !!entry.OppositeAligned));
+    lines.push(
+      toLine([word], false, !!entry.OppositeAligned, RomanizeBelow(romanize) ? RomanizedLine(entry) : "")
+    );
   }
   return lines;
 }

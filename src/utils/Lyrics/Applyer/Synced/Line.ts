@@ -21,7 +21,13 @@ import {
 } from "../../lyrics.ts";
 import { CreateLyricsContainer, DestroyAllLyricsContainers } from "../CreateLyricsContainer.ts";
 import { StripZeroWidth } from "../Utils/StripZeroWidth.ts";
-import { PickDisplayText } from "../Utils/PickDisplayText.ts";
+import {
+  PickDisplayText,
+  RomanizeBelow,
+  RomanizedLine,
+  RomanizeInPlace,
+} from "../Utils/PickDisplayText.ts";
+import { AppendRomanLine } from "../Utils/RomanLine.ts";
 import { initLyricsVirtualizer } from "../../LyricsVirtualizer.ts";
 import { ApplySongCredits, MarkLastLineSide } from "../Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
@@ -182,7 +188,7 @@ export function ApplyLineLyrics(data: LyricsData, UseRomanized: boolean = false)
   content.forEach((line, index, arr) => {
     const lineElem = document.createElement("div");
     lineElem.textContent = StripZeroWidth(
-      PickDisplayText(line, UseRomanized)
+      PickDisplayText(line, RomanizeInPlace(UseRomanized))
     );
     lineElem.classList.add("line");
 
@@ -215,6 +221,7 @@ export function ApplyLineLyrics(data: LyricsData, UseRomanized: boolean = false)
       lineElem.classList.add("OppositeAligned");
     }
 
+    if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineElem, RomanizedLine(line));
     lineElements.push(lineElem);
     if (arr[index + 1] && arr[index + 1].StartTime - line.EndTime >= getLyricsBetweenShow()) {
       const musicalLine = document.createElement("div");

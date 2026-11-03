@@ -1314,3 +1314,24 @@
     opacity 0.2s cubic-bezier(0.61, 1, 0.88, 1),
     visibility 0s linear 0.2s;
 }
+/* Romanization Under the Lyrics (Utils/RomanLine.ts): the romanization on its own row at
+   the bottom of the line, smaller and quieter, like Apple Music's pronunciation line. The
+   line draws its text through a clipped gradient or a text-shadow, so the row paints its
+   own the same way: a shadow that carries the line's blur. It dims with the line, which
+   sets the opacity. */
+#SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line > .SL_RomanLine {
+  flex-basis: 100%;
+  margin-top: 0.18em;
+  font-size: 0.56em;
+  font-weight: 600 !important;
+  line-height: 1.25;
+  letter-spacing: 0;
+  background: none !important;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 var(--BlurAmount, 0) rgba(255, 255, 255, 0.62) !important;
+  pointer-events: none;
+}
+
+#SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.Active > .SL_RomanLine {
+  text-shadow: 0 0 0 rgba(255, 255, 255, 0.78) !important;
+}
