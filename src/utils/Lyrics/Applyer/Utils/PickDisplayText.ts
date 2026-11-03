@@ -37,18 +37,30 @@ export function RomanizedLine(entry: any): string {
 const comparable = (text: string) => StripZeroWidth(text).toLowerCase().replace(/[\s\p{P}]+/gu, "");
 const differs = (original: string, romanized: string) => comparable(original) !== comparable(romanized);
 
-// The same for a sung line: its syllables' romanizations joined back into words, with
-// the original text kept for syllables that have none (Latin words in a Japanese line).
-export function RomanizedSyllables(syllables: any[]): string {
-  if (!syllables.some((s) => HasLyricsText(s?.Text) && HasLyricsText(s?.TransliteratedText))) return "";
-  const text = syllables
+/** A piece of the romanization line with its syllable's times, in seconds like the lyrics. */
+export type RomanPart = { text: string; start: number; end: number };
+
+// The same for a sung line, a part per syllable so it can light up in time with the
+// lyrics: the syllables' romanizations joined back into words, with the original text
+// kept for syllables that have none (Latin words in a Japanese line).
+export function RomanizedSyllableParts(syllables: any[]): RomanPart[] {
+  if (!syllables.some((s) => HasLyricsText(s?.Text) && HasLyricsText(s?.TransliteratedText))) return [];
+  const parts = syllables
     .map((s, i) => {
       const part = HasLyricsText(s?.TransliteratedText) ? s.TransliteratedText : (s?.Text ?? "");
-      return s?.IsPartOfWord || i === syllables.length - 1 ? part : `${part} `;
+      const text = s?.IsPartOfWord || i === syllables.length - 1 ? part : `${part} `;
+      return { text: StripZeroWidth(text).replace(/\s+/g, " "), start: s.StartTime, end: s.EndTime };
     })
-    .join("");
+    .filter((p) => p.text.length > 0);
+  if (parts.length > 0) parts[0].text = parts[0].text.trimStart();
   const original = syllables.map((s) => s?.Text ?? "").join("");
-  return differs(original, text) ? StripZeroWidth(text).replace(/\s+/g, " ").trim() : "";
+  return differs(original, parts.map((p) => p.text).join("")) ? parts : [];
 }
+
+export const RomanizedSyllables = (syllables: any[]): string =>
+  RomanizedSyllableParts(syllables)
+    .map((p) => p.text)
+    .join("")
+    .trim();
 
 export default PickDisplayText;

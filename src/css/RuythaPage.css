@@ -118,3 +118,32 @@
 #SpicyLyricsPage.AmllLyrics:not(.SL_NoGlow) .amll-lyric-player [class*="_lyricMainLine"][class*="_active"] {
   filter: drop-shadow(0 0 calc(12px * var(--sl_glow-size, 1)) rgba(255, 255, 255, calc(0.28 * var(--sl_glow, 1))));
 }
+
+/* ─── Synced romanization (Lyrics/Applyer/Utils/RomanLine.ts) ──────────────── */
+/* Romanization Under the Lyrics on both renderers: each part of the row is lit from the
+   left as its syllable is sung (--SL_RomanFill, 0 to 1), with a soft edge like the
+   lyrics' own sweep. AMLL's row takes its colour from AMLL, so it's lit to full and
+   dimmed to part of that; Spicy's row sets its own (Mixed.css). */
+
+#SpicyLyricsPage .SL_RomanSynced {
+  --SL_RomanLit: currentColor;
+  --SL_RomanDim: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+#SpicyLyricsPage .SL_RomanSynced > .SL_RomanPart {
+  background-image: linear-gradient(
+    90deg,
+    var(--SL_RomanLit) calc(var(--SL_RomanFill, 0) * 130% - 30%),
+    var(--SL_RomanDim) calc(var(--SL_RomanFill, 0) * 130%)
+  ) !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* AMLL keeps the row at 30%, too faint for the lit part to show. On the line being sung
+   it's raised, with the unlit part dimmed back to about where AMLL had it. */
+#SpicyLyricsPage.AmllLyrics [class*="_lyricLine"][class*="_active"] > .SL_RomanSynced {
+  --SL_RomanDim: color-mix(in srgb, currentColor 36%, transparent);
+  opacity: 0.88 !important;
+}

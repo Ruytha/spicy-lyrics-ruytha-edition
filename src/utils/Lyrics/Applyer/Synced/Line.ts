@@ -221,7 +221,11 @@ export function ApplyLineLyrics(data: LyricsData, UseRomanized: boolean = false)
       lineElem.classList.add("OppositeAligned");
     }
 
-    if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineElem, RomanizedLine(line));
+    if (RomanizeBelow(UseRomanized)) {
+      const roman = RomanizedLine(line);
+      // One part for the whole line: it sweeps across as the line is sung.
+      AppendRomanLine(lineElem, roman, [{ text: roman, start: line.StartTime, end: line.EndTime }]);
+    }
     lineElements.push(lineElem);
     if (arr[index + 1] && arr[index + 1].StartTime - line.EndTime >= getLyricsBetweenShow()) {
       const musicalLine = document.createElement("div");

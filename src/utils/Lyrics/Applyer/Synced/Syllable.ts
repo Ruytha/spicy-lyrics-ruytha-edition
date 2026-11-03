@@ -30,6 +30,7 @@ import { StripZeroWidth } from "../Utils/StripZeroWidth.ts";
 import {
   PickDisplayText,
   RomanizeBelow,
+  RomanizedSyllableParts,
   RomanizedSyllables,
   RomanizeInPlace,
 } from "../Utils/PickDisplayText.ts";
@@ -346,7 +347,10 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
         lineElem.appendChild(word);
       }
     });
-    if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineElem, RomanizedSyllables(line.Lead.Syllables));
+    if (RomanizeBelow(UseRomanized)) {
+      const parts = RomanizedSyllableParts(line.Lead.Syllables);
+      AppendRomanLine(lineElem, RomanizedSyllables(line.Lead.Syllables), parts);
+    }
 
     if (line.Background) {
       line.Background.filter((bg) => !IsEmptySyllableGroup(bg)).forEach((bg) => {
@@ -459,7 +463,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
             lineE.appendChild(bwE);
           }
         });
-        if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineE, RomanizedSyllables(bg.Syllables));
+        if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineE, RomanizedSyllables(bg.Syllables), RomanizedSyllableParts(bg.Syllables));
       });
     }
     if (arr[index + 1] && arr[index + 1].Lead.StartTime - line.Lead.EndTime >= getLyricsBetweenShow()) {

@@ -28,9 +28,11 @@ import {
   PickDisplayText,
   RomanizeBelow,
   RomanizedLine,
-  RomanizedSyllables,
+  RomanizedSyllableParts,
   RomanizeInPlace,
+  type RomanPart,
 } from "./Utils/PickDisplayText.ts";
+import { FillRomanRow } from "./Utils/RomanLine.ts";
 import { StripZeroWidth } from "./Utils/StripZeroWidth.ts";
 
 const amllLyricsLogger = new Logger("AMLL Lyrics");
@@ -80,17 +82,40 @@ export function IsAmllLyricsEnabled(): boolean {
 
 const toMs = (seconds: number) => Math.max(0, Math.round(seconds * 1000));
 
-function toLine(words: LyricWord[], isBG: boolean, isDuet: boolean, romanLyric = ""): LyricLine {
-  return {
+// Romanization Under the Lyrics: each line's romanization in timed parts, so the row
+// AMLL draws under the line can light up with it (fillRomanSubLine). Looked up by what
+// AMLL hands back for the line, which can be a copy with its times moved a little, so
+// a romanization used on several lines (a chorus) goes to the one starting nearest.
+const romanParts = new Map<string, { start: number; parts: RomanPart[] }[]>();
+const romanKey = (line: Pick<LyricLine, "isBG" | "romanLyric">) => `${line.isBG ? 1 : 0}|${line.romanLyric}`;
+
+function findRomanParts(line: LyricLine): RomanPart[] | undefined {
+  let best: { start: number; parts: RomanPart[] } | undefined;
+  for (const entry of romanParts.get(romanKey(line)) ?? []) {
+    if (!best || Math.abs(entry.start - line.startTime) < Math.abs(best.start - line.startTime)) best = entry;
+  }
+  return best?.parts;
+}
+
+function toLine(words: LyricWord[], isBG: boolean, isDuet: boolean, roman: RomanPart[] = []): LyricLine {
+  const line: LyricLine = {
     words,
     translatedLyric: "",
     // AMLL shows it as a smaller line under the lyric.
-    romanLyric,
+    romanLyric: roman
+      .map((p) => p.text)
+      .join("")
+      .trim(),
     startTime: Math.min(...words.map((w) => w.startTime)),
     endTime: Math.max(...words.map((w) => w.endTime)),
     isBG,
     isDuet,
   };
+  if (line.romanLyric) {
+    const key = romanKey(line);
+    romanParts.set(key, [...(romanParts.get(key) ?? []), { start: line.startTime, parts: roman }]);
+  }
+  return line;
 }
 
 function toWords(syllables: SyllableData[], romanize: boolean): LyricWord[] {
@@ -112,18 +137,30 @@ function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLi
     const isDuet = !!entry.OppositeAligned;
     const lead = toWords(entry.Lead.Syllables, romanize);
     if (lead.length === 0) continue;
-    const leadRoman = RomanizeBelow(romanize) ? RomanizedSyllables(entry.Lead.Syllables) : "";
+    const leadRoman = RomanizeBelow(romanize) ? RomanizedSyllableParts(entry.Lead.Syllables) : [];
     lines.push(toLine(lead, false, isDuet, leadRoman));
     // The player shows one background line per main line, so several groups become one.
     const background = (entry.Background ?? []).flatMap((group) =>
       toWords(group.Syllables, romanize)
     );
     const backgroundRoman = RomanizeBelow(romanize)
-      ? (entry.Background ?? []).map((group) => RomanizedSyllables(group.Syllables)).filter(Boolean).join(" ")
-      : "";
+      ? (entry.Background ?? []).flatMap((group) => {
+          const parts = RomanizedSyllableParts(group.Syllables);
+          // A space between the groups, like between their words.
+          const last = parts[parts.length - 1];
+          if (last) parts[parts.length - 1] = { ...last, text: `${last.text} ` };
+          return parts;
+        })
+      : [];
     if (background.length > 0) lines.push(toLine(background, true, isDuet, backgroundRoman));
   }
   return lines;
+}
+
+// A line-synced line's romanization is one part, which sweeps across as the line is sung.
+function romanLineParts(entry: LineLyrics["Content"][number], romanize: boolean): RomanPart[] {
+  const text = RomanizeBelow(romanize) ? RomanizedLine(entry) : "";
+  return text ? [{ text, start: entry.StartTime, end: entry.EndTime }] : [];
 }
 
 function convertLineLyrics(data: LineLyrics, romanize: boolean): LyricLine[] {
@@ -134,10 +171,52 @@ function convertLineLyrics(data: LineLyrics, romanize: boolean): LyricLine[] {
     const startTime = toMs(entry.StartTime);
     const word = { word: text, startTime, endTime: Math.max(startTime, toMs(entry.EndTime)) };
     lines.push(
-      toLine([word], false, !!entry.OppositeAligned, RomanizeBelow(romanize) ? RomanizedLine(entry) : "")
+      toLine([word], false, !!entry.OppositeAligned, romanLineParts(entry, romanize))
     );
   }
   return lines;
+}
+
+// ─── Synced romanization ─────────────────────────────────────────────────────
+// AMLL builds a line's elements when it first comes into view, and sets the row under
+// it to the romanization as plain text (setSubLinesText). Its line class isn't exported,
+// so that method is wrapped on the prototype of a line it made: after AMLL sets the text,
+// the row is refilled with the timed parts. The text is the same, so AMLL's layout holds.
+
+type AmllLine = {
+  element: HTMLElement;
+  built?: boolean;
+  getLine(): LyricLine;
+  setSubLinesText?(trans: HTMLElement, roman: HTMLElement): void;
+};
+
+function fillRomanSubLine(line: AmllLine, roman: HTMLElement | undefined) {
+  const data = line.getLine();
+  const parts = data.romanLyric ? findRomanParts(data) : undefined;
+  if (roman && parts) FillRomanRow(roman, parts);
+}
+
+function syncRomanSubLines(instance: InstanceType<typeof LyricPlayer>) {
+  const groups = (instance as unknown as { currentLyricGroups?: { mainLine?: AmllLine; bgLine?: AmllLine }[] })
+    .currentLyricGroups;
+  const lines = (groups ?? []).flatMap((g) => [g.mainLine, g.bgLine]).filter((l): l is AmllLine => !!l);
+  const proto = lines[0] && (Object.getPrototypeOf(lines[0]) as AmllLine & { slRomanSync?: boolean });
+  if (!proto || typeof proto.setSubLinesText !== "function") {
+    amllLyricsLogger.debug("AMLL's line class changed; romanization stays unsynced");
+    return;
+  }
+  if (!proto.slRomanSync) {
+    const setSubLinesText = proto.setSubLinesText;
+    proto.setSubLinesText = function (this: AmllLine, trans: HTMLElement, roman: HTMLElement) {
+      setSubLinesText.call(this, trans, roman);
+      fillRomanSubLine(this, roman);
+    };
+    proto.slRomanSync = true;
+  }
+  // Lines already on screen were built before the wrap.
+  for (const line of lines) {
+    if (line.built) fillRomanSubLine(line, line.element.children[2] as HTMLElement | undefined);
+  }
 }
 
 // ─── Player ──────────────────────────────────────────────────────────────────
@@ -217,6 +296,7 @@ export function ApplyAmllLyrics(
     return false;
   }
 
+  romanParts.clear();
   let lines: LyricLine[];
   try {
     lines =
@@ -236,6 +316,7 @@ export function ApplyAmllLyrics(
   applyPlayerOptions(instance);
   try {
     instance.setLyricLines(lines, SpotifyPlayer.GetPosition());
+    if (romanParts.size > 0) syncRomanSubLines(instance);
   } catch (err) {
     amllLyricsLogger.warn("AMLL player rejected these lyrics; using the default renderer", err);
     instance.dispose();

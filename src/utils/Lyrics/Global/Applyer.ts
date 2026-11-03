@@ -17,6 +17,7 @@ import fetchLyrics, {
 } from "../fetchLyrics.ts";
 import { BuildLyricsNotice, HasNotice, OnLyricsAreaShownAgain, SetShownNotice, SyncNoLyricsLayout } from "../LyricsNotice.ts";
 import { ClearLyricsContentArrays, isRomanized } from "../lyrics.ts";
+import { ClearRomanRows } from "../Applyer/Utils/RomanLine.ts";
 import { PageContainer } from "../../../components/Pages/PageView.ts";
 import { CleanUpIsByCommunity } from "../Applyer/Credits/ApplyIsByCommunity.tsx";
 import { SpotifyPlayer } from "../../../components/Global/SpotifyPlayer.ts";
@@ -169,6 +170,7 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
   SyncNoLyricsLayout(false);
 
   const romanize = isRomanized;
+  ClearRomanRows();
 
   if (IsAmllLyricsEnabled() && ApplyAmllLyrics(lyrics, romanize)) {
     // Rendered by the AMLL player; unsynced lyrics fall through to the default renderer.

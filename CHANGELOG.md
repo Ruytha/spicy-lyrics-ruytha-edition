@@ -16,6 +16,11 @@ after an update shows what's new.
   don't get a copy. Settings → Lyrics → **Romanization Under the Lyrics** turns it off
   for the old behaviour, where the romanization replaces the lyrics.
 
+- **The romanization line is synced.** It lights up from left to right in time with the
+  lyrics, using the same timing: syllable by syllable for word-synced (TTML) lyrics, and
+  across the whole line for line-synced ones. On AMLL it's brighter on the line being
+  sung, so the lit part stands out.
+
 ## 2026-10-30
 
 ### Added
