@@ -6,6 +6,15 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-04
+
+### Added
+
+- **Several background lines on AMLL.** When a lyric has more than one background vocal
+  (TTML with several `x-bg` spans in one line), the AMLL renderer used to run them
+  together on one row. Each now gets a row of its own under the lyric, and so does its
+  romanization. The Spicy renderer already showed them as separate lines.
+
 ## 2026-11-03
 
 ### Changed

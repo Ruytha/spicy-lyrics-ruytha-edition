@@ -118,17 +118,29 @@ function toLine(words: LyricWord[], isBG: boolean, isDuet: boolean, roman: Roman
   return line;
 }
 
+// A syllable's or line's text, with whitespace folded to single spaces like AMLL's own
+// normalizeSpaces, which is off so the background rows' line breaks survive.
+const displayText = (entry: { Text: string; TransliteratedText?: string }, romanize: boolean) =>
+  StripZeroWidth(PickDisplayText(entry, RomanizeInPlace(romanize))).replace(/\s+/g, " ");
+
 function toWords(syllables: SyllableData[], romanize: boolean): LyricWord[] {
   const parts = ($joinSplitWords.get() ? JoinSplitWords(syllables) : syllables).filter(
     HasRenderableText
   );
   return parts.map((syllable, i) => {
     const startTime = toMs(syllable.StartTime);
-    const text = StripZeroWidth(PickDisplayText(syllable, RomanizeInPlace(romanize)));
+    const text = displayText(syllable, romanize);
     // A syllable that ends a word is followed by a space, except at the end of the line.
     const spaced = syllable.IsPartOfWord || i === parts.length - 1 ? text : `${text} `;
     return { word: spaced, startTime, endTime: Math.max(startTime, toMs(syllable.EndTime)) };
   });
+}
+
+/** Ends a background group's row: a line break after its last piece. */
+function endRow<T>(items: T[], text: (item: T) => string, withText: (item: T, text: string) => T): T[] {
+  const last = items[items.length - 1];
+  if (!last) return items;
+  return [...items.slice(0, -1), withText(last, `${text(last).trimEnd()}\n`)];
 }
 
 function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLine[] {
@@ -139,17 +151,20 @@ function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLi
     if (lead.length === 0) continue;
     const leadRoman = RomanizeBelow(romanize) ? RomanizedSyllableParts(entry.Lead.Syllables) : [];
     lines.push(toLine(lead, false, isDuet, leadRoman));
-    // The player shows one background line per main line, so several groups become one.
-    const background = (entry.Background ?? []).flatMap((group) =>
-      toWords(group.Syllables, romanize)
+    // The player keeps one background line per main line (a second replaces the first),
+    // so several groups share it, each on a row of its own: a line break after every
+    // group but the last, which RuythaPage.css keeps (white-space: pre-line). AMLL splits
+    // the break off the word into a text node of its own, so the word's timing is kept.
+    const groups = (entry.Background ?? [])
+      .map((group) => ({ words: toWords(group.Syllables, romanize), syllables: group.Syllables }))
+      .filter((group) => group.words.length > 0);
+    const background = groups.flatMap((group, i) =>
+      i === groups.length - 1 ? group.words : endRow(group.words, (w) => w.word, (w, word) => ({ ...w, word }))
     );
     const backgroundRoman = RomanizeBelow(romanize)
-      ? (entry.Background ?? []).flatMap((group) => {
-          const parts = RomanizedSyllableParts(group.Syllables);
-          // A space between the groups, like between their words.
-          const last = parts[parts.length - 1];
-          if (last) parts[parts.length - 1] = { ...last, text: `${last.text} ` };
-          return parts;
+      ? groups.flatMap((group, i) => {
+          const parts = RomanizedSyllableParts(group.syllables);
+          return i === groups.length - 1 ? parts : endRow(parts, (p) => p.text, (p, text) => ({ ...p, text }));
         })
       : [];
     if (background.length > 0) lines.push(toLine(background, true, isDuet, backgroundRoman));
@@ -166,7 +181,7 @@ function romanLineParts(entry: LineLyrics["Content"][number], romanize: boolean)
 function convertLineLyrics(data: LineLyrics, romanize: boolean): LyricLine[] {
   const lines: LyricLine[] = [];
   for (const entry of data.Content) {
-    const text = StripZeroWidth(PickDisplayText(entry, RomanizeInPlace(romanize)));
+    const text = displayText(entry, romanize);
     if (!HasLyricsText(text)) continue;
     const startTime = toMs(entry.StartTime);
     const word = { word: text, startTime, endTime: Math.max(startTime, toMs(entry.EndTime)) };
@@ -314,6 +329,9 @@ export function ApplyAmllLyrics(
 
   const instance = new LyricPlayer();
   applyPlayerOptions(instance);
+  // Spaces are folded in displayText instead, so the line breaks between background
+  // groups (endRow) survive.
+  instance.setLyricProcessConfig({ optimizeOptions: { normalizeSpaces: false } });
   try {
     instance.setLyricLines(lines, SpotifyPlayer.GetPosition());
     if (romanParts.size > 0) syncRomanSubLines(instance);

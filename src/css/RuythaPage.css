@@ -147,3 +147,12 @@
   --SL_RomanDim: color-mix(in srgb, currentColor 36%, transparent);
   opacity: 0.88 !important;
 }
+
+/* ─── Several background lines on AMLL (Lyrics/Applyer/AMLL.ts) ───────────── */
+/* AMLL has one background line per lyric, so a lyric's background groups share it with a
+   line break between them; pre-line keeps those breaks (and still folds the spaces), so
+   each group, and its romanization, gets a row of its own. */
+#SpicyLyricsPage.AmllLyrics [class*="_lyricBgLine"] > [class*="_lyricMainLine"],
+#SpicyLyricsPage.AmllLyrics [class*="_lyricBgLine"] > [class*="_lyricSubLine"] {
+  white-space: pre-line;
+}
