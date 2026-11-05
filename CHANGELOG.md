@@ -26,6 +26,14 @@ after an update shows what's new.
   ("aikawarazu dappi shi teru mainichi") and still lights up syllable by syllable. This
   also works for lyrics already cached.
 
+### Fixed
+
+- **"Made by" window.** spicylyrics.org retired the profile embed, so clicking a TTML
+  maker showed an "Embeds have been retired" page. The window is now just their card:
+  picture, name and an **Open profile** button that opens the full profile in your
+  browser. The site doesn't allow its pages to be shown inside other apps, so a
+  browser view in Spotify isn't possible.
+
 ## 2026-11-04
 
 ### Added
