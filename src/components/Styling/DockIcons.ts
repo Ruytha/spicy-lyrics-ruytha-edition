@@ -18,6 +18,8 @@ export const DockIcons = {
   DisableCompactMode: Glyph(`<path d="M5 12h14"/><path d="m9.5 7.5 2.5-2.5 2.5 2.5"/><path d="m9.5 16.5 2.5 2.5 2.5-2.5"/>`),
   // A Latin letter beside a kana stroke: romanization.
   Romanization: Glyph(`<path d="M3.5 18 7.75 6l4.25 12"/><path d="M5.1 13.75h5.3"/><path d="M14.5 7.5h6"/><path d="M17.75 5.5c0 6-1.4 10.4-4 12.5"/><path d="M16 12.25c2 .6 3.6 2.6 4.5 5.25"/>`),
+  // Two speech bubbles, one answering the other: translation.
+  Translation: Glyph(`<path d="M4.25 4.5h9a1.75 1.75 0 0 1 1.75 1.75v5a1.75 1.75 0 0 1-1.75 1.75H8.5L5.5 15.5V13H4.25A1.75 1.75 0 0 1 2.5 11.25v-5A1.75 1.75 0 0 1 4.25 4.5z"/><path d="M17.5 9h2.25A1.75 1.75 0 0 1 21.5 10.75v5a1.75 1.75 0 0 1-1.75 1.75H18.5V20l-3-2.5h-3.75A1.75 1.75 0 0 1 10 15.75V15"/><path d="M6 8h5.5"/><path d="M6 10.25h3.5"/>`),
   // A panel with the cover square in it: the cover side.
   NowBar: Glyph(`<rect x="2.75" y="4" width="18.5" height="16" rx="3.25"/><path d="M10 4v16"/><rect x="4.75" y="8" width="3.25" height="3.25" rx=".8"/>`),
   // Two arrows trading places.

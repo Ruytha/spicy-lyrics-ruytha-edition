@@ -6,6 +6,26 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-05
+
+### Added
+
+- **Translations under the lyrics.** When the lyrics come with a translation, a new
+  **Translation** button by the lyrics shows it as a smaller line under each lyric, like
+  Apple Music, on both renderers. It's off until you turn it on, and the button only
+  appears for lyrics that have one. Many songs' lyrics from Spicy Lyrics already do.
+  TTML files can carry them inline (`x-translation`) or, now also, in the head the way
+  Apple Music's do (`<translations>`). A background vocal's translation that only
+  repeats the line's isn't shown twice. Also under Settings → Lyrics → **Translations
+  Under the Lyrics**.
+
+### Changed
+
+- **Romaji with word gaps.** The romanization line for Japanese lyrics used to run each
+  line together ("aikawarazudappishiterumainichi"). It now has gaps between the words
+  ("aikawarazu dappi shi teru mainichi") and still lights up syllable by syllable. This
+  also works for lyrics already cached.
+
 ## 2026-11-04
 
 ### Added

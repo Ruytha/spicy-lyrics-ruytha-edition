@@ -15,6 +15,7 @@ import {
   $lyricsRenderer,
   $minimalLyricsMode,
   $romanizationBelow,
+  $translationsBelow,
   $simpleLyricsMode,
   $singleLineMode,
 } from "../../../utils/stores.ts";
@@ -149,6 +150,20 @@ const groups: GroupDef[] = [
             label={label}
             checked={useStore($romanizationBelow)}
             onChange={(v) => $romanizationBelow.set(v)}
+          />
+        ),
+      },
+      {
+        id: "translationsBelow",
+        label: "Translations Under the Lyrics",
+        description:
+          "When the lyrics come with a translation, show it as a smaller line under each lyric, like Apple Music. The Translation button by the lyrics turns it on and off too; it only shows for lyrics that have one.",
+        keywords: "translation translate english meaning under below apple music ttml language",
+        Control: ({ label }) => (
+          <Toggle
+            label={label}
+            checked={useStore($translationsBelow)}
+            onChange={(v) => $translationsBelow.set(v)}
           />
         ),
       },

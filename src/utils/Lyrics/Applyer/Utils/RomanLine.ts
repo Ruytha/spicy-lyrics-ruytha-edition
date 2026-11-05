@@ -59,6 +59,19 @@ export function AppendRomanLine(lineElem: HTMLElement, text: string, parts?: Rom
   lineElem.classList.add("HasRomanLine");
 }
 
+/**
+ * Translations Under the Lyrics on Spicy's renderer: the translation as a row at the
+ * bottom of the line, above the romanization's like AMLL has them. It isn't timed, so it
+ * just dims and lights with the line (Mixed.css).
+ */
+export function AppendTranslationLine(lineElem: HTMLElement, text: string): void {
+  if (!text) return;
+  const row = document.createElement("div");
+  row.className = "SL_TranslationLine";
+  row.textContent = text;
+  lineElem.appendChild(row);
+}
+
 function setFill(row: Row, i: number, fill: number) {
   if (row.fills[i] === fill) return;
   row.fills[i] = fill;

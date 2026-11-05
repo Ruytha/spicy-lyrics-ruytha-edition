@@ -5,7 +5,7 @@ import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import PageView, { PageContainer } from "../../components/Pages/PageView.ts";
 import { Query, QueryHttpError, QueryNetworkError } from "../API/Query.ts";
 import { IsTripStatus, ServiceUnavailableError } from "../API/CircuitBreaker.ts";
-import { ProcessLyrics } from "./ProcessLyrics.ts";
+import { AddRomajiWordBreaks, ProcessLyrics } from "./ProcessLyrics.ts";
 import { IsEmptyLyrics } from "./EmptyLines.ts";
 import Logger from "../Logger.ts";
 import { LocalLyricsManager } from "./manager/index.ts";
@@ -277,6 +277,7 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
   const localLyric = await LocalLyricsManager.get(uri);
   if (localLyric) {
     const lyricsData = { ...localLyric, uri };
+    await AddRomajiWordBreaks(lyricsData);
     if (isStaleFetch(uri)) return [lyricsData, 200];
     $currentLyricsData.set(JSON.stringify(lyricsData));
     presentLyrics(lyricsData);
@@ -305,6 +306,8 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
         // re-fetch checks (which match on uri) recognise it — older cache
         // entries predate the uri field.
         const lyricsFromCache = { ...(lyricsFromCacheRes ?? {}), uri };
+        // Cached before word gaps existed, or before its romaji was looked at.
+        await AddRomajiWordBreaks(lyricsFromCache);
         if (isStaleFetch(uri)) return [{ ...lyricsFromCache, fromCache: true }, 200];
         $currentLyricsData.set(JSON.stringify(lyricsFromCache));
         presentLyrics(lyricsFromCache);

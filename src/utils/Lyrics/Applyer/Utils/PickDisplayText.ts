@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 
-import { $romanizationBelow } from "../../../stores.ts";
+import { $romanizationBelow, $translationsBelow } from "../../../stores.ts";
 import { HasLyricsText } from "../../EmptyLines.ts";
 import { StripZeroWidth } from "./StripZeroWidth.ts";
 
@@ -25,6 +25,12 @@ export function PickDisplayText(entry: any, useRomanized: boolean): string {
 export const RomanizeInPlace = (useRomanized: boolean) => useRomanized && !$romanizationBelow.get();
 export const RomanizeBelow = (useRomanized: boolean) => useRomanized && $romanizationBelow.get();
 
+/** The translation shown under a line or vocal group (Translations Under the Lyrics), or "". */
+export const TranslatedLine = (entry: any): string =>
+  $translationsBelow.get() && HasLyricsText(entry?.TranslatedText)
+    ? StripZeroWidth(entry.TranslatedText).replace(/\s+/g, " ").trim()
+    : "";
+
 // The romanization shown under a line. Empty when the line has none, or when the
 // romanization is all it has (PickDisplayText already shows it as the line itself).
 export function RomanizedLine(entry: any): string {
@@ -37,6 +43,26 @@ export function RomanizedLine(entry: any): string {
 const comparable = (text: string) => StripZeroWidth(text).toLowerCase().replace(/[\s\p{P}]+/gu, "");
 const differs = (original: string, romanized: string) => comparable(original) !== comparable(romanized);
 
+/**
+ * A background vocal's translation, or "" when it only repeats part of the lead's: some
+ * lyrics give every background vocal the whole line's translation again.
+ */
+export const BackgroundTranslation = (background: any, lead: any): string => {
+  const text = TranslatedLine(background);
+  const leadText = TranslatedLine(lead);
+  return text && leadText && comparable(leadText).includes(comparable(text)) ? "" : text;
+};
+
+/** Whether any line of the lyrics carries a translation (the Translation button shows then). */
+export const LyricsHaveTranslations = (lyrics: any): boolean =>
+  lyrics?.HasTranslations === true ||
+  [...(lyrics?.Content ?? []), ...(lyrics?.Lines ?? [])].some(
+    (entry: any) =>
+      HasLyricsText(entry?.TranslatedText) ||
+      HasLyricsText(entry?.Lead?.TranslatedText) ||
+      (entry?.Background ?? []).some((bg: any) => HasLyricsText(bg?.TranslatedText))
+  );
+
 /** A piece of the romanization line with its syllable's times, in seconds like the lyrics. */
 export type RomanPart = { text: string; start: number; end: number };
 
@@ -48,7 +74,10 @@ export function RomanizedSyllableParts(syllables: any[]): RomanPart[] {
   const parts = syllables
     .map((s, i) => {
       const part = HasLyricsText(s?.TransliteratedText) ? s.TransliteratedText : (s?.Text ?? "");
-      const text = s?.IsPartOfWord || i === syllables.length - 1 ? part : `${part} `;
+      // RomanSpaceAfter: a word ends inside what the lyrics sing as one (Japanese, see
+      // RomajiSpacing.ts), so the romaji gets the gap the lyric doesn't.
+      const joined = s?.IsPartOfWord && !s?.RomanSpaceAfter;
+      const text = joined || i === syllables.length - 1 ? part : `${part} `;
       return { text: StripZeroWidth(text).replace(/\s+/g, " "), start: s.StartTime, end: s.EndTime };
     })
     .filter((p) => p.text.length > 0);

@@ -31,6 +31,8 @@ import {
   RomanizedSyllableParts,
   RomanizeInPlace,
   type RomanPart,
+  TranslatedLine,
+  BackgroundTranslation,
 } from "./Utils/PickDisplayText.ts";
 import { FillRomanRow } from "./Utils/RomanLine.ts";
 import { StripZeroWidth } from "./Utils/StripZeroWidth.ts";
@@ -49,6 +51,7 @@ interface SyllableData {
 }
 
 interface SyllableGroup {
+  TranslatedText?: string;
   StartTime: number;
   EndTime: number;
   Syllables: SyllableData[];
@@ -65,6 +68,7 @@ interface LineLyrics {
   Content: {
     Text: string;
     TransliteratedText?: string;
+    TranslatedText?: string;
     StartTime: number;
     EndTime: number;
     OppositeAligned?: boolean;
@@ -97,10 +101,17 @@ function findRomanParts(line: LyricLine): RomanPart[] | undefined {
   return best?.parts;
 }
 
-function toLine(words: LyricWord[], isBG: boolean, isDuet: boolean, roman: RomanPart[] = []): LyricLine {
+function toLine(
+  words: LyricWord[],
+  isBG: boolean,
+  isDuet: boolean,
+  roman: RomanPart[] = [],
+  translation = ""
+): LyricLine {
   const line: LyricLine = {
     words,
-    translatedLyric: "",
+    // Translations Under the Lyrics: AMLL's row above the romanization.
+    translatedLyric: translation,
     // AMLL shows it as a smaller line under the lyric.
     romanLyric: roman
       .map((p) => p.text)
@@ -150,13 +161,13 @@ function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLi
     const lead = toWords(entry.Lead.Syllables, romanize);
     if (lead.length === 0) continue;
     const leadRoman = RomanizeBelow(romanize) ? RomanizedSyllableParts(entry.Lead.Syllables) : [];
-    lines.push(toLine(lead, false, isDuet, leadRoman));
+    lines.push(toLine(lead, false, isDuet, leadRoman, TranslatedLine(entry.Lead)));
     // The player keeps one background line per main line (a second replaces the first),
     // so several groups share it, each on a row of its own: a line break after every
     // group but the last, which RuythaPage.css keeps (white-space: pre-line). AMLL splits
     // the break off the word into a text node of its own, so the word's timing is kept.
     const groups = (entry.Background ?? [])
-      .map((group) => ({ words: toWords(group.Syllables, romanize), syllables: group.Syllables }))
+      .map((group) => ({ words: toWords(group.Syllables, romanize), syllables: group.Syllables, group }))
       .filter((group) => group.words.length > 0);
     const background = groups.flatMap((group, i) =>
       i === groups.length - 1 ? group.words : endRow(group.words, (w) => w.word, (w, word) => ({ ...w, word }))
@@ -167,7 +178,13 @@ function convertSyllableLyrics(data: SyllableLyrics, romanize: boolean): LyricLi
           return i === groups.length - 1 ? parts : endRow(parts, (p) => p.text, (p, text) => ({ ...p, text }));
         })
       : [];
-    if (background.length > 0) lines.push(toLine(background, true, isDuet, backgroundRoman));
+    const backgroundTranslation = groups
+      .map((group) => BackgroundTranslation(group.group, entry.Lead))
+      .filter(Boolean)
+      .join("\n");
+    if (background.length > 0) {
+      lines.push(toLine(background, true, isDuet, backgroundRoman, backgroundTranslation));
+    }
   }
   return lines;
 }
@@ -186,7 +203,7 @@ function convertLineLyrics(data: LineLyrics, romanize: boolean): LyricLine[] {
     const startTime = toMs(entry.StartTime);
     const word = { word: text, startTime, endTime: Math.max(startTime, toMs(entry.EndTime)) };
     lines.push(
-      toLine([word], false, !!entry.OppositeAligned, romanLineParts(entry, romanize))
+      toLine([word], false, !!entry.OppositeAligned, romanLineParts(entry, romanize), TranslatedLine(entry))
     );
   }
   return lines;

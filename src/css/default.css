@@ -692,6 +692,7 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay {
   display: none !important;
 } */
 
+#SpicyLyricsPage:not(.Lyrics_TranslationAvailable) .ViewControls #TranslationToggle,
 #SpicyLyricsPage:not(.Lyrics_RomanizationAvailable) .ViewControls #RomanizationToggle,
 #SpicyLyricsPage:not(.SpicyRenderer) .ViewControls #RomanizationToggle {
   display: none !important;

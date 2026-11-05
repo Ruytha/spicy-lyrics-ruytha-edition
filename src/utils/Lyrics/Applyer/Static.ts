@@ -22,8 +22,9 @@ import {
   RomanizeBelow,
   RomanizedLine,
   RomanizeInPlace,
+  TranslatedLine,
 } from "./Utils/PickDisplayText.ts";
-import { AppendRomanLine } from "./Utils/RomanLine.ts";
+import { AppendRomanLine, AppendTranslationLine } from "./Utils/RomanLine.ts";
 import { initLyricsVirtualizer } from "../LyricsVirtualizer.ts";
 import { ApplySongCredits, MarkLastLineSide } from "./Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "./OnApply.ts";
@@ -104,6 +105,7 @@ export function ApplyStaticLyrics(data: StaticLyricsData, UseRomanized: boolean 
       HTMLElement: lineElem,
     };
 
+    AppendTranslationLine(lineElem, TranslatedLine(line));
     if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineElem, RomanizedLine(line));
     LyricsObject.Types.Static.Lines.push(staticLine);
     lineElements.push(lineElem);

@@ -7,6 +7,7 @@ import * as KuromojiAnalyzer from "./KuromojiAnalyzer.ts";
 import { PageContainer } from "../../components/Pages/PageView.ts";
 import Logger from "../Logger.ts";
 import { StripEmptyLyricsLines } from "./EmptyLines.ts";
+import { RomajiWordBreaks } from "./RomajiSpacing.ts";
 
 // Constants
 const RomajiConverter = new Kuroshiro();
@@ -302,6 +303,47 @@ const romanizeEntry = async (
   return changed;
 };
 
+// Sets RomanSpaceAfter on the syllables a word ends after (RomajiSpacing.ts), for the
+// romanization line under the lyrics. Lines in kana or kanji only; the romaji of each
+// syllable stays as it is.
+const markRomajiWordBreaks = async (lyrics: any) => {
+  const groups = lyrics.Content.filter((group: any) => group.Type === "Vocal").flatMap((group: any) => [
+    group.Lead,
+    ...(group.Background ?? []),
+  ]);
+  await Promise.all(
+    groups.map(async (group: any) => {
+      const syllables: any[] = group?.Syllables ?? [];
+      if (!syllables.some((s) => s.TransliteratedText) || !/[ぁ-んァ-ン一-龯]/.test(syllables.map((s) => s.Text).join("")))
+        return;
+      const text = syllables.map((s, i) => `${i > 0 && !syllables[i - 1].IsPartOfWord ? " " : ""}${s.Text}`).join("");
+      try {
+        const spaced = await romanizeJapaneseText(text);
+        const breaks = RomajiWordBreaks(
+          syllables.map((s) => s.TransliteratedText ?? s.Text),
+          spaced
+        );
+        syllables.forEach((s, i) => {
+          if (breaks[i] && s.IsPartOfWord) s.RomanSpaceAfter = true;
+        });
+      } catch (err) {
+        romanizationLogger.warn("Romaji word gaps failed for a line", err);
+      }
+    })
+  );
+};
+
+/**
+ * Word gaps for the romaji of word-synced Japanese lyrics (markRomajiWordBreaks), once per
+ * lyrics. Lyrics are cached already processed, so fetchLyrics runs it on cached and
+ * local ones too; RomajiWordBreaks on the lyrics says it's been done.
+ */
+export const AddRomajiWordBreaks = async (lyrics: any) => {
+  if (lyrics?.Type !== "Syllable" || lyrics.RomajiWordBreaks || !Array.isArray(lyrics.Content)) return;
+  lyrics.RomajiWordBreaks = true;
+  await markRomajiWordBreaks(lyrics);
+};
+
 export const ProcessLyrics = async (lyrics: any) => {
   // Transliterations the API already shipped are preferred and never overwritten,
   // but we still romanize any entry that's missing one — partial API data should
@@ -329,6 +371,8 @@ export const ProcessLyrics = async (lyrics: any) => {
     );
     appliedRomanization = results.some(Boolean);
   }
+  // Also for romaji the API shipped, which skips the romanizing above.
+  if (presentScripts.includes("Japanese")) await AddRomajiWordBreaks(lyrics);
 
   // True if the API shipped transliterations or we generated any here.
   lyrics.HasTransliterations = hadApiTransliterations || appliedRomanization;

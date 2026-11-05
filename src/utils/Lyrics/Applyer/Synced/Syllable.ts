@@ -33,8 +33,10 @@ import {
   RomanizedSyllableParts,
   RomanizedSyllables,
   RomanizeInPlace,
+  TranslatedLine,
+  BackgroundTranslation,
 } from "../Utils/PickDisplayText.ts";
-import { AppendRomanLine } from "../Utils/RomanLine.ts";
+import { AppendRomanLine, AppendTranslationLine } from "../Utils/RomanLine.ts";
 import { initLyricsVirtualizer } from "../../LyricsVirtualizer.ts";
 import { ApplySongCredits, MarkLastLineSide } from "../Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
@@ -347,6 +349,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
         lineElem.appendChild(word);
       }
     });
+    AppendTranslationLine(lineElem, TranslatedLine(line.Lead));
     if (RomanizeBelow(UseRomanized)) {
       const parts = RomanizedSyllableParts(line.Lead.Syllables);
       AppendRomanLine(lineElem, RomanizedSyllables(line.Lead.Syllables), parts);
@@ -463,6 +466,7 @@ export function ApplySyllableLyrics(data: LyricsData, UseRomanized: boolean = fa
             lineE.appendChild(bwE);
           }
         });
+        AppendTranslationLine(lineE, BackgroundTranslation(bg, line.Lead));
         if (RomanizeBelow(UseRomanized)) AppendRomanLine(lineE, RomanizedSyllables(bg.Syllables), RomanizedSyllableParts(bg.Syllables));
       });
     }

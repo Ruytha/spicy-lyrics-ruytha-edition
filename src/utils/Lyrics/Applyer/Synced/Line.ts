@@ -26,8 +26,9 @@ import {
   RomanizeBelow,
   RomanizedLine,
   RomanizeInPlace,
+  TranslatedLine,
 } from "../Utils/PickDisplayText.ts";
-import { AppendRomanLine } from "../Utils/RomanLine.ts";
+import { AppendRomanLine, AppendTranslationLine } from "../Utils/RomanLine.ts";
 import { initLyricsVirtualizer } from "../../LyricsVirtualizer.ts";
 import { ApplySongCredits, MarkLastLineSide } from "../Credits/ApplyLyricsCredits.ts";
 import { EmitApply, EmitNotApplyed } from "../OnApply.ts";
@@ -221,6 +222,7 @@ export function ApplyLineLyrics(data: LyricsData, UseRomanized: boolean = false)
       lineElem.classList.add("OppositeAligned");
     }
 
+    AppendTranslationLine(lineElem, TranslatedLine(line));
     if (RomanizeBelow(UseRomanized)) {
       const roman = RomanizedLine(line);
       // One part for the whole line: it sweeps across as the line is sung.

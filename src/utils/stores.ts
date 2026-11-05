@@ -170,6 +170,9 @@ export const $joinSplitWords = persistAtom<boolean>("joinSplitWords", false);
 // With romanization on, it shows as a smaller line under each lyric (like Apple Music)
 // instead of replacing the lyric.
 export const $romanizationBelow = persistAtom<boolean>("romanizationBelow", true);
+// A lyric's translation, when its lyrics carry one, as a smaller line under it. Off until
+// turned on with the Translation button by the lyrics, like Apple Music.
+export const $translationsBelow = persistAtom<boolean>("translationsBelow", false);
 // Tinted box drawn behind a lyrics line while the pointer is over it.
 export const $lineHoverBackground = persistAtom<boolean>("lineHoverBackground", true);
 // Wide inset on the side a duet line leans away from, so the two voices read as

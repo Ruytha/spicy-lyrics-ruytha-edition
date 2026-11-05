@@ -43,6 +43,7 @@ export interface TtmlAgent {
 }
 
 export interface TtmlTransliterationEntry {
+  '#text'?: TtmlText;
   for?: string;
   span?: TtmlSpanNode | TtmlSpanNode[];
 }
@@ -55,6 +56,9 @@ export interface TtmlITunesMetadata {
   songwriters?: { songwriter?: string | string[] };
   transliterations?: {
     transliteration?: TtmlTransliterationBlock | TtmlTransliterationBlock[];
+  };
+  translations?: {
+    translation?: TtmlTransliterationBlock | TtmlTransliterationBlock[];
   };
 }
 
@@ -525,6 +529,7 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
 
   const SongWriters = GetSongWriters(ttml);
   const Transliterations = GetTransliterations(ttml);
+  const Translations = GetTranslations(ttml);
 
   const base: ParsedLyricsBase = SongWriters ? { SongWriters } : {};
 
@@ -640,8 +645,9 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
           line.TransliteratedText = translit.trim();
           line.HasTransliterations = true;
         }
-        if (roles.translation !== undefined && roles.translation.trim() !== '') {
-          line.TranslatedText = roles.translation.trim();
+        const translation = roles.translation?.trim() || (lineKey ? Translations?.get(lineKey)?.lead : undefined);
+        if (translation) {
+          line.TranslatedText = translation;
           line.HasTranslations = true;
         }
         return line;
@@ -743,8 +749,10 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
           if (leadRoman !== '') {
             vocal.Lead.TransliteratedText = leadRoman;
           }
-          if (leadRoles.translation !== undefined && leadRoles.translation.trim() !== '') {
-            vocal.Lead.TranslatedText = leadRoles.translation.trim();
+          const leadTranslation =
+            leadRoles.translation?.trim() || (lineKey ? Translations?.get(lineKey)?.lead : undefined);
+          if (leadTranslation) {
+            vocal.Lead.TranslatedText = leadTranslation;
             vocal.HasTranslations = true;
           }
           if (
@@ -761,7 +769,7 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
           if (filteredBgSpans.length > 0) {
             const backgrounds: ParsedVocalGroup[] = [];
 
-            filteredBgSpans.forEach((bgSpan) => {
+            filteredBgSpans.forEach((bgSpan, bgIndex) => {
               const bgLineKey = bgSpan['itunes:key'];
               const bgKeyTranslit = bgLineKey ? Transliterations?.get(bgLineKey) : undefined;
               const bgLineTranslit = pickBackgroundTransliterations(bgKeyTranslit, lineTranslitEntry);
@@ -793,8 +801,14 @@ function convertTTML(ttmlInput: string): ParsedTTMLLyrics | null {
               if (bgRoles.roman !== undefined && bgRoles.roman.trim() !== '') {
                 bgVocal.TransliteratedText = bgRoles.roman.trim();
               }
-              if (bgRoles.translation !== undefined && bgRoles.translation.trim() !== '') {
-                bgVocal.TranslatedText = bgRoles.translation.trim();
+              // A head translation keyed by the background span itself, else the line's
+              // background part, which can't be split between several groups: the first gets it.
+              const bgTranslation =
+                bgRoles.translation?.trim() ||
+                (bgLineKey ? Translations?.get(bgLineKey)?.lead : undefined) ||
+                (bgIndex === 0 && lineKey ? Translations?.get(lineKey)?.background : undefined);
+              if (bgTranslation) {
+                bgVocal.TranslatedText = bgTranslation;
                 bgVocal.HasTranslations = true;
               }
 
@@ -1025,6 +1039,52 @@ function GetSongWriters(ttml: TtmlDocument): string[] | null {
   }
   ttmlLogger.debug('Found songwriters:', SongWritersOutput);
   return SongWritersOutput;
+}
+
+/** A line's translation from the head, split like a transliteration entry: lead and background. */
+interface TranslationLine {
+  lead: string;
+  background: string;
+}
+
+/**
+ * Translations kept in the head (`<iTunesMetadata><translations><translation xml:lang>`
+ * with `<text for="L1">`), the way Apple Music's TTML carries them. Plain text, so the
+ * entry's text is the lead and an `x-bg` span inside it the background vocal's. Only
+ * the first translation is used when there are several languages.
+ */
+function GetTranslations(ttml: TtmlDocument): Map<string, TranslationLine> | null {
+  const block = toArray(ttml?.tt?.head?.metadata?.iTunesMetadata)
+    .flatMap((metadata) => toArray(metadata?.translations?.translation))
+    .find((translation) => translation?.text !== undefined);
+  if (!block) return null;
+
+  const map = new Map<string, TranslationLine>();
+  toArray(block.text).forEach((entry) => {
+    const key = entry?.for;
+    if (!key) return;
+    let lead = readText(entry['#text']);
+    let background = '';
+    const addSpans = (spans: TtmlSpanNode[], bg: boolean) => {
+      spans.forEach((span) => {
+        if (typeof span === 'string') {
+          if (bg) background += decodeXmlEntities(span);
+          else lead += decodeXmlEntities(span);
+          return;
+        }
+        if (!isSpanObject(span)) return;
+        const isBg = bg || span['ttm:role'] === 'x-bg';
+        const text = readText(span['#text']);
+        if (isBg) background += `${background && text ? ' ' : ''}${text}`;
+        else lead += `${lead && text && !/\s$/.test(lead) ? ' ' : ''}${text}`;
+        if (span.span) addSpans(toArray(span.span), isBg);
+      });
+    };
+    addSpans(toArray(entry.span), false);
+    const line = { lead: lead.replace(/\s+/g, ' ').trim(), background: background.replace(/\s+/g, ' ').trim() };
+    if (line.lead || line.background) map.set(key, line);
+  });
+  return map.size > 0 ? map : null;
 }
 
 function GetTransliterations(ttml: TtmlDocument): TransliterationMap | null {

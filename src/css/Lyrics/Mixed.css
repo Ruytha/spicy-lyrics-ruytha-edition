@@ -1345,3 +1345,27 @@
   text-shadow: none !important;
   filter: blur(calc(var(--BlurAmount, 0px) / 2));
 }
+
+/* Translations Under the Lyrics (Utils/RomanLine.ts): the translation's row, above the
+   romanization's, painted the same way as an untimed romanization row: a shadow that
+   carries the line's blur, a little brighter while the line is sung. */
+#SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line > .SL_TranslationLine {
+  flex-basis: 100%;
+  margin-top: 0.18em;
+  font-size: 0.56em;
+  font-weight: 600 !important;
+  line-height: 1.25;
+  letter-spacing: 0;
+  background: none !important;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 var(--BlurAmount, 0) rgba(255, 255, 255, 0.62) !important;
+  pointer-events: none;
+}
+
+#SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line.Active > .SL_TranslationLine {
+  text-shadow: 0 0 0 rgba(255, 255, 255, 0.78) !important;
+}
+
+#SpicyLyricsPage.SpicyRenderer .LyricsContainer .LyricsContent .line > .SL_TranslationLine + .SL_RomanLine {
+  margin-top: 0.06em;
+}

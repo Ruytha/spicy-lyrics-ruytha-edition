@@ -32,6 +32,7 @@ import {
   $duetLinePadding,
   $joinSplitWords,
   $romanizationBelow,
+  $translationsBelow,
   $lineHoverBackground,
   $lyricsContainerExists,
   $lyricsRenderer,
@@ -97,6 +98,7 @@ export const Tooltips: {
   Close: TippyInstance | null;
   CompactModeToggle: TippyInstance | null;
   RomanizationToggle: TippyInstance | null;
+  TranslationToggle: TippyInstance | null;
   NowBarToggle: TippyInstance | null;
   FullscreenToggle: TippyInstance | null;
   CinemaView: TippyInstance | null;
@@ -110,6 +112,7 @@ export const Tooltips: {
   Close: null,
   CompactModeToggle: null,
   RomanizationToggle: null,
+  TranslationToggle: null,
   NowBarToggle: null,
   FullscreenToggle: null,
   CinemaView: null,
@@ -689,6 +692,7 @@ function AppendViewControls(ReAppend: boolean = false) {
   ].join("");
   const lyricsGroup = [
     button("RomanizationToggle", DockIcons.Romanization, "Romanization", isRomanized),
+    button("TranslationToggle", DockIcons.Translation, "Translation", $translationsBelow.get()),
     isTTMLMakerMode ? button("LoadTTML", DockIcons.LoadTTML, "Load TTML File") : "",
     isTTMLMakerMode ? button("LyricsManager", DockIcons.LyricsManager, "Lyrics Manager") : "",
     button("ClearCurrentCache", DockIcons.ClearCache, "Clear Cached Lyrics"),
@@ -844,6 +848,21 @@ function AppendViewControls(ReAppend: boolean = false) {
       } catch (err) {
         controlsLogger.warn("Failed to setup Romanization tooltip", err);
       }
+    }
+
+    const translationToggle = elem.querySelector("#TranslationToggle");
+    if (translationToggle) {
+      if (!isPip) {
+        Tooltips.TranslationToggle = createTooltip(translationToggle, {
+          ...Spicetify.TippyProps,
+          content: $translationsBelow.get() ? "Hide Translation" : "Show Translation",
+        });
+      }
+      // The store's listener redraws the lyrics; the controls are redrawn for the button's state.
+      translationToggle.addEventListener("click", () => {
+        $translationsBelow.set(!$translationsBelow.get());
+        setTimeout(AppendViewControls, 45);
+      });
     }
 
     if (!Fullscreen.IsOpen && !Fullscreen.CinemaViewOpen) {
@@ -1042,6 +1061,12 @@ $joinSplitWords.listen(() => {
 });
 
 $romanizationBelow.listen(() => {
+  const uri = SpotifyPlayer.GetUri();
+  $currentLyricsData.set("");
+  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+});
+
+$translationsBelow.listen(() => {
   const uri = SpotifyPlayer.GetUri();
   $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);
