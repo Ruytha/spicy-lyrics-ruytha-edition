@@ -178,7 +178,7 @@ export const EXPERIMENTS = [
     label: "Lyrics Liftoff",
     description:
       "Words have no fill. Each one shrinks to nothing as it's sung, turns inside out, and leaves through the top of the screen. Interlude dots climb out of the screen one by one and drop back, and the list glides between lines and overshoots as an interlude ends, whatever the Smooth Scrolling setting. Line-synced lines are split into words sharing the line's time by length. Only applies to Spicy's lyrics renderer. Disable to bring gravity back.",
-    default: false,
+    default: true,
     pageClass: "Exp_LyricsLiftoff",
   },
 ] as const satisfies readonly Experiment[];

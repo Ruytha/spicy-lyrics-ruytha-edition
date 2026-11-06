@@ -206,7 +206,7 @@
   width: 42px;
   height: 24px;
   background: rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
+  border-radius: 999px !important;
   transition: background var(--dur-base) var(--ease-standard);
   position: relative;
 }
@@ -218,7 +218,7 @@
   left: 3px;
   width: 18px;
   height: 18px;
-  border-radius: 50%;
+  border-radius: 50% !important;
   background: rgba(255, 255, 255, 0.6);
   transition:
     transform var(--dur-base) var(--ease-standard),
