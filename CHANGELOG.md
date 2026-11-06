@@ -6,6 +6,16 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-07
+
+### Added
+
+- **Lyrics Liftoff.** A silly experiment, off by default, under Settings → Experiments.
+  Each word shrinks to nothing as it's sung, flips upside down and flies off the top of
+  the screen. Interlude dots climb away one by one and drop back, and the list overshoots
+  as an interlude ends. Line-synced lyrics work too, split into words. It only applies
+  to Spicy's renderer, not AMLL's.
+
 ## 2026-11-05
 
 ### Added
