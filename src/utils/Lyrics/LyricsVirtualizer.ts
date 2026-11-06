@@ -28,6 +28,30 @@ const ESTIMATE: Record<string, number> = {
 
 const virtualizerLogger = new Logger("Lyrics Virtualizer");
 
+// Lyrics Liftoff's overshoot on leaving an interlude. The interlude gives up this
+// much height (in lyric sizes) quickly, on the spring below, so the rows jump up,
+// and the scroll spring, being slower, takes its time bringing them back.
+const LIFTOFF_INTERLUDE_HEIGHT = 2.05;
+const LIFTOFF_SCROLL_FREQUENCY = 1.5;
+const LIFTOFF_BUMP_SECONDS = 1.2;
+const LIFTOFF_BUMP_STEP = 1 / 60;
+
+const isLiftoff = () => isExperimentEnabled("lyricsLiftoff");
+
+/** Lyrics Liftoff's scrolling is part of the effect, so it glides whatever the setting says. */
+export function lyricsUseSmoothScroll(): boolean {
+  return $smoothScrolling.get() || isLiftoff();
+}
+
+/** How much of an interlude is left, `seconds` after it starts to collapse (underdamped, can dip below 0). */
+export function liftoffCollapse(seconds: number): number {
+  const omega = Math.sqrt(200);
+  const damping = 0.7;
+  const decay = damping * omega;
+  const wave = omega * Math.sqrt(1 - damping * damping);
+  return Math.exp(-decay * seconds) * (Math.cos(wave * seconds) + (decay / wave) * Math.sin(wave * seconds));
+}
+
 // Smooth-scroll spring. Critically damped, so it never overshoots the line, and
 // settles in ~0.8s. A retarget mid-flight keeps the current velocity, which is
 // what makes back-to-back line changes read as one continuous glide.
@@ -115,6 +139,7 @@ export const isBgPopActive = (): boolean =>
   isRefreshedSimpleLyrics() && isExperimentEnabled("backgroundLinePop");
 
 class LyricsVirtualizer {
+  private _liftoffBumpIndex = -1;
   private _virtualizer: Virtualizer<HTMLElement, HTMLElement> | null = null;
   private _allElements: HTMLElement[] = [];
   private _indexByElement = new Map<HTMLElement, number>();
@@ -837,7 +862,7 @@ class LyricsVirtualizer {
     // not only on the next scroll.
     this._maid!.Give(
       $smoothScrolling.listen((enabled) => {
-        if (!enabled) this._handOffSmoothScroll();
+        if (!enabled && !isLiftoff()) this._handOffSmoothScroll();
       })
     );
     // In this order: each one resizes rows relative to the other's current state.
@@ -1311,7 +1336,7 @@ class LyricsVirtualizer {
     }
     // Refreshed Simple Lyrics follows lines with the ripple, in place of either
     // kind of smooth scroll. The list itself moves instantly; the rows animate.
-    this._cascadeChain = !instant && this._refreshed;
+    this._cascadeChain = !instant && this._refreshed && !isLiftoff();
     if (this._cascadeChain) {
       this._stopSmoothScroll();
       this._setConverging(true);
@@ -1319,13 +1344,39 @@ class LyricsVirtualizer {
       return;
     }
     this._stopCascade();
-    if (!instant && $smoothScrolling.get()) {
+    if (!instant && lyricsUseSmoothScroll()) {
+      this._liftoffBump(index);
       this._smoothScrollToIndex(index, align, padding);
       return;
     }
     this._stopSmoothScroll();
     this._setConverging(true);
     this._scrollToIndexWithRetry(index, align, instant, padding, 0, null);
+  }
+
+  // Lyrics Liftoff: leaving an interlude, the list shoots past the next line and
+  // settles back. Scrolls repeat for one line, so each interlude bumps once.
+  private _liftoffBump(index: number): void {
+    const line = this._allElements[index];
+    const afterInterlude = this._allElements[index - 1]?.classList.contains("musical-line");
+    if (!line || !afterInterlude || !isLiftoff()) {
+      this._liftoffBumpIndex = -1;
+      return;
+    }
+    if (this._liftoffBumpIndex === index || !this._virtualContainer) return;
+    this._liftoffBumpIndex = index;
+    const height = LIFTOFF_INTERLUDE_HEIGHT * parseFloat(getComputedStyle(line).fontSize);
+    const scroll = new Spring(0, LIFTOFF_SCROLL_FREQUENCY, 1);
+    const keyframes: Keyframe[] = [];
+    for (let t = 0; t <= LIFTOFF_BUMP_SECONDS; t += LIFTOFF_BUMP_STEP) {
+      const collapsed = height * (1 - Math.max(liftoffCollapse(t), 0));
+      keyframes.push({ transform: `translateY(${scroll.Step(LIFTOFF_BUMP_STEP) - collapsed}px)` });
+      scroll.SetGoal(collapsed);
+    }
+    keyframes.push({ transform: "translateY(0)" });
+    for (const el of [this._virtualContainer, ...this._trailingElements()]) {
+      el.animate(keyframes, { duration: LIFTOFF_BUMP_SECONDS * 1000, composite: "add" });
+    }
   }
 
   /**
@@ -1529,6 +1580,9 @@ class LyricsVirtualizer {
       // Starting fresh: begin at rest from wherever the list actually is.
       this._smoothSpring.SetGoal(current, true);
     }
+    this._smoothSpring.SetFrequency(
+      isLiftoff() ? LIFTOFF_SCROLL_FREQUENCY : SMOOTH_SCROLL_FREQUENCY
+    );
 
     this._smoothGeometry = this._readSmoothGeometry(v, scrollEl);
     this._smoothReconciles = 0;
@@ -1819,7 +1873,7 @@ class LyricsVirtualizer {
 
   private _layoutGlideEnabled(): boolean {
     return (
-      ($smoothScrolling.get() || this._refreshed) &&
+      (lyricsUseSmoothScroll() || this._refreshed) &&
       performance.now() >= this._layoutGlideBlockedUntil
     );
   }

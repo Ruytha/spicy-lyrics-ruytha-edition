@@ -12,6 +12,7 @@ import { BlurMultiplier, timeOffset } from "../Shared.ts";
 import {
   isBgPopActive,
   isLyricsListMoving,
+  liftoffCollapse,
   setOnNewElementMounted,
   syncDetachedBackgroundLines,
 } from "../../LyricsVirtualizer.ts";
@@ -1059,6 +1060,294 @@ function getProgressPercentage(currentTime: number, startTime: number, endTime: 
 
 let lastAnimateFrameTime = 0;
 
+// Lyrics Liftoff: words run on a spring that is broken on purpose. Its velocity
+// update keeps the displacement it should have decayed, so any distance from the
+// goal feeds itself. A word goes untouched until its goal starts moving, then
+// runs away, whatever its length: scale falls through 0 and turns it upside down,
+// and the offset drawn inside that scale nudges it down, then throws it up.
+//
+// The runaway grows per step, not per second, so it's stepped at a fixed rate to
+// look the same on every display.
+class RunawaySpring {
+  private velocity = 0;
+  private goal: number;
+
+  constructor(
+    public position: number,
+    private readonly frequency: number,
+    private readonly damping: number
+  ) {
+    this.goal = position;
+  }
+
+  Step(goal: number, dt: number): number {
+    this.goal = goal;
+    const w = this.frequency * 2 * Math.PI;
+    const z = this.damping;
+    const wd = w * Math.sqrt(1 - z * z);
+    const offset = this.position - this.goal;
+    const boosted = this.velocity + z * w * offset;
+    const fade = Math.exp(-z * w * dt);
+    const c = Math.cos(wd * dt);
+    const s = Math.sin(wd * dt);
+    this.position = fade * (offset * c + (boosted / wd) * s) + this.goal;
+    this.velocity = fade * (boosted * c - (offset * wd + (z * w * boosted) / wd) * s);
+    return this.position;
+  }
+}
+
+type RunawayWord = {
+  Scale: RunawaySpring;
+  YOffset: RunawaySpring;
+  Pending: number;
+  LastPosition: number;
+  Gone: boolean;
+};
+
+const Runaway = {
+  StepSeconds: 1 / 90,
+  MaxFrameSeconds: 0.1,
+  ScaleSpline: GetSpline([
+    { Time: 0, Value: 0.95 },
+    { Time: 0.7, Value: 1.025 },
+    { Time: 1, Value: 1 },
+  ]),
+  YOffsetSpline: GetSpline([
+    { Time: 0, Value: 0.01 },
+    { Time: 0.9, Value: -0.0167 },
+    { Time: 1, Value: 0 },
+  ]),
+  // Offsets are in text heights, about this many lyric sizes.
+  TextHeight: 1.3,
+  // Long past the top of the screen by this size.
+  GoneScale: 40,
+  // Playback position wobbles by a little on its own; more than this is a rewind.
+  RewindMs: 250,
+};
+
+const _runawayWords = new WeakMap<object, RunawayWord>();
+
+function setRunawayStyle(el: HTMLElement, scale: number, y: number): void {
+  setStyleIfChanged(el, "scale", `${scale}`, 0.001);
+  setStyleIfChanged(
+    el,
+    "transform",
+    `translate3d(0, calc(var(--DefaultLyricsSize) * ${y * Runaway.TextHeight}), 0)`,
+    0.0001,
+    y
+  );
+}
+
+type RunawayTarget = { HTMLElement: HTMLElement; StartTime: number; EndTime: number };
+
+// Line-synced lines have no word timings, so while Lyrics Liftoff is on each line's
+// text is split into words sharing out the line's time by length. Script without
+// spaces still splits where a word ends, and punctuation stays on its word.
+type SplitLine = { Words: RunawayTarget[]; Text: Text | null };
+const _splitLines = new WeakMap<object, SplitLine>();
+
+function splitLineText(text: string): { Text: string; Joined: boolean }[] {
+  const words: { Text: string; Joined: boolean }[] = [];
+  let lead = "";
+  let afterSpace = true;
+  for (const { segment, isWordLike } of new Intl.Segmenter(undefined, {
+    granularity: "word",
+  }).segment(text)) {
+    const last = words[words.length - 1];
+    if (!segment.trim()) {
+      afterSpace = true;
+    } else if (isWordLike) {
+      if (last && !afterSpace) last.Joined = true;
+      words.push({ Text: lead + segment, Joined: false });
+      lead = "";
+      afterSpace = false;
+    } else if (last && !afterSpace) {
+      last.Text += segment;
+    } else {
+      lead += segment;
+    }
+  }
+  if (lead) {
+    const last = words[words.length - 1];
+    if (last) last.Text += lead;
+    else words.push({ Text: lead, Joined: false });
+  }
+  return words;
+}
+
+function getSplitLine(line: RunawayTarget): RunawayTarget[] {
+  const existing = _splitLines.get(line);
+  if (existing) return existing.Words;
+
+  const el = line.HTMLElement;
+  // Anything after the text, like a romanization row, stays as it is.
+  const text = el.firstChild instanceof Text ? el.firstChild : null;
+  const parts = text ? splitLineText(text.data) : [];
+  const total = parts.reduce((sum, part) => sum + [...part.Text].length, 0);
+  const fragment = document.createDocumentFragment();
+  let spent = 0;
+  const words = parts.map((part, index) => {
+    const span = document.createElement("span");
+    span.classList.add("word");
+    if (part.Joined) span.classList.add("PartOfWord");
+    if (index === parts.length - 1) span.classList.add("LastWordInLine");
+    span.textContent = part.Text;
+    fragment.appendChild(span);
+    const startShare = spent / total;
+    spent += [...part.Text].length;
+    return {
+      HTMLElement: span,
+      StartTime: line.StartTime + (line.EndTime - line.StartTime) * startShare,
+      EndTime: line.StartTime + ((line.EndTime - line.StartTime) * spent) / total,
+    };
+  });
+  if (text && words.length) text.replaceWith(fragment);
+  _splitLines.set(line, { Words: words, Text: words.length ? text : null });
+  return words;
+}
+
+function restoreSplitLine(line: RunawayTarget): void {
+  const split = _splitLines.get(line);
+  if (!split) return;
+  _splitLines.delete(line);
+  if (!split.Text) return;
+  line.HTMLElement.insertBefore(split.Text, split.Words[0].HTMLElement);
+  for (const word of split.Words) word.HTMLElement.remove();
+}
+
+function stepRunawayWord(word: RunawayTarget, position: number, deltaTime: number): void {
+  const el = word.HTMLElement;
+  if (position < word.StartTime) {
+    _runawayWords.delete(word);
+    setRunawayStyle(el, Runaway.ScaleSpline.at(0), Runaway.YOffsetSpline.at(0));
+    return;
+  }
+  let state = _runawayWords.get(word);
+  // Rewinding into a word sends it around again.
+  if (!state || position < state.LastPosition - Runaway.RewindMs) {
+    state = {
+      Scale: new RunawaySpring(Runaway.ScaleSpline.at(0), 0.7, 0.6),
+      YOffset: new RunawaySpring(Runaway.YOffsetSpline.at(0), 1.25, 0.4),
+      Pending: 0,
+      LastPosition: position,
+      // Already over when first seen: it was seeked past, not sung.
+      Gone: position > word.EndTime,
+    };
+    _runawayWords.set(word, state);
+  }
+  state.LastPosition = position;
+  if (!state.Gone) {
+    const progress = getProgressPercentage(position, word.StartTime, word.EndTime);
+    const scaleGoal = Runaway.ScaleSpline.at(progress);
+    const yGoal = Runaway.YOffsetSpline.at(progress);
+    state.Pending += Math.min(deltaTime, Runaway.MaxFrameSeconds);
+    while (state.Pending >= Runaway.StepSeconds) {
+      state.Scale.Step(scaleGoal, Runaway.StepSeconds);
+      state.YOffset.Step(yGoal, Runaway.StepSeconds);
+      state.Pending -= Runaway.StepSeconds;
+    }
+    state.Gone = state.Scale.position < -Runaway.GoneScale;
+  }
+  if (state.Gone) setRunawayStyle(el, 0, 0);
+  else setRunawayStyle(el, state.Scale.position, state.YOffset.position);
+}
+
+// The interlude dots run on healthy springs, but their lift is a hundred times
+// too big: each one climbs out of the screen across its slot and drops back at
+// the end of it. The group grows and collapses on the line's own spring.
+const LiftoffDots = {
+  ScaleSpline: GetSpline([
+    { Time: 0, Value: 0.75 },
+    { Time: 0.7, Value: 1.05 },
+    { Time: 1, Value: 1 },
+  ]),
+  OpacitySpline: GetSpline([
+    { Time: 0, Value: 0.35 },
+    { Time: 0.6, Value: 1 },
+    { Time: 1, Value: 1 },
+  ]),
+  YOffsetSpline: GetSpline([
+    { Time: 0, Value: 0 },
+    { Time: 0.9, Value: -12 },
+    { Time: 1, Value: 0 },
+  ]),
+  // Slots end this long before the interlude does.
+  BreatherMs: 250,
+  MaxStepSeconds: 0.064,
+  // A jump this big in position is a seek: dots land instead of chasing it.
+  SeekMs: 250,
+};
+
+type LiftoffDot = {
+  Scale: Spring;
+  YOffset: Spring;
+  Opacity: Spring;
+  LastPosition: number;
+};
+
+const _liftoffDots = new WeakMap<SyllableLead, LiftoffDot>();
+
+function stepLiftoffDots(
+  lineStart: number,
+  lineEnd: number,
+  dots: SyllableLead[],
+  position: number,
+  deltaTime: number
+): void {
+  const group = dots[0]?.HTMLElement.parentElement;
+  if (!group) return;
+  const groupScale =
+    position < lineStart
+      ? 0
+      : position < lineEnd
+        ? 1 - liftoffCollapse((position - lineStart) / 1000)
+        : liftoffCollapse((position - lineEnd) / 1000);
+  setStyleIfChanged(group, "scale", `${Clamp(groupScale, 0, 1)}`, 0.001);
+
+  const slot = Math.max(30, lineEnd - lineStart - LiftoffDots.BreatherMs) / dots.length;
+  const dt = Math.min(deltaTime, LiftoffDots.MaxStepSeconds);
+  dots.forEach((dot, index) => {
+    const start = lineStart + index * slot;
+    const progress = getProgressPercentage(position, start, start + slot);
+    const scaleGoal = LiftoffDots.ScaleSpline.at(progress);
+    const yGoal = LiftoffDots.YOffsetSpline.at(progress);
+    const opacityGoal = LiftoffDots.OpacitySpline.at(progress);
+
+    let state = _liftoffDots.get(dot);
+    if (!state) {
+      state = {
+        Scale: new Spring(scaleGoal, 0.7, 0.6),
+        YOffset: new Spring(yGoal, 1.25, 0.4),
+        Opacity: new Spring(opacityGoal, 1, 0.5),
+        LastPosition: position,
+      };
+      _liftoffDots.set(dot, state);
+    }
+    const seeked = Math.abs(position - state.LastPosition) > LiftoffDots.SeekMs;
+    state.LastPosition = position;
+    state.Scale.SetGoal(scaleGoal, seeked);
+    state.YOffset.SetGoal(yGoal, seeked);
+    state.Opacity.SetGoal(opacityGoal, seeked);
+
+    setRunawayStyle(
+      dot.HTMLElement,
+      Clamp(state.Scale.Step(dt), 0, 1.5),
+      state.YOffset.Step(dt)
+    );
+    setStyleIfChanged(dot.HTMLElement, "opacity", `${Clamp(state.Opacity.Step(dt), 0, 1)}`, 0.001);
+  });
+}
+
+// Hands the dot group back to the stylesheet, which hides it between interludes.
+function clearLiftoffDotGroup(dots: SyllableLead[]): void {
+  const group = dots[0]?.HTMLElement.parentElement;
+  if (!group) return;
+  group.style.removeProperty("scale");
+  _styleCache.delete(group);
+}
+
+let liftoffWasOn = false;
+
 export function Animate(position: number): void {
   const ProcessedPosition = position + timeOffset - ($simpleLyricsMode.get() ? 33.5 : 0);
   const refreshedSimple =
@@ -1190,6 +1479,24 @@ export function Animate(position: number): void {
     // The pop-out belongs to the refreshed layout; anywhere else every background line stays open.
     markBackgroundGroups(arr, ProcessedPosition, isBgPopActive());
 
+    const liftoff = isExperimentEnabled("lyricsLiftoff");
+    if (liftoff || liftoffWasOn) {
+      for (const line of arr) {
+        // Turning it off has to bring back words on unmounted lines too.
+        if (liftoff && !line.HTMLElement.isConnected) continue;
+        const words = line.Syllables?.Lead ?? [];
+        if (!liftoff) {
+          if (line.DotLine) clearLiftoffDotGroup(words);
+          for (const word of words) setRunawayStyle(word.HTMLElement, 1, 0);
+        } else if (line.DotLine) {
+          stepLiftoffDots(line.StartTime, line.EndTime, words, ProcessedPosition, deltaTime);
+        } else {
+          for (const word of words) stepRunawayWord(word, ProcessedPosition, deltaTime);
+        }
+      }
+      liftoffWasOn = liftoff;
+    }
+
     // Sweeps are measured here, before this frame changes any class, so the
     // reads don't force a layout. A line's words are as wide before it turns
     // Active as after.
@@ -1266,6 +1573,7 @@ export function Animate(position: number): void {
         let floatCap = 1;
         for (let wordIndex = 0; wordIndex < words.length; wordIndex++) {
           const word = words[wordIndex];
+          if (liftoff) continue;
           const wordState = getElementState(ProcessedPosition, word.StartTime, word.EndTime);
           const percentage = getProgressPercentage(ProcessedPosition, word.StartTime, word.EndTime);
           const sweepSpan = sweep?.Spans[wordIndex];
@@ -1932,6 +2240,7 @@ export function Animate(position: number): void {
           let floatCap = 1;
           for (let i = 0; i < words.length; i++) {
             const word = words[i];
+            if (liftoff) continue;
             if (word.AnimatorStore && !word.Dot) {
               word.AnimatorStore.Scale.SetGoal(ScaleSpline.at(1));
               if (refreshedSimple) {
@@ -2230,6 +2539,30 @@ export function Animate(position: number): void {
   } else if (CurrentLyricsType === "Line") {
     const arr = LyricsObject.Types.Line.Lines;
 
+    const liftoff = isExperimentEnabled("lyricsLiftoff");
+    if (liftoff || liftoffWasOn) {
+      for (const line of arr) {
+        // Turning it off has to bring back lines that aren't mounted too.
+        if (liftoff && !line.HTMLElement.isConnected) continue;
+        const dots = line.Syllables?.Lead ?? [];
+        if (line.DotLine) {
+          if (liftoff) {
+            stepLiftoffDots(line.StartTime, line.EndTime, dots, ProcessedPosition, deltaTime);
+          } else {
+            clearLiftoffDotGroup(dots);
+            for (const dot of dots) setRunawayStyle(dot.HTMLElement, 1, 0);
+          }
+        } else if (liftoff) {
+          for (const word of getSplitLine(line)) {
+            stepRunawayWord(word, ProcessedPosition, deltaTime);
+          }
+        } else {
+          restoreSplitLine(line);
+        }
+      }
+      liftoffWasOn = liftoff;
+    }
+
     for (let index = 0; index < arr.length; index++) {
       const line = arr[index];
       if (!line.HTMLElement.isConnected) continue;
@@ -2268,6 +2601,8 @@ export function Animate(position: number): void {
             }
           }
         }
+
+        if (liftoff) continue;
 
         const percentage = getProgressPercentage(ProcessedPosition, line.StartTime, line.EndTime);
 

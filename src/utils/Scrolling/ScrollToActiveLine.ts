@@ -3,7 +3,6 @@ import {
   $lyricsContainerExists,
   $scrollLeadEnabled,
   $scrollLeadMs,
-  $smoothScrolling,
 } from "../../utils/stores.ts";
 import Global from "../../components/Global/Global.ts";
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
@@ -21,6 +20,7 @@ import { ScrollIntoTopViewCSS } from "../ScrollIntoView/Top.ts";
 import {
   getLyricsVirtualizer,
   lyricsUseRefreshedLayout,
+  lyricsUseSmoothScroll,
   scrollLyricsToIndex,
 } from "../Lyrics/LyricsVirtualizer.ts";
 import { IsScrollbarDragging } from "./Simplebar/ScrollSimplebar.ts";
@@ -543,7 +543,7 @@ export function ScrollToActiveLine(ScrollSimplebar: any) {
           // it collapses, so scrolling at the same moment makes the two read as
           // one motion instead of two.
           if (
-            !$smoothScrolling.get() &&
+            !lyricsUseSmoothScroll() &&
             !lyricsUseRefreshedLayout() &&
             Lines[currentLine._LineIndex - 1] &&
             Lines[currentLine._LineIndex - 1].DotLine === true

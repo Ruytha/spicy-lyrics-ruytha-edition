@@ -192,6 +192,64 @@
   background-position: calc((var(--SLM_GradientPosition) + 50%) / 1.5) 0;
 }
 
+/* Lyrics Liftoff (experiment). Every line is painted the same flat white, with
+   no fill, glow or blur; only line opacity differs, so the active line is just
+   slightly brighter. Syllables always collapse on their own centre, split
+   letters stay put and travel with their word. */
+#SpicyLyricsPage.SpicyRenderer.Exp_LyricsLiftoff
+  .LyricsContainer
+  .LyricsContent
+  .SpicyLyricsScrollContainer[data-lyrics-type="Line"] {
+  /* The animator splits these lines into words, which do the moving. The line
+     itself paints nothing and doesn't grow when active. */
+  & .line:not(.musical-line) {
+    background-image: none !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.35);
+    text-shadow: none !important;
+    scale: 1 !important;
+  }
+}
+
+#SpicyLyricsPage.SpicyRenderer.Exp_LyricsLiftoff
+  .LyricsContainer
+  .LyricsContent
+  .SpicyLyricsScrollContainer:is([data-lyrics-type="Syllable"], [data-lyrics-type="Line"]) {
+  & .line:not(.musical-line) :is(.word, .letter) {
+    background-image: none !important;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.35);
+    text-shadow: none !important;
+  }
+
+  & .line :is(.word, .letterGroup) {
+    transform-origin: center center !important;
+  }
+
+  & .line.musical-line.Sung {
+    opacity: 1 !important;
+  }
+
+  & .line .letter {
+    scale: 1 !important;
+    transform: none !important;
+    translate: none !important;
+  }
+
+  & .line.musical-line .dotGroup .dot {
+    background-image: none !important;
+    -webkit-text-fill-color: #fff;
+    text-shadow: 0 0 0.25em rgba(255, 255, 255, 0.85) !important;
+  }
+
+  /* The dots climb well out of the line's box. */
+  & .line.musical-line {
+    overflow: visible !important;
+  }
+
+  & .line.musical-line .dotGroup {
+    transition: none !important;
+  }
+}
+
 /* Syllable words paint their own gradient. A gradient clipped to their parent
    paints the same glyphs again while the words move. The interlude dots paint
    their own too, in every lyrics type: left on the line, its gradient drew a
