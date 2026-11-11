@@ -400,6 +400,12 @@
   margin: 0;
 }
 
+/* The names keep a gutter for the scroll fade on their left; pulling them back by it
+   puts the text on the cover's edge, the line the timeline and volume start on. */
+#SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header .Metadata :is(.SongName, .Artists) {
+  margin-left: -2.5cqw;
+}
+
 #SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header .Metadata .Artists {
   font-weight: 400;
   opacity: 0.6;
@@ -523,6 +529,12 @@
 
 #SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle) svg {
   width: 4.2cqw;
+}
+
+/* On, they turn white with the dot under them; the accent would be the only cool colour
+   on a background taken from the cover. */
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl:is(.ShuffleToggle, .LoopToggle).Enabled {
+  color: #fff;
 }
 
 /* The volume: a thin line between a quiet speaker (the mute button) and a loud one. */
