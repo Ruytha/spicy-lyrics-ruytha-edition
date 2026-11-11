@@ -388,7 +388,7 @@
 #SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Metadata {
   grid-area: meta;
   align-items: flex-start;
-  margin: 6cqw 0 0;
+  margin: 5cqw 0 0;
 }
 
 #SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header .Metadata :is(.SongName, .Artists) {
@@ -408,7 +408,7 @@
 #SpicyLyricsPage.SL_AppleDeck .SL_Deck .Heart {
   grid-area: heart;
   align-self: center;
-  margin-top: 6cqw;
+  margin-top: 5cqw;
   transition:
     background-color 0.2s ease,
     opacity 0.35s ease,
@@ -420,9 +420,9 @@
   grid-area: time;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  row-gap: 1.8cqw;
+  row-gap: 1.2cqw;
   padding: 0;
-  margin-top: 6cqw;
+  margin-top: 4cqw;
 }
 
 #SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .SliderBar {
@@ -476,7 +476,7 @@
 #SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControls {
   grid-area: transport;
   max-height: 30cqw;
-  margin-top: 5cqw;
+  margin-top: 1.5cqw;
   padding: 0 1cqw;
   transition:
     max-height 0.7s cubic-bezier(0.23, 1, 0.32, 1),
@@ -485,8 +485,8 @@
 }
 
 #SpicyLyricsPage.SL_AppleDeck .SL_Deck .PlaybackControl.PlayStateToggle {
-  width: 22cqw !important;
-  height: 22cqw;
+  width: 20cqw !important;
+  height: 20cqw;
   color: #fff;
   background-color: transparent;
   box-shadow: none;
@@ -530,7 +530,7 @@
   grid-area: volume;
   height: 1.4cqw;
   max-height: 10cqw;
-  margin: 7cqw 7.5cqw 1cqw;
+  margin: 3cqw 7.5cqw 1cqw;
   background: rgba(255, 255, 255, 0.2);
   transition:
     height 0.28s var(--sl-spring, cubic-bezier(0.23, 1, 0.32, 1)),
