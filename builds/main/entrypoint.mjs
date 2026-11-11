@@ -1,5 +1,10 @@
 const API_HOST = "api.spicylyrics.org";
-const STORAGE_BASE_URL = "https://public.storage.spicylyrics.org/spicy-lyrics";
+// Branches and their versions; the extension loads the `public` branch.
+const CLIENT_INFO_URL = `https://${API_HOST}/bp/loader/grabClientInfo`;
+// Redirects to the latest build with a short-lived token (about five minutes), so it's
+// requested fresh for every load and never stored.
+const PLUGIN_FILE_URL = `https://${API_HOST}/bp/loader/grabPluginFile`;
+const RELEASE_BRANCH = "public";
 const STATUS_URL = "https://status.spicylyrics.org";
 const DISCORD_URL = "https://discord.com/invite/uqgXU5wh8j";
 const STATUS_API_URL = "https://uptimeapi.edgeprocessor.spicylyrics.org";
@@ -66,15 +71,22 @@ const waitForSpicetify = () =>
     check();
   });
 
+// The client info lists each branch as { tag, version }; the release is the `public` one.
+const releaseVersionFrom = (info) => {
+  const branches = Array.isArray(info?.branches) ? info.branches : [];
+  const release = branches.find((branch) => branch?.tag === RELEASE_BRANCH);
+  return typeof release?.version === "string" ? release.version.trim() : "";
+};
+
 const fetchVersion = async () => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
-    const response = await fetch(`https://${API_HOST}/version`, { signal: controller.signal });
-    if (!response.ok) throw new Error(`Version request failed with HTTP ${response.status}`);
-    const version = (await response.text()).trim();
+    const response = await fetch(CLIENT_INFO_URL, { signal: controller.signal, cache: "no-store" });
+    if (!response.ok) throw new Error(`Client info request failed with HTTP ${response.status}`);
+    const version = releaseVersionFrom(await response.json());
     if (!VERSION_PATTERN.test(version)) {
-      throw new Error(`Unexpected version response: ${JSON.stringify(version.slice(0, 40))}`);
+      throw new Error(`No usable ${RELEASE_BRANCH} version in the client info: ${JSON.stringify(version.slice(0, 40))}`);
     }
     return version;
   } finally {
@@ -85,14 +97,15 @@ const fetchVersion = async () => {
 // Chromium remembers a failed module fetch per URL, so every retry needs a URL it hasn't seen.
 let importCount = 0;
 
+// Each attempt imports grabPluginFile itself, so it follows a fresh redirect and gets a
+// token of its own; a token from an earlier attempt may have expired by then.
 const importExtension = (version) => {
   window._spicy_lyrics_metadata = { LoadedVersion: version };
-  const url = `${STORAGE_BASE_URL}${encodeURIComponent(`@${version}.mjs`)}`;
   return withRetries(
     IMPORT_ATTEMPTS,
     () => {
       const attempt = importCount++;
-      return import(attempt === 0 ? url : `${url}?retry=${attempt}`);
+      return import(attempt === 0 ? PLUGIN_FILE_URL : `${PLUGIN_FILE_URL}?retry=${attempt}`);
     },
     isModuleFetchFailure,
   );
