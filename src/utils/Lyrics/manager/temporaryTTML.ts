@@ -29,6 +29,10 @@ $currentLyricsData.listen((data) => {
   }
 });
 
+/** Whether a temporary TTML is what's showing for `uri`. */
+export const IsTemporaryLyricsShowing = (uri: string | null | undefined) =>
+  !!uri && temporaryData !== null && $temporaryLyricsUri.get() === uri;
+
 /** Parses `ttml` and shows it for `uri` until the lyrics load again. False if it didn't parse. */
 export async function ApplyTemporaryTTML(ttml: string, uri: string): Promise<boolean> {
   const result = ParseTTML(ttml);

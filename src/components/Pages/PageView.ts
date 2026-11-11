@@ -7,6 +7,7 @@ import "../../css/Loaders/DotLoader.css";
 import { DestroyAllLyricsContainers } from "../../utils/Lyrics/Applyer/CreateLyricsContainer.ts";
 import ApplyLyrics, {
   cleanupApplyLyricsAbortController,
+  GetAppliedLyrics,
 } from "../../utils/Lyrics/Global/Applyer.ts";
 import {
   addLinesEvListener,
@@ -71,7 +72,7 @@ import { IsPIP, _IsPIP_after, ClosePopupLyrics } from "../Utils/PopupLyrics.ts";
 import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
 import { CleanUpIsByCommunity } from "../../utils/Lyrics/Applyer/Credits/ApplyIsByCommunity.tsx";
 import { OpenLyricsDBPanel } from "../../utils/openLyricsDBPanel.tsx";
-import { PickTemporaryTTML } from "../../utils/Lyrics/manager/temporaryTTML.ts";
+import { IsTemporaryLyricsShowing, PickTemporaryTTML } from "../../utils/Lyrics/manager/temporaryTTML.ts";
 import { openSettingsPanel } from "../../utils/settings.ts";
 import { ToggleCoverOnly } from "../../utils/Ruytha/PageOptions.ts";
 import { DockIcons } from "../Styling/DockIcons.ts";
@@ -1074,6 +1075,13 @@ $translationsBelow.listen(() => {
 
 $lyricsRenderer.listen(() => {
   const uri = SpotifyPlayer.GetUri();
+  // A temporary TTML exists only on screen, so a fresh fetch would lose it: draw the
+  // same lyrics again with the new renderer instead.
+  const shown = GetAppliedLyrics();
+  if (uri && shown && IsTemporaryLyricsShowing(uri)) {
+    void ApplyLyrics([shown, 200, uri]);
+    return;
+  }
   $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);
 });
