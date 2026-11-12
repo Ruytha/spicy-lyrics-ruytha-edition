@@ -6,6 +6,37 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-12
+
+### Changed
+
+- **Download the loader again for a steadier start.** Replace your installed
+  [`spicy-lyrics-ruytha.mjs`](https://github.com/Ruytha/spicy-lyrics-ruytha-edition/raw/main/builds/spicy-lyrics-ruytha.mjs)
+  with the new one and run `spicetify apply`, once. Spicetify sometimes fails partway
+  through starting up, which left Spicy Lyrics missing until Spotify was restarted; the
+  new loader notices, reloads Spotify's page once to recover, and shows a notice if that
+  didn't help. It also stops waiting on GitHub after 4 seconds and retries a failed
+  download. Everything else keeps updating on its own as before.
+- **Smoother playback.** The title and artist scroll now only runs when a title is too
+  long to fit. It used to run all the time, and was most of the page's styling work
+  during playback.
+- **A smaller download.** Language detection for romanization uses a lighter library, so
+  the extension is about a quarter smaller (519 KB compressed, from 674 KB). It also
+  recognises Bulgarian lyrics, which it used to mistake for another language.
+- **A tighter Apple Music player.** The fullscreen player is smaller and its rows sit
+  closer together. The title lines up with the cover, the times are easier to read, the
+  heart has a firmer outline, and shuffle and repeat turn white when they're on.
+- **Lyrics Liftoff is on by default.** It stays on for anyone who never changed it, and
+  can be turned off under Settings → Experiments.
+
+### Fixed
+
+- **A loaded TTML survives a renderer switch.** Switching between Spicy's and AMLL's
+  renderer used to drop a temporary TTML and fetch the song's own lyrics.
+- **Toggles keep their pill shape** under themes that change the switch's corner radius.
+- **No more remote config warning on every start.** Settings the server sends for other
+  clients are now expected rather than reported as problems.
+
 ## 2026-11-07
 
 ### Added
