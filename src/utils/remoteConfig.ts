@@ -142,6 +142,8 @@ const POLL_INTERVALS = [
   ["updates", "checkIntervalMs"],
 ] as const satisfies readonly (readonly [keyof RemoteConfig, string])[];
 const NON_EMPTY_LISTS = new Set(["breaker.ladderMs"]);
+// Keys this build reads that the shared server doesn't serve; their defaults apply.
+const LOCAL_ONLY_KEYS = new Set(["token.sourceTimeoutMs"]);
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
@@ -172,13 +174,17 @@ const show = (value: unknown): string => JSON.stringify(value) ?? String(value);
  *
  * Pass `issues` to collect a line for everything that wasn't taken as served —
  * unknown, missing, invalid or capped keys — so a bad push is visible.
+ *
+ * The endpoint also serves other clients, so a group this build doesn't know and a
+ * missing key that only this build reads (`LOCAL_ONLY_KEYS`) are expected. Those go
+ * to `notes` instead, when passed.
  */
-export function sanitizeRemoteConfig(data: unknown, issues?: string[]): RemoteConfig {
+export function sanitizeRemoteConfig(data: unknown, issues?: string[], notes?: string[]): RemoteConfig {
   const source = isPlainObject(data) ? data : {};
   const result = {} as Record<string, Record<string, unknown>>;
 
   for (const group of Object.keys(source)) {
-    if (!Object.hasOwn(DEFAULT_REMOTE_CONFIG, group)) issues?.push(`${group}: unknown group, ignored`);
+    if (!Object.hasOwn(DEFAULT_REMOTE_CONFIG, group)) notes?.push(`${group}: group for another client, ignored`);
   }
 
   for (const group of Object.keys(DEFAULT_REMOTE_CONFIG) as (keyof RemoteConfig)[]) {
@@ -201,7 +207,9 @@ export function sanitizeRemoteConfig(data: unknown, issues?: string[]): RemoteCo
 
       if (!isPlainObject(source[group])) continue;
       if (!Object.hasOwn(incoming, key)) {
-        issues?.push(`${group}.${key}: missing, using default ${show(fallback)}`);
+        (LOCAL_ONLY_KEYS.has(`${group}.${key}`) ? notes : issues)?.push(
+          `${group}.${key}: missing, using default ${show(fallback)}`
+        );
       } else if (value === undefined) {
         issues?.push(`${group}.${key}: invalid ${show(raw)}, using default ${show(fallback)}`);
       } else if (show(value) !== show(raw)) {
@@ -296,7 +304,15 @@ function noteFailure(reason: RefreshReason, detail: unknown): void {
   logger.warn(`Fetch (${reason}) failed, keeping the current config until it recovers`, detail);
 }
 
-function noteIssues(issues: string[]): void {
+let lastNotes = "";
+
+function noteIssues(issues: string[], notes: string[]): void {
+  const joinedNotes = notes.join("\n");
+  if (notes.length && joinedNotes !== lastNotes) {
+    logger.debug(`Payload differs from this build as expected:\n  ${notes.join("\n  ")}`);
+  }
+  lastNotes = joinedNotes;
+
   const joined = issues.join("\n");
   if (joined === lastIssues) return;
   if (issues.length) {
@@ -331,9 +347,10 @@ export function RefreshRemoteConfig(reason: RefreshReason = "manual"): Promise<v
       }
 
       const issues: string[] = [];
-      const next = sanitizeRemoteConfig(payload, issues);
+      const notes: string[] = [];
+      const next = sanitizeRemoteConfig(payload, issues, notes);
       const nextJson = JSON.stringify(next);
-      noteIssues(issues);
+      noteIssues(issues, notes);
 
       if (JSON.stringify(store.Items.payload) !== JSON.stringify(payload)) {
         store.Items.payload = payload;
