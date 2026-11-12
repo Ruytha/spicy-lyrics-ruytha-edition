@@ -17,7 +17,7 @@
         "cyrillic-romanization": "^1.2.1",
         "d3-ease": "^3.0.1",
         "fast-xml-parser": "^5.11.0",
-        "franc-all": "^7.2.0",
+        "franc": "6.2.0",
         "idb": "^8.0.3",
         "kuroshiro": "^1.2.0",
         "langs": "^2.0.0",
@@ -560,7 +560,7 @@
 
     "fraction.js": ["fraction.js@5.3.4", "", {}, "sha512-1X1NTtiJphryn/uLQz3whtY6jK3fTqoE3ohKs0tT+Ujr1W59oopxmoEh7Lu5p6vBaPbgoM0bzveAW4Qi5RyWDQ=="],
 
-    "franc-all": ["franc-all@7.2.0", "", { "dependencies": { "trigram-utils": "^2.0.0" } }, "sha512-ZR6ciLQTDBaOvBdkOd8+vqDzaLtmIXRa9GCzcAlaBpqNAKg9QrtClPmqiKac5/xZXfCZGMo1d8dIu1T0BLhHEg=="],
+    "franc": ["franc@6.2.0", "", { "dependencies": { "trigram-utils": "^2.0.0" } }, "sha512-rcAewP7PSHvjq7Kgd7dhj82zE071kX5B4W1M4ewYMf/P+i6YsDQmj62Xz3VQm9zyUzUXwhIde/wHLGCMrM+yGg=="],
 
     "fs-extra": ["fs-extra@10.0.0", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-C5owb14u9eJwizKGdchcDUQeFtlSHHthBk8pbX9Vc1PFZrLombudjDnNns88aYslCyF6IY5SUw3Roz6xShcEIQ=="],
 
