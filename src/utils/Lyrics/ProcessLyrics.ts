@@ -1,8 +1,7 @@
 import cyrillicToLatin from "cyrillic-romanization";
-import { franc } from "franc";
 import Kuroshiro from "kuroshiro";
-import langs from "langs";
 import { RetrievePackage } from "../ImportPackage.ts";
+import { detectLanguage, romanizationBranchFromLanguage, type RomanizationBranch } from "./LanguageHint.ts";
 import * as KuromojiAnalyzer from "./KuromojiAnalyzer.ts";
 import { PageContainer } from "../../components/Pages/PageView.ts";
 import Logger from "../Logger.ts";
@@ -50,8 +49,6 @@ RetrievePackage("aromanize", "1.0.0", "js")
 RetrievePackage("GreekRomanization", "1.0.0", "js")
   .catch(() => {});
 
-type RomanizationBranch = "Japanese" | "Chinese" | "Korean" | "Cyrillic" | "Greek";
-
 // Priority order used both for detection and for composing converters per item.
 const SCRIPT_PRIORITY: RomanizationBranch[] = [
   "Japanese",
@@ -65,31 +62,6 @@ type RomanizationPackages = {
   aromanize?: any;
   pinyin?: any;
   greekRomanization?: any;
-};
-
-const romanizationBranchFromFranc = (
-  primaryLanguage: string,
-  iso2Language: string | undefined
-): RomanizationBranch | undefined => {
-  if (primaryLanguage === "jpn") return "Japanese";
-  if (primaryLanguage === "cmn") return "Chinese";
-  if (primaryLanguage === "kor") return "Korean";
-  if (
-    primaryLanguage === "bel" ||
-    primaryLanguage === "bul" ||
-    primaryLanguage === "kaz" ||
-    iso2Language === "ky" ||
-    primaryLanguage === "mkd" ||
-    iso2Language === "mn" ||
-    primaryLanguage === "rus" ||
-    primaryLanguage === "srp" ||
-    primaryLanguage === "tgk" ||
-    primaryLanguage === "ukr"
-  ) {
-    return "Cyrillic";
-  }
-  if (primaryLanguage === "ell") return "Greek";
-  return undefined;
 };
 
 // Load every package needed for the scripts present in the current song, once.
@@ -226,7 +198,7 @@ const detectPresentScripts = (
   if (CyrillicTextTest.test(scriptText)) present.add("Cyrillic");
   if (GreekTextTest.test(scriptText)) present.add("Greek");
 
-  const hint = romanizationBranchFromFranc(language, iso2Language);
+  const hint = romanizationBranchFromLanguage(language, iso2Language);
   if (hint && !present.has(hint)) {
     if (hint === "Japanese" || hint === "Chinese") {
       if (!present.has("Japanese") && !present.has("Chinese")) present.add(hint);
@@ -354,8 +326,7 @@ export const ProcessLyrics = async (lyrics: any) => {
 
   const { francText, scriptText, entries } = gatherText(lyrics);
 
-  const language = franc(francText);
-  const languageISO2 = langs.where("3", language)?.["1"];
+  const { language, iso2: languageISO2 } = detectLanguage(francText);
   lyrics.Language = language;
   lyrics.LanguageISO2 = languageISO2;
 
