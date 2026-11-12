@@ -411,6 +411,12 @@
   opacity: 0.6;
 }
 
+/* The outline is drawn at a fixed screen width, matching the weight of the title beside it. */
+#SpicyLyricsPage.SL_AppleDeck .SL_Deck .Heart #SpicyLyrics_Heart path {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1.75px;
+}
+
 #SpicyLyricsPage.SL_AppleDeck .SL_Deck .Heart {
   grid-area: heart;
   align-self: center;
@@ -462,8 +468,9 @@
 #SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .Time {
   grid-row: 2;
   min-width: 0;
-  font-size: calc(var(--default-font-size) * 0.85) !important;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: calc(var(--default-font-size) * 0.95) !important;
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.68);
 }
 
 #SpicyLyricsPage.SL_AppleDeck .ContentBox .NowBar .Header > .Timeline .Time.Position {
