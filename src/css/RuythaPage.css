@@ -156,3 +156,11 @@
 #SpicyLyricsPage.AmllLyrics [class*="_lyricBgLine"] > [class*="_lyricSubLine"] {
   white-space: pre-line;
 }
+
+/* ─── Title scroll only when it would move (MarqueeGate.ts) ───────────────── */
+/* The scroll keyframes restyle their span every frame even when the text fits and the
+   offset is 0px; a fitting span gets SL_MarqueeIdle and the animation is dropped. The
+   doubled id outranks every layout's own animation rule. */
+#SpicyLyricsPage#SpicyLyricsPage span.SL_MarqueeIdle {
+  animation: none;
+}

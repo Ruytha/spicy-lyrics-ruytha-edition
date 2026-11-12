@@ -20,6 +20,7 @@ import "./components/DynamicBG/RuythaSpotlight.ts";
 import "./components/DynamicBG/TameImpala.ts";
 import "./components/DynamicBG/AnimatedCover.ts";
 import "./utils/Ruytha/PageOptions.ts";
+import "./utils/Ruytha/MarqueeGate.ts";
 import "./css/RuythaDock.css";
 import { ShowForkWhatsNew } from "./utils/Ruytha/WhatsNew.tsx";
 
