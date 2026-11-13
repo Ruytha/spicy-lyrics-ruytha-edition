@@ -6,6 +6,16 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-13
+
+### Fixed
+
+- **Saved lyrics load again after another Spicy Lyrics build has run.** Another build can
+  upgrade the local lyrics database that every build shares, and this one then couldn't
+  open it at all, so saved TTMLs and the Lyrics Manager stopped working. It now opens
+  the database at whatever version it's at, and lets go when another build needs to
+  upgrade it. Running two Spicy Lyrics builds at once is still not supported.
+
 ## 2026-11-12
 
 ### Changed
