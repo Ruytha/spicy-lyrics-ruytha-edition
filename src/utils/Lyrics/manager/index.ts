@@ -1,4 +1,4 @@
-import { dbPromise, ObjectStores } from "../../db";
+import { getLyricsDB, ObjectStores } from "../../db";
 import Logger from "../../Logger";
 import { ParseTTML } from "./parseTTML";
 
@@ -14,7 +14,7 @@ function logCaught(operation: string, error: unknown, context?: Record<string, u
 
 async function put(uri: string, ttml: unknown) {
   try {
-    const db = await dbPromise;
+    const db = await getLyricsDB();
     return await db.put(objStore, ttml, uri);
   } catch (error) {
     logCaught("put", error, { uri });
@@ -24,7 +24,7 @@ async function put(uri: string, ttml: unknown) {
 
 async function get(uri: string): Promise<any | null> {
   try {
-    const db = await dbPromise;
+    const db = await getLyricsDB();
     const data = await db.get(objStore, uri);
     if (data == null) {
       return null;
@@ -44,7 +44,7 @@ async function get(uri: string): Promise<any | null> {
 
 async function listKeys(): Promise<Array<string>> {
   try {
-    const db = await dbPromise;
+    const db = await getLyricsDB();
     const keys = await db.getAllKeys(objStore);
     return keys.filter((key): key is string => typeof key === "string");
   } catch (error) {
@@ -55,7 +55,7 @@ async function listKeys(): Promise<Array<string>> {
 
 async function getRaw(uri: string): Promise<string | null> {
   try {
-    const db = await dbPromise;
+    const db = await getLyricsDB();
     const data = await db.get(objStore, uri);
     if (data == null) return null;
     return typeof data === "string" ? data : null;
@@ -67,7 +67,7 @@ async function getRaw(uri: string): Promise<string | null> {
 
 async function remove(uri: string): Promise<void> {
   try {
-    const db = await dbPromise;
+    const db = await getLyricsDB();
     await db.delete(objStore, uri);
   } catch (error) {
     logCaught("remove", error, { uri });

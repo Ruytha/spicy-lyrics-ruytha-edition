@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { dbPromise } from "./db";
+import { getLyricsDB } from "./db";
 import { LocalLyricsManager } from "./Lyrics/manager";
 import { openSettingsPanel } from "./settings";
 import { OpenLyricsDBPanel } from "./openLyricsDBPanel";
@@ -24,7 +24,7 @@ export function exposeToWindow() {
             },
         },
         db: {
-            dbPromise: dbPromise,
+            getLyricsDB,
             objectStores: {
                 lyricsStore: {
                     manager: LocalLyricsManager,
