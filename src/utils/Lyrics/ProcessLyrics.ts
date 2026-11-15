@@ -365,6 +365,23 @@ const romanizeUnit = async (
   return { texts, gaps, complete };
 };
 
+// Romaji that came with the lyrics (the API or the TTML) is often written without gaps
+// between words. Its text stays as it is; the gaps the romanizer finds are added, so the
+// row under the line reads word by word.
+const japaneseGapsWanted = (unit: RomanizeUnit, presentScripts: RomanizationBranch[]): boolean =>
+  presentScripts.includes("Japanese") &&
+  unit.syllables.some(hasTransliteration) &&
+  unit.syllables.some((s) => ItemJapaneseTest.test(s.Text ?? ""));
+
+const addSuppliedGaps = (unit: RomanizeUnit, result: UnitResult) => {
+  const { syllables } = unit;
+  syllables.forEach((syllable, i) => {
+    if (i < syllables.length - 1 && result.gaps[i] && syllable.IsPartOfWord) {
+      syllable.TransliteratedIsPartOfWord = false;
+    }
+  });
+};
+
 // Writes a unit's romanization onto its syllables. A syllable that already has a
 // transliteration (from the API or the TTML) keeps it; if any does, the lyrics'
 // own word gaps are kept too.
@@ -443,7 +460,9 @@ export const ProcessLyrics = async (lyrics: any): Promise<boolean> => {
   let complete = true;
   if (
     presentScripts.length > 0 &&
-    units.some((unit) => unit.syllables.some((s) => !hasTransliteration(s)))
+    units.some(
+      (unit) => unit.syllables.some((s) => !hasTransliteration(s)) || japaneseGapsWanted(unit, presentScripts)
+    )
   ) {
     const packages = await loadPackagesForScripts(presentScripts);
     const ukrainian = UkrainianTextTest.test(scriptText);
@@ -452,11 +471,14 @@ export const ProcessLyrics = async (lyrics: any): Promise<boolean> => {
     // other one are romanized again (see JapaneseRomajiIsCurrent).
     if (presentScripts.includes("Japanese")) lyrics.JapaneseRomaji = japaneseRomajiSpelling();
     for (const unit of units) {
-      if (unit.syllables.every(hasTransliteration)) continue;
+      const allSupplied = unit.syllables.every(hasTransliteration);
+      const suppliedGaps = japaneseGapsWanted(unit, presentScripts);
+      if (allSupplied && !suppliedGaps) continue;
       try {
         const result = await romanizeUnit(unit, presentScripts, packages, ukrainian, writtenRomaji);
         if (!result.complete) complete = false;
-        if (applyUnit(unit, result)) appliedRomanization = true;
+        if (!allSupplied && applyUnit(unit, result)) appliedRomanization = true;
+        if (suppliedGaps) addSuppliedGaps(unit, result);
       } catch (error) {
         romanizationLogger.warn("Line romanization failed", error);
       }

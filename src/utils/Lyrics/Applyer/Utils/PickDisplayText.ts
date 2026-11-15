@@ -74,9 +74,9 @@ export function RomanizedSyllableParts(syllables: any[]): RomanPart[] {
   const parts = syllables
     .map((s, i) => {
       const part = HasLyricsText(s?.TransliteratedText) ? s.TransliteratedText : (s?.Text ?? "");
-      // The romanization's own word gaps (TransliteratedIsPartOfWord) win over the
-      // original script's, where Japanese or Chinese has no gaps at all.
-      const joined = HasLyricsText(s?.TransliteratedText) ? PickPartOfWord(s, true) : !!s?.IsPartOfWord;
+      // A gap in the lyric stays a gap; the romanization's own word gaps
+      // (TransliteratedIsPartOfWord false) add the ones Japanese or Chinese doesn't write.
+      const joined = !!s?.IsPartOfWord && s?.TransliteratedIsPartOfWord !== false;
       const text = joined || i === syllables.length - 1 ? part : `${part} `;
       return { text: StripZeroWidth(text).replace(/\s+/g, " "), start: s.StartTime, end: s.EndTime };
     })

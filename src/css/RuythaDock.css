@@ -363,3 +363,9 @@
 .spicy-pip-wrapper #SpicyLyricsPage#SpicyLyricsPage.Exp_DockMenu.Exp_PopupDock.Fullscreen .ViewControls {
   opacity: var(--ControlsOpacity) !important;
 }
+
+/* The romanization toggle stays in the dock (PageView.ts), so the Lyrics / Queue switch's seat
+   for it (QueueView.css) never opens. */
+#SpicyLyricsPage#SpicyLyricsPage .ViewSwitch .ViewSwitchSeat_Romanize {
+  width: 0;
+}

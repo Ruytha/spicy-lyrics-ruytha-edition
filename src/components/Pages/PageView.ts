@@ -71,7 +71,7 @@ import {
   OpenNowBar,
 } from "../Utils/NowBar.ts";
 import TransferElement from "../Utils/TransferElement.ts";
-import { SeatRomanizationToggle, SyncViewSwitch } from "../Utils/QueueView.ts";
+import { SyncViewSwitch } from "../Utils/QueueView.ts";
 import { IsPIP, _IsPIP_after, ClosePopupLyrics } from "../Utils/PopupLyrics.ts";
 import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
 import { CleanUpIsByCommunity } from "../../utils/Lyrics/Applyer/Credits/ApplyIsByCommunity.tsx";
@@ -874,8 +874,9 @@ function AppendViewControls(ReAppend: boolean = false) {
       SetupDockMenu(targetElem);
     }
   }
-  // Wired up, the romanization toggle moves into the Lyrics / Queue switch where there is one.
-  SeatRomanizationToggle();
+  // The romanization toggle stays in the dock: as a row of the controls menu it can't sit in the
+  // Lyrics / Queue switch, whose seat for it stays closed (RuythaDock.css).
+
 
   function SetupTippy(elem: HTMLElement) {
     // If in PIP mode, do not create any Tippy tooltips, but still wire up click handlers

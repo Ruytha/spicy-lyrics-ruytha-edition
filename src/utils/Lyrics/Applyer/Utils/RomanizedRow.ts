@@ -34,8 +34,8 @@ const timedRows = new WeakMap<HTMLElement, RomanizedPiece[]>();
 
 const hasRomanization = (entry: any): boolean => HasLyricsText(entry?.TransliteratedText);
 
-// Text without spacing or case, to spot a romanization that only repeats the line.
-const bare = (text: string): string => StripZeroWidth(text).replace(/\s+/g, "").toLowerCase();
+// Text without spacing, punctuation or case, to spot a romanization that only repeats the line.
+const bare = (text: string): string => StripZeroWidth(text).replace(/[\s\p{P}]+/gu, "").toLowerCase();
 
 function createRow(beforeBackground: boolean): HTMLDivElement {
   const row = document.createElement("div");
@@ -69,7 +69,9 @@ export function AppendSyllableRomanization(
     );
     const text = raw.trim();
     const startsWord = !gluedToPrevious || /^\s/.test(raw);
-    const partOfWord = syllable.TransliteratedIsPartOfWord ?? syllable.IsPartOfWord;
+    // A gap in the lyric (a space, a comma) stays a gap here, even when the romanization runs
+    // its words together; the romanization can only add gaps.
+    const partOfWord = !!syllable.IsPartOfWord && syllable.TransliteratedIsPartOfWord !== false;
     gluedToPrevious = !!partOfWord && !/\s$/.test(raw);
     if (text === "") continue;
 
