@@ -260,6 +260,9 @@ export function SeekToLineStart(startTime: number) {
 
 // Define proper type for event parameter
 function LinesEvListener(e: MouseEvent) {
+  // The click that ends selecting lyrics (to flag them) isn't a seek.
+  const selection = getSelection();
+  if (selection && !selection.isCollapsed) return;
   const target = e.target as HTMLElement;
   if (target.classList.contains("line")) {
     let startTime: number | undefined;

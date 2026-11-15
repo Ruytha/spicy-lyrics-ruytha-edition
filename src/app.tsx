@@ -23,6 +23,7 @@ import "./components/DynamicBG/TameImpala.ts";
 import "./components/DynamicBG/AnimatedCover.ts";
 import "./utils/Ruytha/PageOptions.ts";
 import "./utils/Ruytha/MarqueeGate.ts";
+import "./utils/Review/ReviewMode.ts";
 import "./css/RuythaDock.css";
 import { ShowForkWhatsNew } from "./utils/Ruytha/WhatsNew.tsx";
 
@@ -66,6 +67,8 @@ import { $fromVersion, $lastFetchedUri, $previousVersion } from "./utils/uiState
 import { CheckForUpdates } from "./utils/version/CheckForUpdates.tsx";
 import { needsMigration, showMigrationModal } from "./utils/migration/DataMigration.tsx";
 import "./css/settings-panel.css";
+import "./css/TextFlag.css";
+import "./css/ReviewFlags.css";
 import "./components/ReactComponents/LyricsManager/styles.css";
 import "./css/polyfills/generic-modal-polyfill.css";
 import "./css/NoticeDialog.css";

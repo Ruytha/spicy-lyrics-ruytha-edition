@@ -8,6 +8,27 @@ after an update shows what's new.
 
 ## 2026-11-15
 
+### Added
+
+- **Flag Lyrics.** Turn it on under Settings → TTML Reviewer, then select words on the
+  lyrics page to flag them: a type (timing, spelling, wrong words, line break, syllable
+  split) and a note. Flagged words stay underlined, a click reopens the flag, and the bar
+  under the lyrics steps between flags and copies the whole review as Markdown. Flags are
+  kept per song. It works with Spicy's own renderer.
+- **Review in TextFlag.** Settings → TTML Reviewer opens the playing song's lyrics in
+  TextFlag, where you can flag lines with timing or wording problems and export your notes
+  as Markdown. It uses the TTML file itself when you loaded or saved one. Nothing is
+  uploaded: the lyrics go straight from Spotify to the tool.
+
+### Fixed
+
+- **An old version starting after an update.** When GitHub's limit on lookups was
+  reached, Spotify could start a copy of Spicy Lyrics up to a week old and show an update
+  notice. Reinstall the loader (`spicy-lyrics-ruytha.mjs`) and run `spicetify apply` to
+  get the fix.
+
+## 2026-11-15
+
 Brought up to Spicy Lyrics 6.5.10.
 
 ### Added

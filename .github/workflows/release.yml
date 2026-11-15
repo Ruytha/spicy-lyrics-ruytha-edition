@@ -86,3 +86,11 @@ jobs:
             exit 1
           fi
           echo "::notice::Released $(git rev-parse --short HEAD)"
+      - name: Refresh the CDN's copy of main
+        # Loaders that can't look up the newest commit (GitHub's API limits each network
+        # to 60 requests an hour) load the bundle at @main, which jsDelivr otherwise
+        # serves from its cache for up to 12 hours. Not fatal: the cache expires anyway.
+        run: |
+          curl -fsS --retry 3 --max-time 30 \
+            "https://purge.jsdelivr.net/gh/${{ github.repository }}@main/builds/ruytha/spicy-lyrics.js" \
+            || echo "::warning::Couldn't purge jsDelivr's copy of @main; it refreshes within 12 hours."

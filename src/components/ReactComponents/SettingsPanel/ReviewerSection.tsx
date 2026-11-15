@@ -11,10 +11,32 @@ import {
 import { Row, Toggle } from "./components.tsx";
 import { ReviewerIcon } from "./icons.tsx";
 import type { SectionDef } from "./model.ts";
+import { OpenTextFlag } from "../../../utils/textflag.ts";
+import { $flagLyrics } from "../../../utils/Review/ReviewMode.ts";
 
 const MODE_LABEL = "TTML Reviewer Mode";
 const MODE_DESCRIPTION =
   "Saves your settings and strips Spicy Lyrics back to basics. Turn it off to get them back exactly as they were.";
+
+const FLAG_LABEL = "Flag Lyrics";
+const FLAG_DESCRIPTION =
+  "Select words on the lyrics page to flag timing or wording problems with a note, then copy the review as Markdown. Flags are kept per song.";
+
+function FlagToggle({ label }: { label: string }) {
+  return <Toggle label={label} checked={useStore($flagLyrics)} onChange={(on) => $flagLyrics.set(on)} />;
+}
+
+const TEXTFLAG_LABEL = "Review in TextFlag";
+const TEXTFLAG_DESCRIPTION =
+  "Opens the playing song's lyrics in TextFlag, to flag lines with timing or wording problems and export your notes as Markdown.";
+
+function TextFlagButton() {
+  return (
+    <button type="button" className="sl-sp-btn" onClick={() => void OpenTextFlag()}>
+      Open
+    </button>
+  );
+}
 
 function ModeToggle({ label }: { label: string }) {
   return <Toggle label={label} checked={useStore($ttmlReviewer)} onChange={setTtmlReviewer} />;
@@ -37,6 +59,12 @@ export function ReviewerPane({ labelOf }: { labelOf: (id: string) => string | un
       <div className="sl-sp-card">
         <Row label={MODE_LABEL} description={MODE_DESCRIPTION}>
           <ModeToggle label={MODE_LABEL} />
+        </Row>
+        <Row label={FLAG_LABEL} description={FLAG_DESCRIPTION}>
+          <FlagToggle label={FLAG_LABEL} />
+        </Row>
+        <Row label={TEXTFLAG_LABEL} description={TEXTFLAG_DESCRIPTION}>
+          <TextFlagButton />
         </Row>
       </div>
 
@@ -104,6 +132,20 @@ export const reviewerSection: SectionDef = {
           description: MODE_DESCRIPTION,
           keywords: "review sync ttml basics reset default clean plain maker",
           Control: ModeToggle,
+        },
+        {
+          id: "flagLyrics",
+          label: FLAG_LABEL,
+          description: FLAG_DESCRIPTION,
+          keywords: "flag review notes markdown export select words sync timing spelling report",
+          Control: FlagToggle,
+        },
+        {
+          id: "textflagReview",
+          label: TEXTFLAG_LABEL,
+          description: TEXTFLAG_DESCRIPTION,
+          keywords: "textflag text flag review notes markdown export sync timing spelling",
+          Control: TextFlagButton,
         },
       ],
     },

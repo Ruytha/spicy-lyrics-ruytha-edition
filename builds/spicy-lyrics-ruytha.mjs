@@ -72,8 +72,12 @@
   // A failed import is cached by URL, so the retry asks for a fresh one.
   const load = (at, query = "") =>
     import(`https://cdn.jsdelivr.net/gh/${REPO}@${at}/${BUILD_PATH}${query}`);
+  // jsDelivr tells the browser to keep @main for a week, so Spotify would load an old
+  // build from its own cache. The stamp changes every hour, which the browser treats as
+  // a new link and jsDelivr ignores. The release workflow refreshes jsDelivr's copy.
+  const hourly = `?t=${Math.floor(Date.now() / 3600000)}`;
   try {
-    await load(ref);
+    await load(ref, ref === "main" ? hourly : "");
   } catch (err) {
     console.warn(LOG, `Couldn't load the build at ${ref}, retrying from main`, err);
     try {
