@@ -6,6 +6,62 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-15
+
+Brought up to Spicy Lyrics 6.5.10.
+
+### Added
+
+- **The queue in Cinema View and fullscreen.** A switch in the corner of the lyrics flips
+  between the lyrics and what plays next. A setting can open it on its own for a song with
+  no lyrics.
+- **Up Next.** In the last 30 seconds of a song, fullscreen and Cinema View show the next
+  song in the queue under the lyrics. It can be turned off under Settings → Experiments.
+- **Lyrics Size.** A new setting makes the lyrics text bigger or smaller in every view.
+- **Pinned Credits.** The songwriter and lyrics source lines can stay at the bottom of the
+  lyrics while they scroll.
+- **A lyrics offset for each song.** A song that's always early or late keeps its own
+  offset, on top of the general one.
+- **The release year in the NowBar**, before or after the artists. It's off until you pick
+  a side under Settings → Interface.
+- **Unsynced lyrics scroll through the song** at the pace it plays, instead of standing
+  still.
+- **A portrait fullscreen layout.** Compact fullscreen in a window taller than it is wide
+  gives the lyrics nearly the full width.
+- **TTML Reviewer mode** under Settings, which puts your settings aside so a sync can be
+  judged on its own, and puts them all back when you turn it off.
+- **Player Below the Cover**, an experiment that's off by default, puts the player under
+  the cover in Cinema View.
+
+### Changed
+
+- **Better romanization.** Every script is romanized a line at a time. Japanese romaji
+  is spelled the way lyric sites write it (kyou, wa, wo), Korean letters land on the
+  syllable that sings them, and Chinese gets its pinyin per character. The old Japanese
+  spelling is one switch away under Settings → Experiments (Romaji as Written).
+- **Romanization under each line now lights up syllable by syllable**, and turning it on
+  or off slides the rows in and out without reloading the lyrics. The Romanization
+  setting picks between that and replacing the line; your old choice is kept.
+- **Join Split Words has more choices**: all words, only evenly sung ones, or only held
+  ones, plus Keep Syllable Pace for joined words drawn letter by letter. Anyone who had
+  it on gets the evenly sung choice, which is what it did before.
+- **Simple Lyrics Mode is now the Bloom style** under Renderer Visual Style. If you had
+  Simple Lyrics Mode on, you get Bloom.
+- **Long titles scroll more smoothly**, back and forth at a reading pace, and only when
+  they don't fit.
+- The back-to-the-line button follows the new Scroll to Active Button setting, so it can
+  be turned off.
+
+### Fixed
+
+- Upstream fixes for TTML files with no-break spaces or words without an end time,
+  interlude dots on words sung past their line, Greek lyrics caching, and the Canvas
+  loading twice when skipping songs quickly.
+
+Your Ruytha Edition features stay as they are. The Animated Covers you already have keep
+the cover square, so Spicy Lyrics' own animated artwork waits while they're on, and the
+dock and controls menu keep their look.
+
 ## 2026-11-13
 
 ### Fixed
