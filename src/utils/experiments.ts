@@ -14,6 +14,7 @@ import { EdgeLookup } from "./API/EdgeService.ts";
  *
  *   {
  *     id: "myExperiment",              // stable; persisted as "experiment:myExperiment"
+ *     category: "lyrics",              // the Experiments tab heading it sits under
  *     label: "My Experiment",
  *     description: "What it changes, and what turning it off restores.",
  *     default: true,
@@ -55,9 +56,19 @@ import { EdgeLookup } from "./API/EdgeService.ts";
  * reaches everyone who never touched the experiment, and no one who did.
  */
 
+/** The groups the Experiments tab lists experiments under, in this order. */
+export const EXPERIMENT_CATEGORIES = [
+  { id: "lyrics", title: "Lyrics" },
+  { id: "background", title: "Background" },
+  { id: "player", title: "Player" },
+] as const;
+export type ExperimentCategory = (typeof EXPERIMENT_CATEGORIES)[number]["id"];
+
 export type Experiment = {
   /** Stable key. Persisted in the settings blob as `experiment:<id>`. */
   id: string;
+  /** Which heading it's listed under in the Experiments tab. */
+  category: ExperimentCategory;
   label: string;
   description: string;
   default: boolean;
@@ -67,6 +78,8 @@ export type Experiment = {
   rebuildsNowBar?: boolean;
   /** Lock the experiment on (`true`) or off (`false`); omit to let the user choose. */
   forceState?: boolean;
+  /** Ignore remote overrides, for an experiment this build has to keep as it is set here. */
+  localOnly?: boolean;
   /** Leave it out of the settings panel. Never affects the value. */
   hidden?: boolean;
 };
@@ -74,6 +87,7 @@ export type Experiment = {
 export const EXPERIMENTS = [
   {
     id: "newProgressBarStyling",
+    category: "player",
     label: "New SliderBar Styling",
     description:
       "New glass-like style for the SliderBar. Disable to revert back to the original one.",
@@ -82,6 +96,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "lyricsSkeleton",
+    category: "lyrics",
     label: "Lyrics Loading Skeleton",
     description:
       "Shows placeholder lines and a small \"Loading Lyrics\" label while lyrics fetch and render, instead of the blurred spinner. Disable to bring the spinner back.",
@@ -90,6 +105,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "canvasImmersive",
+    category: "background",
     label: "Canvas Stage",
     description:
       "When a song has a Spotify Canvas, it fills the Now Bar side of the screen in place of the album cover, and its colors drive the page background. Works with every background style except None. Disable to keep the cover and your background.",
@@ -97,6 +113,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "npvCanvasBackground",
+    category: "background",
     label: "Canvas NPV Background",
     description:
       "When a song has a Spotify Canvas, the Now Playing View's dynamic background is drawn from the Canvas video playing there, frame for frame, instead of the album cover. Disable to keep the cover.",
@@ -104,6 +121,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "popupDock",
+    category: "player",
     label: "Popup Player Dock",
     description:
       "Popup lyrics fill the whole window, with the player docked along the bottom like the Canvas Stage: title and artist at rest, the timeline and controls rising in when you move the mouse. Disable to bring back the cover header and the controls over the enlarged cover.",
@@ -112,6 +130,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "refinedBackground",
+    category: "background",
     label: "Refined Background",
     description:
       "Background changes crossfade in place, including switching styles in Settings, and Cover Colors use the cover's deeper tones, changing with the song instead of a second later. Image backgrounds keep their edges instead of being cropped. Disable to bring back the sliding image transition and the brighter Cover Colors.",
@@ -119,15 +138,33 @@ export const EXPERIMENTS = [
     pageClass: "Exp_RefinedBackground",
   },
   {
-    id: "refreshedSimpleLyrics",
-    label: "Refreshed Simple Lyrics Mode",
+    id: "musicReactiveBackground",
+    category: "background",
+    label: "Music-Reactive Background",
     description:
-      "In Simple Lyrics Mode, the sung part of a line fades in behind one soft edge that runs on from word to word without stopping, words float up as they're sung with the next already rising before the last has settled, the part still to come stays a little brighter, and the letters of a short held word swell, spread apart, lift and glow one after another, then ease back, stronger the longer the word is held. Lines sit further apart and follow the song in a ripple, each catching up a moment after the one above it. Interlude dots fill in one by one while the group slowly breathes. Its scrolling takes over from Smooth Scrolling while it's on. Disable to bring back the previous Simple Lyrics look.",
+      "The Dynamic (Kawarp) background follows the song as it plays: it flows faster and swells slightly through loud parts, and slows through quiet ones. On the lyrics page, in Cinema View and in fullscreen it's also less blurred, so the movement shows. Disable to bring back the steadier, more blurred flow that only loosely follows the tempo.",
+    default: true,
+  },
+  {
+    id: "largerCinemaLyrics",
+    category: "lyrics",
+    label: "Larger Cinema View Lyrics (Bloom style only)",
+    description:
+      "In Cinema View and fullscreen, Bloom lyrics grow with the screen instead of stopping at their usual size, so they read well from a distance on a big display. Small windows, the popup and compact mode keep the usual size. Disable to keep the usual size everywhere.",
     default: false,
-    pageClass: "Exp_RefreshedSimpleLyrics",
+    pageClass: "Exp_LargerCinemaLyrics",
+  },
+  {
+    id: "springLineSpacing",
+    category: "lyrics",
+    label: "Increased Line Spacing (Spring style only)",
+    description:
+      "With the Spring renderer style, lyrics lines sit further apart, spaced by the text size like Bloom (a little tighter) instead of by a sliver of the window width. Disable to bring back Spring's tighter spacing.",
+    default: true,
   },
   {
     id: "refinedCredits",
+    category: "lyrics",
     label: "Refined Credits",
     description:
       "The credits under the lyrics become quiet type close under the last line, with no box: the songwriters, then the lyrics source beneath. Community lyrics say so on that second line, with the people who made and uploaded them linked by name. In synced lyrics the credits stay dim until the last line has been sung. Disable to bring back the previous credit lines.",
@@ -136,6 +173,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "scrubPreview",
+    category: "player",
     label: "Scrub Preview",
     description:
       "Hovering or dragging the progress bar shows the time a click would seek to, and the volume bar shows the level it would set. Disable to hide these previews.",
@@ -144,22 +182,25 @@ export const EXPERIMENTS = [
   },
   {
     id: "backgroundLinePop",
+    category: "lyrics",
     label: "Background Vocal Pop-Out",
     description:
-      "Background vocal lines stay tucked away under their line until it's sung, then slide out from beneath it while the lines below make room, and tuck back in once both are done. Only applies in Simple Lyrics Mode with Refreshed Simple Lyrics Mode on. Disable to keep every background vocal line on screen at all times.",
-    default: false,
+      "Background vocal lines stay tucked away under their line until it's sung, then slide out from beneath it while the lines below make room, and tuck back in once both are done. Only applies with the Bloom renderer style. Disable to keep every background vocal line on screen at all times.",
+    default: true,
     pageClass: "Exp_BackgroundLinePop",
   },
   {
     id: "keepOverlappingLines",
+    category: "lyrics",
     label: "Keep Overlapping Lines",
     description:
-      "In Minimal Lyrics Mode, a line that ends while one above it is still being sung (overlapping lines, background vocals) stays on screen, dimmed, instead of fading out early. Disable to fade every sung line out as soon as it ends.",
+      "With Fade Away Previous Lines on, a line that ends while one above it is still being sung (overlapping lines, background vocals) stays on screen, dimmed, instead of fading out early. Disable to fade every sung line out as soon as it ends.",
     default: true,
     pageClass: "Exp_KeepOverlappingLines",
   },
   {
     id: "dockMenu",
+    category: "player",
     label: "Controls Menu",
     description:
       "The lyrics page controls fold behind a single button that opens a glass menu, one labelled row per action. Disable to show every control in the dock at all times.",
@@ -168,6 +209,7 @@ export const EXPERIMENTS = [
   },
   {
     id: "beatDrivenMotion",
+    category: "background",
     label: "Beat-Driven Background Motion",
     description:
       "The background moves faster on each beat of the song and drifts slower in between, so its motion follows the music more closely. Disable to restore the previous, steadier speed changes.",
@@ -175,11 +217,61 @@ export const EXPERIMENTS = [
   },
   {
     id: "lyricsLiftoff",
+    category: "lyrics",
     label: "Lyrics Liftoff",
     description:
       "Words have no fill. Each one shrinks to nothing as it's sung, turns inside out, and leaves through the top of the screen. Interlude dots climb out of the screen one by one and drop back, and the list glides between lines and overshoots as an interlude ends, whatever the Smooth Scrolling setting. Line-synced lines are split into words sharing the line's time by length. Only applies to Spicy's lyrics renderer. Disable to bring gravity back.",
     default: true,
     pageClass: "Exp_LyricsLiftoff",
+  },
+  {
+    id: "portraitFullscreen",
+    category: "player",
+    label: "Portrait Fullscreen Layout",
+    description:
+      "In compact fullscreen on a window taller than it is wide, the lyrics use nearly the full width, the cover header sits as far from the top as the lyrics are from the sides, the song title and artist sit beside the cover, level with its bottom edge, and are sized to the lyrics, and the cover grows on hover without covering them. Disable to bring back the regular compact layout.",
+    default: true,
+    pageClass: "Exp_PortraitFullscreen",
+  },
+  {
+    id: "romajiAsWritten",
+    category: "lyrics",
+    label: "Romaji as Written",
+    description:
+      "Japanese romaji is spelled the way romanized lyrics usually are: long vowels as written (kyou, toukyou, koohii), particles as said (wa, e, wo), endings kept on their word (yonde ita), gaps between words even where the syllables are joined, and a capital at the start of the line. Disable to bring back the previous spelling (kyō, tōkyō, o, one word per token).",
+    default: true,
+  },
+  {
+    id: "nextUpCard",
+    category: "player",
+    label: "Up Next",
+    description:
+      "In fullscreen and Cinema View, the last 30 seconds of a song show the next one in the queue (cover, title and artist) at the bottom of the lyrics. Disable to never show it.",
+    default: true,
+    pageClass: "Exp_NextUpCard",
+  },
+  {
+    id: "playerBelowCover",
+    category: "player",
+    label: "Player Below the Cover",
+    description:
+      "In Cinema View, when no Canvas is showing, the cover moves out toward the screen edge and the player sits under it, always on screen: the title and artist with the like button beside them, then the progress bar with its times, the playback controls and the volume bar. The view buttons line up in a column beside the cover instead of over it. Disable to keep the centered cover and title, with the controls that appear over the cover.",
+    default: false,
+    pageClass: "Exp_PlayerBelowCover",
+  },
+  {
+    id: "groupedViewControls",
+    category: "player",
+    label: "Grouped View Controls",
+    description:
+      "The view buttons share one frosted capsule instead of each having its own. Buttons that switch something on, like romanization, compact mode or the NowBar, fill in white with their icon cut out while it is on. The button back to the current line becomes a matching frosted circle in the bottom corner. Disable to bring back the separate frosted buttons that change their icon instead, and the round button at the lyrics' edge.",
+    default: true,
+    pageClass: "Exp_GroupedViewControls",
+    // Ruytha Edition draws its own dock (RuythaDock.css) and back-to-line button, which this
+    // layout's markup and styles would replace, so it stays off and out of the list.
+    forceState: false,
+    hidden: true,
+    localOnly: true,
   },
 ] as const satisfies readonly Experiment[];
 
@@ -189,7 +281,9 @@ export type ExperimentId = RegisteredExperiment["id"];
 /** A registry entry with any remote overrides applied — what everything should read. */
 export type ResolvedExperiment = Experiment & { id: ExperimentId };
 
-type ExperimentOverride = Partial<Omit<Experiment, "id">>;
+// The category stays local: a value the client doesn't know would drop the row from
+// every heading in the Experiments tab.
+type ExperimentOverride = Partial<Omit<Experiment, "id" | "category" | "localOnly">>;
 
 const REGISTRY = EXPERIMENTS as readonly ResolvedExperiment[];
 
@@ -200,7 +294,7 @@ function resolve(
   exp: ResolvedExperiment,
   overrides: Partial<Record<ExperimentId, ExperimentOverride>>
 ): ResolvedExperiment {
-  const override = overrides[exp.id];
+  const override = exp.localOnly ? undefined : overrides[exp.id];
   return override ? { ...exp, ...override } : exp;
 }
 

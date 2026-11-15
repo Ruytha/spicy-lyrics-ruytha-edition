@@ -1,8 +1,8 @@
 import { createTooltip } from "../../utils/tooltip.ts";
-import fetchLyrics, { ShowQueueLoader } from "../../utils/Lyrics/fetchLyrics.ts";
+import fetchLyrics, { HoldsTemporaryUpload, ShowQueueLoader } from "../../utils/Lyrics/fetchLyrics.ts";
 import { LyricsQueueRetry } from "../../utils/Lyrics/LyricsQueueRetry.ts";
 import { SkeletonMarkup } from "../../utils/Lyrics/LyricsSkeleton.ts";
-import { $forceCompactMode } from "../../utils/uiState.ts";
+import { $forceCompactMode, $romanization } from "../../utils/uiState.ts";
 import "../../css/Loaders/DotLoader.css";
 import { DestroyAllLyricsContainers } from "../../utils/Lyrics/Applyer/CreateLyricsContainer.ts";
 import ApplyLyrics, {
@@ -26,29 +26,32 @@ import {
 } from "../../utils/Scrolling/Simplebar/ScrollSimplebar.ts";
 import ApplyDynamicBackground, { KawarpMap, PAGE_BACKGROUND_KEY } from "../DynamicBG/dynamicBackground.ts";
 import { DisposeAMLLBackground } from "../DynamicBG/AMLLBackground.ts";
-import { DisposeAmllLyrics } from "../../utils/Lyrics/Applyer/AMLL.ts";
+import { DisposeAmllLyrics, IsAmllLyricsShowing } from "../../utils/Lyrics/Applyer/AMLL.ts";
 import {
   $creditsFollowLastLine,
   $currentLyricsData,
   $duetLinePadding,
-  $joinSplitWords,
-  $romanizationBelow,
   $translationsBelow,
   $lineHoverBackground,
   $lyricsContainerExists,
   $lyricsRenderer,
+  $lyricsSize,
   $minimalLyricsMode,
+  $romanizationDisplay,
   $showVolumeSlider,
-  $simpleLyricsMode,
+  $rendererVisualStyle,
   $singleLineMode,
   $lyricsFont,
   $coverOnlyMode,
+  $syllableMerge,
+  $syllablePace,
   $ttmlMakerMode,
   $viewControlsPosition,
 } from "../../utils/stores.ts";
 import Global from "../Global/Global.ts";
 import Session from "../Global/Session.ts";
 import { SpotifyPlayer } from "../Global/SpotifyPlayer.ts";
+import { Icons, KnockoutDisc } from "../Styling/Icons.ts";
 import {
   DisableCompactMode,
   EnableCompactMode,
@@ -68,6 +71,7 @@ import {
   OpenNowBar,
 } from "../Utils/NowBar.ts";
 import TransferElement from "../Utils/TransferElement.ts";
+import { SeatRomanizationToggle, SyncViewSwitch } from "../Utils/QueueView.ts";
 import { IsPIP, _IsPIP_after, ClosePopupLyrics } from "../Utils/PopupLyrics.ts";
 import { NPVCardOwnsPage, DeRenderNPVCard } from "../Utils/NPVLyrics.ts";
 import { CleanUpIsByCommunity } from "../../utils/Lyrics/Applyer/Credits/ApplyIsByCommunity.tsx";
@@ -79,13 +83,18 @@ import { DockIcons } from "../Styling/DockIcons.ts";
 import { RemoveCurrentLyrics_AllCaches } from "../../utils/LyricsCacheTools.ts";
 import Logger from "../../utils/Logger.ts";
 import { setStockPlaybarPage } from "../../utils/themeMatcher.ts";
+import { CreateTextScroller, type TextScroller } from "../../utils/TextScroller.ts";
 import {
   ApplyExperimentClasses,
   isExperimentEnabled,
   onExperimentChange,
   onExperimentDefinitionChange,
 } from "../../utils/experiments.ts";
-import { triggerRemeasureLV } from "../../utils/Lyrics/LyricsVirtualizer.ts";
+import {
+  lyricsSizeChanged,
+  romanizedRowsToggled,
+  triggerRemeasureLV,
+} from "../../utils/Lyrics/LyricsVirtualizer.ts";
 
 const pageLogger = new Logger("Page View");
 const controlsLogger = new Logger("View Controls");
@@ -159,6 +168,8 @@ function cancelPendingPageMount() {
 }
 
 let PageResizeListener: ResizeObserver | null = null;
+// Scrolls the title and artists when they are wider than the player.
+let MetadataScroller: TextScroller | null = null;
 export let PageContainer: HTMLElement | null = null;
 export let IsCardMode = false;
 
@@ -302,13 +313,15 @@ async function OpenPage(
   
   PageContainer = elem;
 
+  elem.style.setProperty("--SL-LyricsScale", String($lyricsSize.get() / 100));
+
   // UseSpicyFont and the other fonts are set by utils/Ruytha/PageOptions.ts.
   if ($lyricsFont.get() === "spicy") {
     elem.classList.add("UseSpicyFont");
   }
 
-  if ($simpleLyricsMode.get()) {
-    elem.classList.add("SimpleLyricsMode");
+  if ($rendererVisualStyle.get() === "bloom") {
+    elem.classList.add("BloomRenderer");
   }
 
   if ($minimalLyricsMode.get()) {
@@ -325,6 +338,11 @@ async function OpenPage(
 
   if ($duetLinePadding.get()) {
     elem.classList.add("DuetLinePadding");
+  }
+
+  // Opens the romanization rows under each line (Mixed.css).
+  if (isRomanized) {
+    elem.classList.add("RomanizedRowsShown");
   }
 
   if ($creditsFollowLastLine.get()) {
@@ -352,6 +370,13 @@ async function OpenPage(
   }
 
   pageRoot.appendChild(elem);
+
+  // After the append, so a page opened in the popup observes with the popup's window.
+  // TextSliding / TextSettling drive the start-edge fade in Player Below the Cover (PlayerBelowCover.css).
+  MetadataScroller = CreateTextScroller(
+    [...elem.querySelectorAll<HTMLElement>(".NowBar .Header .Metadata :is(.SongName, .Artists)")],
+    { slidingClass: "TextSliding", settlingClass: "TextSettling" }
+  );
 
   addLinesEvListener();
 
@@ -475,6 +500,8 @@ async function DestroyPage() {
   CleanupScrollEvents();
   PageResizeListener?.disconnect(); // Disconnect the observer
   PageResizeListener = null;
+  MetadataScroller?.destroy();
+  MetadataScroller = null;
   $lyricsContainerExists.set(false);
   DestroyAllLyricsContainers();
   CleanUpIsByCommunity();
@@ -511,7 +538,12 @@ Global.Event.listen("lyrics:not-apply", () => {
 Global.Event.listen("lyrics:apply", ({ Type }: { Type: string }) => {
   CleanupScrollEvents();
 
-  if (!Type || Type === "Static") return;
+  if (!Type) return;
+  if (Type === "Static") {
+    // Unsynced lyrics only need to know about hand scrolls, so auto-scroll can let go.
+    if (ScrollSimplebar) InitializeScrollEvents(ScrollSimplebar);
+    return;
+  }
   if (ScrollSimplebar) {
     InitializeScrollEvents(ScrollSimplebar);
     //QueueForceScroll(); // Queue a force scroll instead of directly calling with true
@@ -637,10 +669,106 @@ function SetupDockMenu(controls: HTMLElement) {
   });
 }
 
+// Player Below the Cover stacks the view controls in a column beside the cover
+// (PlayerBelowCover.css), where a tooltip above or below a button would sit on its
+// neighbour. There they open sideways, toward the lyrics. Decided on each show, since
+// the layout comes and goes with the experiment, compact mode and Canvas Stage.
+function ViewControlTooltipProps(): Record<string, unknown> {
+  const base = (Spicetify.TippyProps ?? {}) as Record<string, unknown> & {
+    placement?: string;
+    onShow?: (instance: any) => unknown;
+  };
+  return {
+    ...base,
+    onShow(instance: any) {
+      const page = PageContainer;
+      // Seated in the Lyrics / Queue switch (QueueView.ts), a toggle is in a row, not the column.
+      const column =
+        !!page &&
+        !instance.reference?.closest?.(".ViewSwitch") &&
+        page.classList.contains("Fullscreen") &&
+        page.classList.contains("Exp_PlayerBelowCover") &&
+        !page.classList.contains("CanvasImmersive") &&
+        !page.classList.contains("CompactMode") &&
+        !page.classList.contains("ForcedCompactMode");
+      const placement = column
+        ? page.classList.contains("NowBarSide__Right")
+          ? "left"
+          : "right"
+        : (base.placement ?? "top");
+      if (instance.props?.placement !== placement) instance.setProps({ placement });
+      return base.onShow?.(instance);
+    },
+  };
+}
+
+// A toggle whose click swaps its own glyph gets that glyph eased in (SL_IconSwapIn, default.css).
+// The controls are rebuilt whole, and one click can rebuild them more than once, so the swap is
+// armed by the click and carried across rebuilds: the first starts the animation, a later one
+// picks it up where it had got to instead of starting it over.
+// A grouped toggle keeps its glyph, so its disc fills in or clears instead (SL_ToggleSwap).
+const ICON_SWAP_MS = 200;
+const TOGGLE_SWAP_MS = 320;
+const ICON_SWAP_ARM_MS = 3000;
+let IconSwap: { id: string; armedAt: number; startedAt: number | null } | null = null;
+
+function ArmIconSwap(id: string) {
+  IconSwap = { id, armedAt: performance.now(), startedAt: null };
+}
+
+// A grouped toggle answers the click itself: its disc starts filling or clearing at once, and the
+// rebuild that follows picks the motion up where it has got to (ApplyIconSwap).
+function PressToggle(button: Element) {
+  if (!button.classList.contains("ViewToggle")) return;
+  const now = performance.now();
+  // A button rebuilt after an earlier flip still carries that replay; this flip is a transition.
+  // The style has to settle without the replay first, or the flip lands in the same style change
+  // and the disc snaps instead of transitioning.
+  if (button.classList.contains("SL_ToggleSwap")) {
+    button.classList.remove("SL_ToggleSwap");
+    (button as HTMLElement).style.removeProperty("--ToggleSwapDelay");
+    void getComputedStyle(button.querySelector(".SL_KnockoutDisc") ?? button).opacity;
+  }
+  button.setAttribute("aria-pressed", String(button.getAttribute("aria-pressed") !== "true"));
+  IconSwap = { id: button.id, armedAt: now, startedAt: now };
+}
+
+function ApplyIconSwap(controls: HTMLElement) {
+  if (!IconSwap) return;
+  const now = performance.now();
+  const button = controls.querySelector<HTMLElement>(`#${IconSwap.id}`);
+  const isToggle = button?.classList.contains("ViewToggle") ?? false;
+  const elapsed = IconSwap.startedAt === null ? 0 : now - IconSwap.startedAt;
+  if (
+    elapsed >= (isToggle ? TOGGLE_SWAP_MS : ICON_SWAP_MS) ||
+    now - IconSwap.armedAt > ICON_SWAP_ARM_MS
+  ) {
+    IconSwap = null;
+    return;
+  }
+  if (isToggle && button) {
+    IconSwap.startedAt ??= now;
+    button.classList.add("SL_ToggleSwap");
+    if (elapsed > 0) button.style.setProperty("--ToggleSwapDelay", `-${Math.round(elapsed)}ms`);
+    return;
+  }
+  const svg = button?.querySelector<SVGElement>("svg");
+  if (!svg) return;
+  IconSwap.startedAt ??= now;
+  svg.classList.add("SL_IconSwapIn");
+  if (elapsed > 0) svg.style.animationDelay = `-${Math.round(elapsed)}ms`;
+}
+
+// Which markup the controls were last built with, so a remote override that flips the grouped
+// layout without touching the stored value still gets them rebuilt.
+let RenderedGroupedControls: boolean | null = null;
+
 function AppendViewControls(ReAppend: boolean = false) {
   if (IsCardMode) return;
   if (!PageContainer) return;
   controlsLogger.debug("Append view controls");
+  // The Lyrics / Queue switch lives in its own corner but comes and goes with the same views.
+  SyncViewSwitch();
   const elem = PageContainer.querySelector<HTMLElement>(
     ".ContentBox .ViewControls"
   );
@@ -661,6 +789,9 @@ function AppendViewControls(ReAppend: boolean = false) {
   const inFullscreen = Fullscreen.IsOpen || Fullscreen.CinemaViewOpen;
   const asMenu = isExperimentEnabled("dockMenu");
   dockBuiltAsMenu = asMenu;
+  // The dock keeps its own markup, so Grouped View Controls is locked off (experiments.ts).
+  const grouped = isExperimentEnabled("groupedViewControls");
+  RenderedGroupedControls = grouped;
   const button =(id: string, icon: string, label: string, pressed?: boolean, extraClass = "") => {
     const className = `ViewControl${extraClass ? ` ${extraClass}` : ""}`;
     if (!asMenu) {
@@ -743,6 +874,8 @@ function AppendViewControls(ReAppend: boolean = false) {
       SetupDockMenu(targetElem);
     }
   }
+  // Wired up, the romanization toggle moves into the Lyrics / Queue switch where there is one.
+  SeatRomanizationToggle();
 
   function SetupTippy(elem: HTMLElement) {
     // If in PIP mode, do not create any Tippy tooltips, but still wire up click handlers
@@ -753,7 +886,7 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.Close = createTooltip(closeButton, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: `Close Page`,
           });
         }
@@ -786,13 +919,15 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.CompactModeToggle = createTooltip(compactModeToggle, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: `${
               IsCompactMode() ? "Disable Compact Mode" : "Enable Compact Mode"
             }`,
           });
         }
         compactModeToggle.addEventListener("click", () => {
+          if (grouped) PressToggle(compactModeToggle);
+          else ArmIconSwap("CompactModeToggle");
           // Use PageContainer instead of document.querySelector
           const SpicyLyricsPage = PageContainer;
           if (Fullscreen.IsOpen || Fullscreen.CinemaViewOpen) {
@@ -821,13 +956,23 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.RomanizationToggle = createTooltip(romanizationToggle, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: isRomanized ? `Disable Romanization` : `Enable Romanization`,
           });
         }
         romanizationToggle.addEventListener("click", async () => {
           const songUri = SpotifyPlayer.GetUri();
           if (!songUri) return;
+          if (grouped) PressToggle(romanizationToggle);
+          else ArmIconSwap("RomanizationToggle");
+          // Under each line, the rows are already built: they open or close in
+          // place. A fetch in flight builds them too, and the class decides. The AMLL
+          // renderer builds its rows only with romanization on, so it renders again.
+          if ($romanizationDisplay.get() === "underLine" && !IsAmllLyricsShowing()) {
+            romanizedRowsToggled(() => setRomanizedStatus(!isRomanized));
+            AppendViewControls();
+            return;
+          }
           PageContainer?.querySelector(
             ".LyricsContainer .LyricsContent"
           )?.classList.add("HiddenTransitioned");
@@ -872,11 +1017,14 @@ function AppendViewControls(ReAppend: boolean = false) {
         try {
           if (!isPip) {
             Tooltips.NowBarToggle = createTooltip(nowBarButton, {
-              ...Spicetify.TippyProps,
+              ...ViewControlTooltipProps(),
               content: `NowBar`,
             });
           }
-          nowBarButton.addEventListener("click", () => ToggleNowBar());
+          nowBarButton.addEventListener("click", () => {
+            if (grouped) PressToggle(nowBarButton);
+            ToggleNowBar();
+          });
         } catch (err) {
           controlsLogger.warn("Failed to setup NowBar tooltip", err);
         }
@@ -889,13 +1037,14 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.FullscreenToggle = createTooltip(fullscreenBtn, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: `${
               Fullscreen.CinemaViewOpen ? "Fullscreen" : "Cinema View"
             }`,
           });
         }
         fullscreenBtn.addEventListener("click", async () => {
+          if (grouped) PressToggle(fullscreenBtn);
           // If we're in cinema view, go to full fullscreen
           if (Fullscreen.CinemaViewOpen) {
             Fullscreen.CinemaViewOpen = false;
@@ -918,7 +1067,7 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.CinemaView = createTooltip(cinemaViewBtn, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: `Cinema View`,
           });
         }
@@ -939,7 +1088,7 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.NowBarSideToggle = createTooltip(nowBarSideToggleBtn, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: `Swap NowBar Side`,
           });
         }
@@ -982,7 +1131,7 @@ function AppendViewControls(ReAppend: boolean = false) {
     if (settingsButton && !isPip) {
       try {
         Tooltips.Settings = createTooltip(settingsButton, {
-          ...Spicetify.TippyProps,
+          ...ViewControlTooltipProps(),
           content: `Spicy Lyrics Settings`,
         });
         settingsButton.addEventListener("click", () => {
@@ -1014,7 +1163,7 @@ function AppendViewControls(ReAppend: boolean = false) {
       try {
         if (!isPip) {
           Tooltips.LyricsManager = createTooltip(lyricsManagerButton, {
-            ...Spicetify.TippyProps,
+            ...ViewControlTooltipProps(),
             content: `Lyrics Manager`,
           });
         }
@@ -1034,20 +1183,26 @@ function AppendViewControls(ReAppend: boolean = false) {
 
 // --- Reactive setting subscriptions ---
 
-$simpleLyricsMode.listen((v) => {
-  if (!PageContainer) return;
-  PageContainer.classList.toggle("SimpleLyricsMode", v);
+// Rebuilds the lyrics after a setting that shapes them changes. A "Just once" upload
+// rebuilds from what's held: refetching would swap it for the song's normal lyrics.
+function rebuildLyrics() {
   const uri = SpotifyPlayer.GetUri();
-  $currentLyricsData.set("");
+  if (!HoldsTemporaryUpload(uri)) $currentLyricsData.set("");
   if (uri) fetchLyrics(uri).then(ApplyLyrics);
+}
+
+// The letter split, word springs and line timing are fixed when the lyrics are
+// built, so a style change rebuilds them.
+$rendererVisualStyle.listen((v) => {
+  if (!PageContainer) return;
+  PageContainer.classList.toggle("BloomRenderer", v === "bloom");
+  rebuildLyrics();
 });
 
 $minimalLyricsMode.listen((v) => {
   if (!PageContainer) return;
   PageContainer.classList.toggle("MinimalLyricsMode", v);
-  const uri = SpotifyPlayer.GetUri();
-  $currentLyricsData.set("");
-  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+  rebuildLyrics();
 });
 
 // Pure CSS (Mixed.css), so the lyrics don't need rebuilding.
@@ -1055,17 +1210,25 @@ $singleLineMode.listen((v) => {
   PageContainer?.classList.toggle("SingleLineMode", v);
 });
 
-$joinSplitWords.listen(() => {
-  const uri = SpotifyPlayer.GetUri();
-  $currentLyricsData.set("");
-  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+$syllableMerge.listen(rebuildLyrics);
+$syllablePace.listen(rebuildLyrics);
+// Rows under each line are built with romanization off too, so the toggle can
+// open them in place; switching to or from them always renders again.
+$romanizationDisplay.listen(rebuildLyrics);
+
+// Synchronous, so romanizedRowsToggled sees the rows change inside its flip.
+$romanization.listen((v) => {
+  PageContainer?.classList.toggle("RomanizedRowsShown", v);
 });
 
-$romanizationBelow.listen(() => {
-  const uri = SpotifyPlayer.GetUri();
-  $currentLyricsData.set("");
-  if (uri) fetchLyrics(uri).then(ApplyLyrics);
+// CSS sizes the text. The list's cached row heights and scroll position are JS, so those follow.
+$lyricsSize.listen((v, previous) => {
+  if (!PageContainer) return;
+  PageContainer.style.setProperty("--SL-LyricsScale", String(v / 100));
+  lyricsSizeChanged(v / previous);
+  ResetLastLine();
 });
+
 
 $translationsBelow.listen(() => {
   const uri = SpotifyPlayer.GetUri();
@@ -1115,18 +1278,22 @@ onExperimentChange((experiment) => {
   ApplyExperimentClasses(PageContainer);
   // The controls are built as a dock or as a menu, so build them again.
   if (experiment.id === "dockMenu") AppendViewControls(true);
-  // Its letter split and word springs are fixed when the lyrics are built, so rebuild them.
-  if (experiment.id === "refreshedSimpleLyrics" && $simpleLyricsMode.get()) {
-    const uri = SpotifyPlayer.GetUri();
-    $currentLyricsData.set("");
-    if (uri) fetchLyrics(uri).then(ApplyLyrics);
+  if (experiment.id === "groupedViewControls") AppendViewControls(true);
+  // Romaji is made when the lyrics are fetched, so rebuild them.
+  if (experiment.id === "romajiAsWritten") {
+    rebuildLyrics();
   }
 });
 onExperimentDefinitionChange(() => {
   if (!PageContainer) return;
   ApplyExperimentClasses(PageContainer);
-  // A remote default or forceState can flip the menu without a stored value changing.
-  if (dockBuiltAsMenu !== null && isExperimentEnabled("dockMenu") !== dockBuiltAsMenu) {
+  // A remote default or forceState can flip the menu, or the grouped layout, without a
+  // stored value changing.
+  if (
+    (dockBuiltAsMenu !== null && isExperimentEnabled("dockMenu") !== dockBuiltAsMenu) ||
+    (RenderedGroupedControls !== null &&
+      RenderedGroupedControls !== isExperimentEnabled("groupedViewControls"))
+  ) {
     AppendViewControls(true);
   }
 });

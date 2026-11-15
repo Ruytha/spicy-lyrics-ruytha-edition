@@ -15,7 +15,15 @@ import fetchLyrics, {
   ShowQueueLoader,
   type FetchLyricsResult,
 } from "../fetchLyrics.ts";
-import { BuildLyricsNotice, HasNotice, OnLyricsAreaShownAgain, SetShownNotice, SyncNoLyricsLayout } from "../LyricsNotice.ts";
+import {
+  BuildLyricsNotice,
+  HasNotice,
+  IsNoLyricsNotice,
+  OnLyricsAreaShownAgain,
+  SetShownNotice,
+  SyncNoLyricsLayout,
+} from "../LyricsNotice.ts";
+import { SetNoLyricsSong } from "../../../components/Utils/QueueView.ts";
 import { ClearLyricsContentArrays, isRomanized } from "../lyrics.ts";
 import { ClearRomanRows } from "../Applyer/Utils/RomanLine.ts";
 import { LyricsHaveTranslations } from "../Applyer/Utils/PickDisplayText.ts";
@@ -155,6 +163,9 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
     );
 
     SetShownNotice(descriptor);
+    // Before the layout sync: with the queue open the lyrics column stays, so the NowBar
+    // doesn't start moving to the middle only to turn back.
+    SetNoLyricsSong(IsNoLyricsNotice(descriptor) ? (noticeUri ?? null) : null);
     SyncNoLyricsLayout();
 
     EmitApply("None", null)
@@ -168,6 +179,7 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
   // without going through fetchLyrics), so a later layout sync can't hide them. They're
   // drawn just below, so showing the area mustn't ask for another draw.
   SetShownNotice(null);
+  SetNoLyricsSong(null);
   SyncNoLyricsLayout(false);
 
   const romanize = isRomanized;

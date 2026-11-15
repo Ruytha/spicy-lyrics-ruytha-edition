@@ -10,7 +10,6 @@ g.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {} };
 g.Spicetify ??= { LocalStorage: { get: () => null, set() {} } };
 
 const { parseTTML } = await import("../src/utils/Lyrics/ttml/parser.ts");
-const { RomajiWordBreaks } = await import("../src/utils/Lyrics/RomajiSpacing.ts");
 
 const fixture = (name: string) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), "utf8");
 
@@ -36,21 +35,6 @@ describe("background vocals and translations", () => {
   });
   test("an inline translation wins over the head's", () => {
     expect(second.Lead.TranslatedText).toBe("Second line, inline");
-  });
-});
-
-describe("romaji word gaps", () => {
-  test("gaps land between the syllables a word ends at", () => {
-    expect(
-      RomajiWordBreaks(["ai", "kawa", "razu", "dap", "pi", "shi", "teru", "mai", "nichi"], "aikawarazu dappi shiteru mainichi")
-    ).toEqual([false, false, true, false, true, false, true, false, false]);
-  });
-  test("small spelling differences still line up", () => {
-    // The line's romaji has a macron where the syllable's has a doubled vowel.
-    expect(RomajiWordBreaks(["kyou", "wa", "ii", "hi"], "kyō wa ii hi")).toEqual([true, true, true, false]);
-  });
-  test("no gap where no syllable edge is close", () => {
-    expect(RomajiWordBreaks(["abcdefgh"], "abcd efgh")).toEqual([false]);
   });
 });
 

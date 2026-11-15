@@ -2,6 +2,7 @@ import { useStore } from "@nanostores/react";
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { $experimentOverrides } from "../../../utils/experiments.ts";
 import { ResetSetting } from "../../../utils/stores.ts";
+import { $ttmlReviewer, isHeldByReviewer, REVIEWER_LOCK_REASON } from "../../../utils/ttmlReviewer.ts";
 import { PopupModal } from "../../Modal.ts";
 import About, { useUpdateStatus } from "./About.tsx";
 import { advancedSection } from "./AdvancedSection.tsx";
@@ -9,6 +10,7 @@ import { appearanceSection } from "./AppearanceSection.tsx";
 import { backgroundSection } from "./BackgroundSection.tsx";
 import { coverSection } from "./CoverSection.tsx";
 import { MAKER } from "../../../utils/Ruytha/ForkRelease.ts";
+import { BugReportPane } from "./BugReportSection.tsx";
 import { Highlight, PeekContext, Row, SearchBar } from "./components.tsx";
 import { experimentsSection } from "./ExperimentsSection.tsx";
 import { AboutIcon, ChevronIcon, CloseIcon, PeekIcon } from "./icons.tsx";
@@ -23,6 +25,7 @@ import {
   searchTerms,
 } from "./model.ts";
 import { playbackSection } from "./PlaybackSection.tsx";
+import { ReviewerPane, reviewerSection } from "./ReviewerSection.tsx";
 
 const aboutSection: SectionDef = {
   id: "about",
@@ -40,6 +43,9 @@ const SECTIONS: SectionDef[] = [
   appearanceSection,
   experimentsSection,
   advancedSection,
+  // The "Got a Bug?" tab is left out: it sends reports to the Spicy Lyrics Discord, and the
+  // fork's bugs go to its own GitHub issues (About → Report a bug).
+  reviewerSection,
   aboutSection,
 ];
 
@@ -54,17 +60,26 @@ const notDisabled = () => false as const;
 // the NPV card in this window. Popup Lyrics lives in its own window.
 const lyricsBehindPanel = () => !!document.querySelector("#SpicyLyricsPage");
 
+/** A row's label wherever it lives, so nothing else has to repeat it. */
+const settingLabel = (id: string) =>
+  SECTIONS.flatMap((section) => section.groups?.() ?? [])
+    .flatMap((group) => group.settings)
+    .find((setting) => setting.id === id)?.label;
+
 function SettingRow({ def, query }: { def: SettingDef; query: string }) {
   const useDisabled = def.useDisabled ?? notDisabled;
-  const reason = useDisabled();
+  const heldByReviewer = useStore($ttmlReviewer) && isHeldByReviewer(def.id);
+  const ownReason = useDisabled();
+  const reason = heldByReviewer ? REVIEWER_LOCK_REASON : ownReason;
   const useNote = def.useNote ?? notDisabled;
   const note = useNote();
   const label = <Highlight text={def.label} query={query} />;
 
-  if (def.render) return <>{def.render(label)}</>;
+  if (def.render) return <>{def.render(label, query !== "")}</>;
   if (!def.Control) return null;
 
   const Control = def.Control;
+  const Aside = def.Aside;
   return (
     <Row
       label={label}
@@ -73,8 +88,12 @@ function SettingRow({ def, query }: { def: SettingDef; query: string }) {
       disabled={!!reason}
       disabledReason={reason || undefined}
       note={note || undefined}
+      aside={Aside && <Aside disabled={!!reason} />}
     >
-      <Control disabled={!!reason} label={def.label} />
+      {/* Not every Control passes `disabled` on; this holds them all, keyboard included. */}
+      <fieldset className="sl-sp-control-lock" disabled={!!reason}>
+        <Control disabled={!!reason} label={def.label} />
+      </fieldset>
     </Row>
   );
 }
@@ -142,6 +161,7 @@ function search(query: string): SearchHit[] {
 export default function SettingsPanel() {
   // Experiments' rows are rebuilt from the overrides, so they re-render with them.
   useStore($experimentOverrides);
+  const reviewerOn = useStore($ttmlReviewer);
 
   const [tab, setTab] = useState<SectionId>(() => {
     sectionById(lastTab).onEnter?.();
@@ -297,6 +317,7 @@ export default function SettingsPanel() {
         <span className="sl-sp-tab-icon" data-section={s.id}>{s.icon}</span>
         <span className="sl-sp-tab-label">{s.title}</span>
         {count !== null && count > 0 && <span className="sl-sp-tab-count">{count}</span>}
+        {s.id === "reviewer" && reviewerOn && <span className="sl-sp-tab-dot" aria-label="TTML Reviewer is on" />}
         {count === null && s.id === "about" && updateStatus === "outdated" && (
           <span className="sl-sp-tab-dot" aria-label="Update available" />
         )}
@@ -432,9 +453,15 @@ export default function SettingsPanel() {
               )
             ) : section.id === "about" ? (
               <About status={updateStatus} />
+            ) : section.id === "reviewer" ? (
+              <ReviewerPane labelOf={settingLabel} />
+            ) : section.id === "bug" ? (
+              <BugReportPane />
             ) : (
               <>
                 {section.intro && <p className="sl-sp-intro">{section.intro}</p>}
+                {/* Experiment rows are all held at once, so the tab says it once, not per row. */}
+                {section.id === "experiments" && reviewerOn && <p className="sl-sp-intro">{REVIEWER_LOCK_REASON}</p>}
                 {hasRows ? (
                   <>
                     {groups.map((group, i) => (

@@ -40,7 +40,8 @@ export async function ApplyTemporaryTTML(ttml: string, uri: string): Promise<boo
     toast.error("Failed to parse TTML.", { duration: 5000 });
     return false;
   }
-  const dataToSave = { ...result, uri };
+  // The source rides along so a spelling change can romanize it again (fetchLyrics).
+  const dataToSave = { ...result, uri, temporaryUpload: true, uploadedTTML: ttml };
   await ProcessLyrics(dataToSave);
   const data = JSON.stringify(dataToSave);
   $currentLyricsData.set(data);

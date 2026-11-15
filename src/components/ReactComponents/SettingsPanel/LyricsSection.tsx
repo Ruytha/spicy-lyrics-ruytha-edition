@@ -9,15 +9,24 @@ import {
   $timingOverlay,
   $creditsFollowLastLine,
   $duetLinePadding,
-  $joinSplitWords,
   $lineHoverBackground,
   $lyricGlow,
   $lyricsRenderer,
-  $minimalLyricsMode,
-  $romanizationBelow,
   $translationsBelow,
-  $simpleLyricsMode,
   $singleLineMode,
+  $lyricsSize,
+  $minimalLyricsMode,
+  $pinnedCredits,
+  $rendererVisualStyle,
+  $romanizationDisplay,
+  $syllableMerge,
+  $syllablePace,
+  RENDERER_VISUAL_STYLES,
+  RENDERER_VISUAL_STYLE_LABELS,
+  type PinnedCredits,
+  type RendererVisualStyle,
+  type RomanizationDisplay,
+  type SyllableMerge,
 } from "../../../utils/stores.ts";
 import { Select, Slider, Toggle } from "./components.tsx";
 import { LyricsIcon } from "./icons.tsx";
@@ -48,13 +57,38 @@ function amllToggle(
 // Built once: the Control components must keep their identity across renders.
 const groups: GroupDef[] = [
   {
+    title: "Text",
+    settings: [
+      {
+        id: "lyricsSize",
+        label: "Lyrics Size",
+        description:
+          "Makes the lyrics bigger or smaller in every view, including romanization and background vocals. 100% is each view's usual size.",
+        keywords: "font text scale bigger smaller zoom",
+        stacked: true,
+        Control: ({ label }) => (
+          <Slider
+            label={label}
+            value={useStore($lyricsSize)}
+            min={60}
+            max={200}
+            step={5}
+            defaultValue={100}
+            unit="%"
+            onChange={(v) => $lyricsSize.set(v)}
+          />
+        ),
+      },
+    ],
+  },
+  {
     title: "Style",
     settings: [
       {
         id: "lyricsRenderer",
         label: "Lyrics Renderer",
         description:
-          "Which renderer draws synced lyrics. AMLL scrolls and highlights lines with its own layout and effects; Simple and Minimal Lyrics Mode only apply to Spicy. Unsynced lyrics always use Spicy.",
+          "Which renderer draws synced lyrics. AMLL scrolls and highlights lines with its own layout and effects; Renderer Visual Style and Fade Away Previous Lines only apply to Spicy. Unsynced lyrics always use Spicy.",
         keywords: "amll renderer player engine",
         Control: ({ label }) => (
           <Select
@@ -88,22 +122,26 @@ const groups: GroupDef[] = [
         ),
       },
       {
-        id: "simpleLyricsMode",
-        label: "Simple Lyrics Mode",
-        description: "Drop the extra visual effects from the lyrics.",
-        keywords: "effects plain",
+        id: "rendererVisualStyle",
+        label: "Renderer Visual Style",
+        description:
+          "Visual design of rendered lyrics. \"Spring\" is the default Spicy Lyrics renderer you know.",
+        keywords: "simple lyrics mode refreshed renderer animation effects plain spring bloom",
         Control: ({ label }) => (
-          <Toggle
+          <Select
             label={label}
-            checked={useStore($simpleLyricsMode)}
-            onChange={(v) => $simpleLyricsMode.set(v)}
+            value={useStore($rendererVisualStyle)}
+            options={[...RENDERER_VISUAL_STYLES]}
+            labels={RENDERER_VISUAL_STYLES.map((style) => RENDERER_VISUAL_STYLE_LABELS[style])}
+            onChange={(v) => $rendererVisualStyle.set(v as RendererVisualStyle)}
           />
         ),
       },
       {
         id: "minimalLyricsMode",
-        label: "Minimal Lyrics Mode",
+        label: "Fade Away Previous Lines",
         description: "Hide lines that have already been sung in Fullscreen and Cinema View.",
+        keywords: "minimal lyrics mode hide sung",
         Control: ({ label }) => (
           <Toggle
             label={label}
@@ -127,29 +165,34 @@ const groups: GroupDef[] = [
         ),
       },
       {
-        id: "joinSplitWords",
+        id: "syllableMerge",
         label: "Join Split Words",
-        description: "Show a word that's sung in syllables as one word, when its parts line up evenly.",
-        keywords: "syllables merge",
+        description:
+          "Show a word sung in syllables as one word. Steadily Sung keeps only words with no gap and an even pace between parts; Held Words only those long enough to light up letter by letter.",
+        keywords: "syllables merge held steady",
         Control: ({ label }) => (
-          <Toggle
+          <Select
             label={label}
-            checked={useStore($joinSplitWords)}
-            onChange={(v) => $joinSplitWords.set(v)}
+            value={useStore($syllableMerge)}
+            options={["off", "full", "steady", "held"]}
+            labels={["Off", "All Words", "Steadily Sung", "Held Words"]}
+            onChange={(v) => $syllableMerge.set(v as SyllableMerge)}
           />
         ),
       },
       {
-        id: "romanizationBelow",
-        label: "Romanization Under the Lyrics",
+        id: "syllablePace",
+        label: "Keep Syllable Pace",
         description:
-          "With romanization on (the Romanization button by the lyrics), keep the lyrics as they are and show the romanization as a smaller line under each one, like Apple Music. Off, the romanization replaces the lyrics.",
-        keywords: "romanization romanize romaji pinyin transliteration pronunciation under below apple music japanese korean chinese",
-        Control: ({ label }) => (
+          "A joined word that lights up letter by letter follows each syllable's timing, slow on a long syllable and quick on a short one.",
+        keywords: "syllables merge held letters timing",
+        useDisabled: () => useStore($syllableMerge) === "off" && "Pick a Join Split Words mode to change this.",
+        Control: ({ disabled, label }) => (
           <Toggle
             label={label}
-            checked={useStore($romanizationBelow)}
-            onChange={(v) => $romanizationBelow.set(v)}
+            checked={useStore($syllablePace)}
+            onChange={(v) => $syllablePace.set(v)}
+            disabled={disabled}
           />
         ),
       },
@@ -172,6 +215,22 @@ const groups: GroupDef[] = [
   {
     title: "Lines",
     settings: [
+      {
+        id: "romanizationDisplay",
+        label: "Romanization",
+        description:
+          "With romanization on, show it in place of the original lyrics, or as a smaller row under each line.",
+        keywords: "romaji romanized romanize pronunciation under below replace",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($romanizationDisplay)}
+            options={["replace", "underLine"]}
+            labels={["Replace the line", "Under each line"]}
+            onChange={(v) => $romanizationDisplay.set(v as RomanizationDisplay)}
+          />
+        ),
+      },
       {
         id: "lineHoverBackground",
         label: "Highlight on Hover",
@@ -209,6 +268,22 @@ const groups: GroupDef[] = [
             label={label}
             checked={useStore($creditsFollowLastLine)}
             onChange={(v) => $creditsFollowLastLine.set(v)}
+          />
+        ),
+      },
+      {
+        id: "pinnedCredits",
+        label: "Pinned Credits",
+        description:
+          "Keep the credits at the bottom of the lyrics while they scroll. No Writers pins the lyrics source and community line, Full pins the songwriters too.",
+        keywords: "credits footer pin sticky written by songwriters provided by source community bottom",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($pinnedCredits)}
+            options={["off", "noWriters", "full"]}
+            labels={["Off", "No Writers", "Full"]}
+            onChange={(v) => $pinnedCredits.set(v as PinnedCredits)}
           />
         ),
       },

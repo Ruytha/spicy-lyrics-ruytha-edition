@@ -8,6 +8,7 @@ import {
   IsUserScrolledAway,
   ScrollBackToActiveLine,
 } from "../../utils/Scrolling/ScrollToActiveLine.ts";
+import { $showScrollToActive } from "../../utils/stores.ts";
 import { PageContainer } from "../Pages/PageView.ts";
 import { Icons } from "../Styling/Icons.ts";
 
@@ -54,7 +55,7 @@ document.addEventListener("keydown", (e) => {
 
 onAnimationFrame(() => {
   if (!PageContainer) return;
-  const away = IsAmllLyricsShowing() ? IsAmllScrolledAway() : IsUserScrolledAway();
+  const away = $showScrollToActive.get() && (IsAmllLyricsShowing() ? IsAmllScrolledAway() : IsUserScrolledAway());
   const el = away ? ensureButton() : button;
   el?.classList.toggle("Visible", away);
   if (away) el?.classList.toggle("Up", scrolledDown);

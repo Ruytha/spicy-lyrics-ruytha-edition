@@ -12,8 +12,8 @@ import {
   $amllLyricsPosition,
   $amllLyricsScale,
   $amllLyricsSpring,
-  $joinSplitWords,
   $lyricsRenderer,
+  $syllableMerge,
 } from "../../stores.ts";
 import { PageContainer } from "../../../components/Pages/PageView.ts";
 import { SpotifyPlayer } from "../../../components/Global/SpotifyPlayer.ts";
@@ -135,9 +135,8 @@ const displayText = (entry: { Text: string; TransliteratedText?: string }, roman
   StripZeroWidth(PickDisplayText(entry, RomanizeInPlace(romanize))).replace(/\s+/g, " ");
 
 function toWords(syllables: SyllableData[], romanize: boolean): LyricWord[] {
-  const parts = ($joinSplitWords.get() ? JoinSplitWords(syllables) : syllables).filter(
-    HasRenderableText
-  );
+  const merge = $syllableMerge.get();
+  const parts = (merge === "off" ? syllables : JoinSplitWords(syllables, merge)).filter(HasRenderableText);
   return parts.map((syllable, i) => {
     const startTime = toMs(syllable.StartTime);
     const text = displayText(syllable, romanize);

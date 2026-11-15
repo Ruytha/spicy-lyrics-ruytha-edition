@@ -1,6 +1,6 @@
 // deno-lint-ignore-file no-explicit-any
 
-import { $romanizationBelow, $translationsBelow } from "../../../stores.ts";
+import { $romanizationDisplay, $translationsBelow } from "../../../stores.ts";
 import { HasLyricsText } from "../../EmptyLines.ts";
 import { StripZeroWidth } from "./StripZeroWidth.ts";
 
@@ -20,10 +20,10 @@ export function PickDisplayText(entry: any, useRomanized: boolean): string {
   return HasLyricsText(romanized) ? romanized : (original ?? "");
 }
 
-// Romanization Under the Lyrics: whether romanization replaces the lyric, or the lyric
+// Romanization Display: whether romanization replaces the lyric, or the lyric
 // stays and the romanization sits under it.
-export const RomanizeInPlace = (useRomanized: boolean) => useRomanized && !$romanizationBelow.get();
-export const RomanizeBelow = (useRomanized: boolean) => useRomanized && $romanizationBelow.get();
+export const RomanizeInPlace = (useRomanized: boolean) => useRomanized && $romanizationDisplay.get() !== "underLine";
+export const RomanizeBelow = (useRomanized: boolean) => useRomanized && $romanizationDisplay.get() === "underLine";
 
 /** The translation shown under a line or vocal group (Translations Under the Lyrics), or "". */
 export const TranslatedLine = (entry: any): string =>
@@ -74,9 +74,9 @@ export function RomanizedSyllableParts(syllables: any[]): RomanPart[] {
   const parts = syllables
     .map((s, i) => {
       const part = HasLyricsText(s?.TransliteratedText) ? s.TransliteratedText : (s?.Text ?? "");
-      // RomanSpaceAfter: a word ends inside what the lyrics sing as one (Japanese, see
-      // RomajiSpacing.ts), so the romaji gets the gap the lyric doesn't.
-      const joined = s?.IsPartOfWord && !s?.RomanSpaceAfter;
+      // The romanization's own word gaps (TransliteratedIsPartOfWord) win over the
+      // original script's, where Japanese or Chinese has no gaps at all.
+      const joined = HasLyricsText(s?.TransliteratedText) ? PickPartOfWord(s, true) : !!s?.IsPartOfWord;
       const text = joined || i === syllables.length - 1 ? part : `${part} `;
       return { text: StripZeroWidth(text).replace(/\s+/g, " "), start: s.StartTime, end: s.EndTime };
     })
@@ -91,5 +91,16 @@ export const RomanizedSyllables = (syllables: any[]): string =>
     .map((p) => p.text)
     .join("")
     .trim();
+
+// Whether the next syllable continues this one's word, judged on the text that
+// renders. IsPartOfWord describes the original script, where Japanese or
+// Chinese has no gaps at all, so a syllable shown from its romanization reads
+// TransliteratedIsPartOfWord instead and falls back when it isn't there.
+export function PickPartOfWord(entry: any, useRomanized: boolean): boolean {
+  if (useRomanized && entry?.TransliteratedText !== undefined) {
+    return !!(entry.TransliteratedIsPartOfWord ?? entry.IsPartOfWord);
+  }
+  return !!entry?.IsPartOfWord;
+}
 
 export default PickDisplayText;
