@@ -8,6 +8,7 @@ import "./css/ContentBox.css";
 import "./css/DynamicBG/spicy-dynamic-bg.css";
 import "./css/Lyrics/main.css";
 import "./css/Lyrics/Mixed.css";
+import "./css/Lyrics/ReviewRenderer.css";
 import "./css/Lyrics/ScrollToActive.css";
 import "./css/Lyrics/PinnedCredits.css";
 import "./css/Loaders/LoaderContainer.css";

@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import Global from "../../components/Global/Global.ts";
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import { PageContainer } from "../../components/Pages/PageView.ts";
-import { IsAmllLyricsEnabled } from "../Lyrics/Applyer/AMLL.ts";
 import { LyricsObject, SeekToLineStart } from "../Lyrics/lyrics.ts";
 import { $lyricsRenderer, persistAtom } from "../stores.ts";
 import {
@@ -586,7 +585,8 @@ function renderDock() {
   const label = el("span", "SL_ReviewDockLabel");
   label.innerHTML = FLAG_ICON;
   const count = review.flags.length;
-  const amll = IsAmllLyricsEnabled();
+  // Flags mark Spicy's own word elements, which the other renderers don't build.
+  const amll = $lyricsRenderer.get() !== "spicy";
   label.append(
     el(
       "span",

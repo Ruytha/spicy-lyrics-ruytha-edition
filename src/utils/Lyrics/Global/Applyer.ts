@@ -9,6 +9,7 @@ import { ApplyStaticLyrics, type StaticLyricsData } from "../Applyer/Static.ts";
 import { ApplyLineLyrics } from "../Applyer/Synced/Line.ts";
 import { ApplySyllableLyrics } from "../Applyer/Synced/Syllable.ts";
 import { ApplyAmllLyrics, DisposeAmllLyrics, IsAmllLyricsEnabled } from "../Applyer/AMLL.ts";
+import { ApplyReviewLyrics, DisposeReviewLyrics, IsReviewLyricsEnabled } from "../Applyer/Review.ts";
 import fetchLyrics, {
   ClearLyricsPageContainer,
   HideLoaderContainer,
@@ -105,6 +106,7 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
   EmitNotApplyed();
 
   DisposeAmllLyrics();
+  DisposeReviewLyrics();
   DestroyAllLyricsContainers();
   appliedLyrics = null;
 
@@ -188,6 +190,8 @@ export default async function ApplyLyrics(lyricsContent: FetchLyricsResult): Pro
 
   if (IsAmllLyricsEnabled() && ApplyAmllLyrics(lyrics, romanize)) {
     // Rendered by the AMLL player; unsynced lyrics fall through to the default renderer.
+  } else if (IsReviewLyricsEnabled() && ApplyReviewLyrics(lyrics, romanize)) {
+    // Rendered by the Review renderer; unsynced lyrics fall through as above.
   } else if (lyrics.Type === "Syllable") {
     ApplySyllableLyrics(lyrics as any, romanize);
   } else if (lyrics.Type === "Line") {

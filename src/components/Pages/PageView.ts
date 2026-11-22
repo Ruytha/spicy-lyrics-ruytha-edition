@@ -27,6 +27,7 @@ import {
 import ApplyDynamicBackground, { KawarpMap, PAGE_BACKGROUND_KEY } from "../DynamicBG/dynamicBackground.ts";
 import { DisposeAMLLBackground } from "../DynamicBG/AMLLBackground.ts";
 import { DisposeAmllLyrics, IsAmllLyricsShowing } from "../../utils/Lyrics/Applyer/AMLL.ts";
+import { DisposeReviewLyrics, IsReviewLyricsShowing } from "../../utils/Lyrics/Applyer/Review.ts";
 import {
   $creditsFollowLastLine,
   $currentLyricsData,
@@ -496,6 +497,7 @@ async function DestroyPage() {
   KawarpMap.delete(PAGE_BACKGROUND_KEY);
   DisposeAMLLBackground(PAGE_BACKGROUND_KEY);
   DisposeAmllLyrics();
+  DisposeReviewLyrics();
   ResetLastLine();
   CleanupScrollEvents();
   PageResizeListener?.disconnect(); // Disconnect the observer
@@ -969,7 +971,7 @@ function AppendViewControls(ReAppend: boolean = false) {
           // Under each line, the rows are already built: they open or close in
           // place. A fetch in flight builds them too, and the class decides. The AMLL
           // renderer builds its rows only with romanization on, so it renders again.
-          if ($romanizationDisplay.get() === "underLine" && !IsAmllLyricsShowing()) {
+          if ($romanizationDisplay.get() === "underLine" && !IsAmllLyricsShowing() && !IsReviewLyricsShowing()) {
             romanizedRowsToggled(() => setRomanizedStatus(!isRomanized));
             AppendViewControls();
             return;

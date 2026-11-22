@@ -1,0 +1,121 @@
+/* Review renderer (Lyrics Renderer → Review), built by utils/Lyrics/Applyer/Review.ts.
+   It scrolls its own box, so the side padding Spicy puts on its scroll container goes
+   on the lyrics area instead, as for AMLL. */
+#SpicyLyricsPage.ReviewLyrics .LyricsContainer .LyricsContent {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#SpicyLyricsPage.ReviewLyrics .ContentBox .NowBar:is(.Active.LeftSide, :not(.Active)) + .LyricsContainer .LyricsContent {
+  padding-left: var(--LyricsLeftSidePadding) !important;
+  padding-right: var(--LyricsRightSidePadding) !important;
+}
+
+#SpicyLyricsPage.ReviewLyrics .ContentBox .NowBar.Active.RightSide + .LyricsContainer .LyricsContent {
+  padding-right: var(--LyricsLeftSidePadding) !important;
+  padding-left: calc(var(--LyricsRightSidePadding) * 1.45) !important;
+}
+
+#SpicyLyricsPage .LyricsContainer .LyricsContent > .SLR_Player {
+  --SLR-Lit: #fff;
+  --SLR-Dim: rgba(255, 255, 255, 0.32);
+  --SLR-Edge: 0.3em;
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  box-sizing: border-box;
+  padding-inline: inherit;
+  font-family: inherit;
+  font-size: var(--DefaultLyricsSize);
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  color: var(--SLR-Dim);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 8%, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 8%, #000 88%, transparent 100%);
+}
+
+#SpicyLyricsPage .SLR_Player::-webkit-scrollbar {
+  display: none;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Pad {
+  height: 45%;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Line {
+  padding: 0.28em 0.35em;
+  margin-inline: -0.35em;
+  border-radius: 0.3em;
+  cursor: pointer;
+  transition: opacity 0.25s ease, background-color 0.15s ease;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Line:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Lines already sung step back so the playing one stands out; nothing is hidden. */
+#SpicyLyricsPage .SLR_Player .SLR_Line.Sung:not(.Focus) {
+  opacity: 0.55;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Line.Opposite {
+  text-align: end;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Background {
+  font-size: 0.62em;
+  margin-top: 0.15em;
+}
+
+/* A word is lit from its start up to the fill, with a short soft edge. The edge starts
+   just before the word and ends just after it, so 0 is fully dim and 1 fully lit. */
+#SpicyLyricsPage .SLR_Player .SLR_Word {
+  display: inline-block;
+  background-image: linear-gradient(
+    to right,
+    var(--SLR-Lit) calc(var(--SLR-Fill, 0) * (100% + var(--SLR-Edge)) - var(--SLR-Edge)),
+    var(--SLR-Dim) calc(var(--SLR-Fill, 0) * (100% + var(--SLR-Edge)))
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transform-origin: 50% 80%;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Line.Opposite .SLR_Word {
+  transform-origin: 50% 80%;
+}
+
+/* A whole line-synced line stays inline, so its fill runs on across a wrap. */
+#SpicyLyricsPage .SLR_Player .SLR_Word.SLR_Whole {
+  display: inline;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Gap {
+  cursor: default;
+  font-size: 0.7em;
+  letter-spacing: 0.1em;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Gap:hover {
+  background-color: transparent;
+}
+
+/* Gaps only show while they're coming up or playing. */
+#SpicyLyricsPage .SLR_Player .SLR_Gap.Sung:not(.Focus) {
+  opacity: 0.25;
+}
+
+#SpicyLyricsPage .SLR_Player .SLR_Credits {
+  margin-top: 1.5em;
+  font-size: 0.45em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #SpicyLyricsPage .SLR_Player .SLR_Line {
+    transition: none;
+  }
+}

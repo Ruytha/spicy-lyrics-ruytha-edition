@@ -88,14 +88,14 @@ const groups: GroupDef[] = [
         id: "lyricsRenderer",
         label: "Lyrics Renderer",
         description:
-          "Which renderer draws synced lyrics. AMLL scrolls and highlights lines with its own layout and effects; Renderer Visual Style and Fade Away Previous Lines only apply to Spicy. Unsynced lyrics always use Spicy.",
-        keywords: "amll renderer player engine",
+          "Which renderer draws synced lyrics. AMLL scrolls and highlights lines with its own layout and effects. Review is plain, for checking a sync: each word fills evenly from its start time to its end time and pops up as it starts. Renderer Visual Style and Fade Away Previous Lines only apply to Spicy. Unsynced lyrics always use Spicy.",
+        keywords: "amll review toxi renderer player engine timing sync check",
         Control: ({ label }) => (
           <Select
             label={label}
             value={useStore($lyricsRenderer)}
-            options={["spicy", "amll"]}
-            labels={["Spicy", "AMLL"]}
+            options={["spicy", "amll", "review"]}
+            labels={["Spicy", "AMLL", "Review"]}
             onChange={(v) => $lyricsRenderer.set(v)}
           />
         ),

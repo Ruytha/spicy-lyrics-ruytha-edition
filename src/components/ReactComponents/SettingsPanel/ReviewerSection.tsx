@@ -6,9 +6,11 @@ import {
   getOtherLyricsExtensions,
   REVIEWER_EXPERIMENTS_OFF,
   REVIEWER_SETTINGS,
+  reviewerShown,
   setTtmlReviewer,
 } from "../../../utils/ttmlReviewer.ts";
-import { Row, Toggle } from "./components.tsx";
+import { $reviewerRenderer } from "../../../utils/stores.ts";
+import { Row, Select, Toggle } from "./components.tsx";
 import { ReviewerIcon } from "./icons.tsx";
 import type { SectionDef } from "./model.ts";
 import { OpenTextFlag } from "../../../utils/textflag.ts";
@@ -38,6 +40,23 @@ function TextFlagButton() {
   );
 }
 
+const RENDERER_LABEL = "Reviewing Renderer";
+const RENDERER_DESCRIPTION =
+  "What TTML Reviewer Mode shows the lyrics with. Review is plain: each word fills evenly from its start time to its end time and pops up as it starts. Keep Mine leaves your renderer as it is. Flag Lyrics needs Spicy's renderer.";
+
+function RendererSelect({ label }: { label: string }) {
+  const value = useStore($reviewerRenderer) === "review" ? "review" : "keep";
+  return (
+    <Select
+      label={label}
+      value={value}
+      options={["review", "keep"]}
+      labels={["Review", "Keep Mine"]}
+      onChange={(v) => $reviewerRenderer.set(v)}
+    />
+  );
+}
+
 function ModeToggle({ label }: { label: string }) {
   return <Toggle label={label} checked={useStore($ttmlReviewer)} onChange={setTtmlReviewer} />;
 }
@@ -45,6 +64,7 @@ function ModeToggle({ label }: { label: string }) {
 /** Settings → TTML Reviewer: the switch, then everything it does. */
 export function ReviewerPane({ labelOf }: { labelOf: (id: string) => string | undefined }) {
   const on = useStore($ttmlReviewer);
+  useStore($reviewerRenderer);
   const others = on ? getOtherLyricsExtensions() : [];
   const held = new Set<string>(REVIEWER_EXPERIMENTS_OFF);
   const defaulted = getVisibleExperiments().filter((experiment) => !held.has(experiment.id));
@@ -59,6 +79,9 @@ export function ReviewerPane({ labelOf }: { labelOf: (id: string) => string | un
       <div className="sl-sp-card">
         <Row label={MODE_LABEL} description={MODE_DESCRIPTION}>
           <ModeToggle label={MODE_LABEL} />
+        </Row>
+        <Row label={RENDERER_LABEL} description={RENDERER_DESCRIPTION}>
+          <RendererSelect label={RENDERER_LABEL} />
         </Row>
         <Row label={FLAG_LABEL} description={FLAG_DESCRIPTION}>
           <FlagToggle label={FLAG_LABEL} />
@@ -84,7 +107,7 @@ export function ReviewerPane({ labelOf }: { labelOf: (id: string) => string | un
             <Fragment key={key}>
               <div className="sl-sp-reviewer-item">
                 <span>{labelOf(key) ?? key}</span>
-                <span className="sl-sp-reviewer-value">{shown}</span>
+                <span className="sl-sp-reviewer-value">{reviewerShown(key, shown)}</span>
               </div>
               {/* Kept apart from the settings, so the mode skips them rather than resetting them. */}
               {key === "playbackOffset" && (
@@ -132,6 +155,13 @@ export const reviewerSection: SectionDef = {
           description: MODE_DESCRIPTION,
           keywords: "review sync ttml basics reset default clean plain maker",
           Control: ModeToggle,
+        },
+        {
+          id: "reviewerRenderer",
+          label: RENDERER_LABEL,
+          description: RENDERER_DESCRIPTION,
+          keywords: "review renderer toxi plain timing sync check keep",
+          Control: RendererSelect,
         },
         {
           id: "flagLyrics",

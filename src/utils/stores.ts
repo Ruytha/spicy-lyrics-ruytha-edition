@@ -196,6 +196,9 @@ export const $backgroundBlur = persistAtom<number>("backgroundBlur", 0);
 // Who draws synced lyrics: "spicy" (the built-in renderer) or "amll" (the AMLL player).
 // Unsynced lyrics always use the built-in one.
 export const $lyricsRenderer = persistAtom<string>("lyricsRenderer", "spicy");
+// The renderer TTML Reviewer Mode switches to: "review" for the Review renderer, anything
+// else leaves the listener's own.
+export const $reviewerRenderer = persistAtom<string>("reviewerRenderer", "keep");
 // AMLL lyrics: the player's own effects, and where the playing line sits ("upper" is
 // AMLL's default, a third of the way down; "center" is the middle).
 export const $amllLyricsBlur = persistAtom<boolean>("amllLyricsBlur", true);

@@ -1,7 +1,7 @@
 import { atom } from "nanostores";
 import { toast } from "sonner";
 import { type ExperimentId, EXPERIMENTS } from "./experiments.ts";
-import { PersistedSettings } from "./stores.ts";
+import { $reviewerRenderer, PersistedSettings } from "./stores.ts";
 
 /**
  * TTML Reviewer mode: saves the user's settings and strips the lyrics back to
@@ -25,6 +25,8 @@ export const REVIEWER_SETTINGS: readonly { key: string; value: unknown; shown: s
   { key: "smoothScrolling", value: false, shown: "Off" },
   { key: "animationFpsCapEnabled", value: false, shown: "Off" },
   // Lyrics: anything that hides lines or changes how they're split or animated.
+  // Only while the reviewer has picked the Review renderer (Reviewing Renderer below).
+  { key: "lyricsRenderer", value: "review", shown: "Review" },
   { key: "rendererVisualStyle", value: "spring", shown: "Spring" },
   { key: "minimalLyricsMode", value: false, shown: "Off" },
   { key: "syllableMerge", value: "off", shown: "Off" },
@@ -80,8 +82,19 @@ function writeBackup(value: string): boolean {
   }
 }
 
+const RENDERER_KEY = "lyricsRenderer";
+const reviewRendererPicked = () => $reviewerRenderer.get() === "review";
+
+/** Whether the mode sets this key now. The renderer only when Review is picked. */
+const sets = (key: string) => key !== RENDERER_KEY || reviewRendererPicked();
+
+/** What "What it sets" shows for a key. */
+export function reviewerShown(key: string, shown: string): string {
+  return sets(key) ? shown : "Unchanged";
+}
+
 function applyProfile() {
-  for (const [key, value] of profile) PersistedSettings.get(key)?.set(value);
+  for (const [key, value] of profile) if (sets(key)) PersistedSettings.get(key)?.set(value);
 }
 
 /** What to put back for a key. `null` means it was never set, and restoring unsets it. */
@@ -106,7 +119,7 @@ function resumeProfile() {
   backup[BACKUP_FORMAT_KEY] = BACKUP_FORMAT;
   const saved = (added.length === 0 && !unversioned) || writeBackup(JSON.stringify(backup));
   for (const [key, value] of profile) {
-    if (saved || !added.includes(key)) PersistedSettings.get(key)?.set(value);
+    if ((saved || !added.includes(key)) && sets(key)) PersistedSettings.get(key)?.set(value);
   }
 }
 
@@ -114,7 +127,7 @@ export const $ttmlReviewer = atom<boolean>(readBackup() !== null);
 
 /** Whether the mode holds this settings row (by id) still. */
 export function isHeldByReviewer(id: string): boolean {
-  return profile.has(id);
+  return profile.has(id) && sets(id);
 }
 
 export function setTtmlReviewer(on: boolean) {
@@ -138,6 +151,8 @@ export function setTtmlReviewer(on: boolean) {
     // off the list, and it still has to come back.
     for (const key of Object.keys(backup)) {
       if (key === BACKUP_FORMAT_KEY) continue;
+      // Left free while the mode kept it, so a change made meanwhile stands.
+      if (key === RENDERER_KEY && !reviewRendererPicked()) continue;
       const entry = PersistedSettings.get(key);
       if (backup[key] === null) entry?.unset();
       else entry?.set(backup[key]);
@@ -169,3 +184,14 @@ export function getOtherLyricsExtensions(): string[] {
 }
 
 if ($ttmlReviewer.get()) resumeProfile();
+
+// Picking the reviewing renderer while the mode is on applies it at once, and going back
+// to "keep" puts the listener's own renderer back from the backup.
+$reviewerRenderer.listen(() => {
+  const backup = readBackup();
+  if (!backup) return;
+  const entry = PersistedSettings.get(RENDERER_KEY);
+  if (reviewRendererPicked()) entry?.set("review");
+  else if (backup[RENDERER_KEY] === null || backup[RENDERER_KEY] === undefined) entry?.unset();
+  else entry?.set(backup[RENDERER_KEY]);
+});

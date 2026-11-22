@@ -1,3 +1,4 @@
+import { IsReviewLyricsShowing, IsReviewScrolledAway, ReviewScrollBack } from "../../utils/Lyrics/Applyer/Review.ts";
 import { onAnimationFrame } from "../../utils/AnimationFrameLoop.ts";
 import {
   AmllScrollBack,
@@ -41,6 +42,7 @@ function ensureButton(): HTMLButtonElement | null {
 
 function scrollBack() {
   if (IsAmllLyricsShowing()) AmllScrollBack();
+  else if (IsReviewLyricsShowing()) ReviewScrollBack();
   else ScrollBackToActiveLine();
 }
 
@@ -55,7 +57,11 @@ document.addEventListener("keydown", (e) => {
 
 onAnimationFrame(() => {
   if (!PageContainer) return;
-  const away = $showScrollToActive.get() && (IsAmllLyricsShowing() ? IsAmllScrolledAway() : IsUserScrolledAway());
+  const away = $showScrollToActive.get() && (IsAmllLyricsShowing()
+      ? IsAmllScrolledAway()
+      : IsReviewLyricsShowing()
+        ? IsReviewScrolledAway()
+        : IsUserScrolledAway());
   const el = away ? ensureButton() : button;
   el?.classList.toggle("Visible", away);
   if (away) el?.classList.toggle("Up", scrolledDown);

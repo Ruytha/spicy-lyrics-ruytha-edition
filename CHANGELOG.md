@@ -6,6 +6,17 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-22
+
+### Added
+
+- **Review renderer.** A third Lyrics Renderer next to Spicy and AMLL, made for checking
+  a sync. Each word fills evenly from its start time to its end time and pops up as it
+  starts, so both ends of its timing are easy to see. Nothing blurs or springs, every line
+  stays readable, and long gaps show as dots that fill across the gap. Click a word to jump
+  to it. Pick it under Settings → Lyrics, or set Settings → TTML Reviewer → Reviewing
+  Renderer to Review so TTML Reviewer Mode switches to it.
+
 ## 2026-11-15
 
 ### Added
