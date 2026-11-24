@@ -116,7 +116,11 @@ function attachToTimeline(nowBar: Element): void {
 function syncLayout(): void {
   const container = layer?.parentElement;
   const content = container?.querySelector<HTMLElement>(":scope > .LyricsContent");
-  const scroll = content?.querySelector<HTMLElement>(".SpicyLyricsScrollContainer");
+  // Spicy's renderer keeps the credits in its scroll container; AMLL and the Review renderer
+  // keep them in a block of their own, the one they were taken from. Measuring only Spicy's
+  // left the layer unpadded and unsized there, so the rows sat small in the page's corner.
+  const scroll =
+    content?.querySelector<HTMLElement>(".SpicyLyricsScrollContainer") ?? home?.parentElement ?? null;
   if (!layer || !container || !content || !scroll) return;
 
   // The padding goes on the column inside: the layer itself spans the lyrics area's width,

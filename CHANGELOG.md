@@ -17,6 +17,16 @@ after an update shows what's new.
   of the song (how loud it is, the notes playing and the beat). Local files get a slow
   wave instead. Off by default.
 
+### Fixed
+
+- **TTML Reviewer Mode keeps your font.** Turning it on no longer swaps a custom lyrics
+  font back to the default, and turning it off no longer changes the font either.
+- **Middle-click scrolling works with the Review renderer.**
+- **Pinned credits line up with AMLL and Review lyrics.** With either renderer, pinned
+  credits sat small in the page's bottom-left corner instead of under the lyrics.
+- **Peeking at the lyrics from Settings clears the whole window.** With some Spicetify
+  themes, holding the peek button left a dark, blurred panel over the lyrics.
+
 ## 2026-11-22
 
 ### Added

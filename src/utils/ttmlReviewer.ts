@@ -33,7 +33,6 @@ export const REVIEWER_SETTINGS: readonly { key: string; value: unknown; shown: s
   { key: "lineHoverBackground", value: true, shown: "On" },
   { key: "duetLinePadding", value: true, shown: "On" },
   { key: "creditsFollowLastLine", value: false, shown: "Off" },
-  { key: "skipSpicyFont", value: false, shown: "Off" },
   // Background: still, so nothing competes with the lyrics for attention or frames.
   { key: "backgroundStyle", value: "color", shown: "Cover Colors" },
   { key: "backgroundBlur", value: 0, shown: "0 px" },
@@ -83,6 +82,12 @@ function writeBackup(value: string): boolean {
 }
 
 const RENDERER_KEY = "lyricsRenderer";
+/**
+ * Taken off the list, but not put back from older backups: the old font switch rewrites the
+ * lyrics font when it changes, so restoring it would replace a custom font picked since. The
+ * font doesn't change any timing, so the mode leaves it alone.
+ */
+const NOT_RESTORED = new Set(["skipSpicyFont"]);
 const reviewRendererPicked = () => $reviewerRenderer.get() === "review";
 
 /** Whether the mode sets this key now. The renderer only when Review is picked. */
@@ -150,7 +155,7 @@ export function setTtmlReviewer(on: boolean) {
     // Everything in the backup, not just today's profile: an update can have taken a key
     // off the list, and it still has to come back.
     for (const key of Object.keys(backup)) {
-      if (key === BACKUP_FORMAT_KEY) continue;
+      if (key === BACKUP_FORMAT_KEY || NOT_RESTORED.has(key)) continue;
       // Left free while the mode kept it, so a change made meanwhile stands.
       if (key === RENDERER_KEY && !reviewRendererPicked()) continue;
       const entry = PersistedSettings.get(key);

@@ -1632,6 +1632,19 @@ sl-generic-modal.SpicyLyricsModal .sl-modal-overlay[data-peek] .sl-modal.slmodal
   opacity: 0;
 }
 
+/* Hold-to-peek clears every surface inside the window, not only the glass: some Spicetify
+   themes paint the window's inner boxes as solid or blurred plates, which otherwise stayed
+   over the lyrics with the settings faded out of them. Only while peeking. */
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.Active[data-peek="all"] .sl-modal.slmodal-settingsPanel *:not(.sl-sp-peek, .sl-sp-peek *),
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.Active[data-peek="all"] .sl-modal.slmodal-settingsPanel *:not(.sl-sp-peek, .sl-sp-peek *)::before,
+sl-generic-modal.SpicyLyricsModal .sl-modal-overlay.Active[data-peek="all"] .sl-modal.slmodal-settingsPanel *:not(.sl-sp-peek, .sl-sp-peek *)::after {
+  background: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
 sl-generic-modal.SpicyLyricsModal .sl-modal-overlay {
   .sl-sp-peek {
     display: flex;

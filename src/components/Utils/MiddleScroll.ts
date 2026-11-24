@@ -49,13 +49,18 @@ function start(e: MouseEvent, lyrics: HTMLElement) {
   doc.documentElement.classList.add("SL_MiddleScrolling");
   session = {
     doc,
-    // AMLL listens on its player element; Spicy's renderer on its scroller, inside the container.
+    // AMLL listens on its player element; Spicy's renderer and the Review renderer on their
+    // scrollers, inside the container.
     target:
       lyrics.querySelector<HTMLElement>(".amll-lyric-player") ??
       lyrics.querySelector<HTMLElement>(".simplebar-content-wrapper") ??
+      lyrics.querySelector<HTMLElement>(".SLR_Player") ??
       lyrics,
-    // Spicy's renderer scrolls a SimpleBar wrapper; AMLL has none and scrolls on its own.
-    scroller: lyrics.querySelector<HTMLElement>(".simplebar-content-wrapper"),
+    // Spicy's renderer scrolls a SimpleBar wrapper and the Review renderer its own box; AMLL
+    // has neither and scrolls on its own.
+    scroller:
+      lyrics.querySelector<HTMLElement>(".simplebar-content-wrapper") ??
+      lyrics.querySelector<HTMLElement>(".SLR_Player"),
     originY: e.clientY,
     pointerY: e.clientY,
     pressedAt: performance.now(),
