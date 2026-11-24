@@ -112,6 +112,9 @@ export function SetShownNotice(descriptor: string | null): void {
   shownNotice = descriptor;
 }
 
+/** The lyrics area holds a notice that only says the song has no lyrics. */
+export const IsShowingNoLyrics = (): boolean => !!shownNotice && NO_LYRICS_NOTICES.has(shownNotice);
+
 export function IsCoverOnly(): boolean {
   return $coverOnlyMode.get() && !!PageContainer && !IsCardMode && !IsCompactMode();
 }

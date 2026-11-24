@@ -6,11 +6,13 @@ import {
   $coverBeatPulse,
   $coverBlend,
   $autoCoverOnly,
+  $noLyricsVisualizer,
   $coverOnlyMode,
   $preferAnimatedCover,
 } from "../../../utils/stores.ts";
 import { Select, Toggle } from "./components.tsx";
 import { CoverIcon } from "./icons.tsx";
+import { VISUALIZER_LABELS, VISUALIZER_STYLES } from "../../Utils/Visualizer.ts";
 import type { GroupDef, SectionDef } from "./model.ts";
 
 type CanvasMode = "stage" | "cover" | "off";
@@ -126,6 +128,22 @@ const groups: GroupDef[] = [
         keywords: "cover only no lyrics automatic auto instrumental notice missing",
         Control: ({ label }) => (
           <Toggle label={label} checked={useStore($autoCoverOnly)} onChange={(v) => $autoCoverOnly.set(v)} />
+        ),
+      },
+      {
+        id: "noLyricsVisualizer",
+        label: "Visualizer for Songs Without Lyrics",
+        description:
+          "When a song has no lyrics, show something that moves with it: Bars along the bottom, a Terrain of ridges in perspective, a Sphere of points turning round the cover, or a Tunnel of rings flying out from behind it. They follow Spotify's analysis of the song (its loudness, the notes in each moment and the beat). Local files get a slow wave instead.",
+        keywords: "visualizer visualiser bars spectrum equalizer audio music no lyrics instrumental beat 3d terrain sphere tunnel",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($noLyricsVisualizer)}
+            options={[...VISUALIZER_STYLES]}
+            labels={VISUALIZER_LABELS}
+            onChange={(v) => $noLyricsVisualizer.set(v)}
+          />
         ),
       },
     ],

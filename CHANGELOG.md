@@ -6,6 +6,17 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-25
+
+### Added
+
+- **Visualizer for songs without lyrics.** Pick one under Settings → Cover, and a song
+  with no lyrics gets something that moves with it: **Bars** along the bottom of the page,
+  a **Terrain** of ridges stretching away in 3D, a **Sphere** of points turning round the
+  cover, or a **Tunnel** of rings flying out from behind it. They follow Spotify's analysis
+  of the song (how loud it is, the notes playing and the beat). Local files get a slow
+  wave instead. Off by default.
+
 ## 2026-11-22
 
 ### Added

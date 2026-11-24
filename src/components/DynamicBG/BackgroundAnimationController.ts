@@ -19,6 +19,10 @@ export interface Segment extends TimeInterval {
     loudness_max_time: number;
     loudness_max: number;
     loudness_end?: number;
+    /** How strongly each of the 12 pitch classes (C to B) sounds, 0 to 1. */
+    pitches?: number[];
+    /** 12 timbre coefficients; the second tracks brightness. */
+    timbre?: number[];
 }
 
 export interface TrackData {

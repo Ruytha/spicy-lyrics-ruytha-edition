@@ -22,6 +22,7 @@ import "./components/Utils/MiddleScroll.ts";
 import "./components/DynamicBG/RuythaSpotlight.ts";
 import "./components/DynamicBG/TameImpala.ts";
 import "./components/DynamicBG/AnimatedCover.ts";
+import "./components/Utils/Visualizer.ts";
 import "./utils/Ruytha/PageOptions.ts";
 import "./utils/Ruytha/MarqueeGate.ts";
 import "./utils/Review/ReviewMode.ts";
@@ -82,6 +83,7 @@ import "./css/GroupedViewControls.css";
 // Last, so its spring overrides the curves above.
 import "./css/RuythaMotion.css";
 import "./css/ThemeShield.css";
+import "./css/Visualizer.css";
 import { showUpdatedDialog } from "./components/ReactComponents/UpdateDialog.tsx";
 import { IsPIP, OpenPopupLyrics, ClosePopupLyrics } from "./components/Utils/PopupLyrics.ts";
 import { GetNPVCardElement, GetNPVElement, GetNPVObserverRoot, initNPVLyrics } from "./components/Utils/NPVLyrics.ts";
