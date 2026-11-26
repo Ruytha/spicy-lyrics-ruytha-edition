@@ -2,6 +2,9 @@ import { useStore } from "@nanostores/react";
 import type { WritableAtom } from "nanostores";
 import {
   $amllHidePassedLines,
+  $communityLyrics,
+  $neteaseLyrics,
+  $qqLyrics,
   $amllLyricsBlur,
   $amllLyricsPosition,
   $amllLyricsScale,
@@ -23,6 +26,7 @@ import {
   $syllablePace,
   RENDERER_VISUAL_STYLES,
   RENDERER_VISUAL_STYLE_LABELS,
+  type CommunityLyrics,
   type PinnedCredits,
   type RendererVisualStyle,
   type RomanizationDisplay,
@@ -56,6 +60,59 @@ function amllToggle(
 
 // Built once: the Control components must keep their identity across renders.
 const groups: GroupDef[] = [
+  {
+    title: "Sources",
+    settings: [
+      {
+        id: "communityLyrics",
+        label: "Community TTML",
+        description:
+          "Word-synced lyrics from the AMLL TTML DB, a public database of hand-synced files, matched to the song by its Spotify id or ISRC. When Missing uses them for songs the Spicy Lyrics server has no lyrics for. Over Line Sync also uses them in place of line-synced and plain lyrics.",
+        keywords: "community ttml amll database provider source word synced syllable fallback missing lyrics isrc",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($communityLyrics)}
+            options={["off", "fallback", "prefer"]}
+            labels={["Off", "When Missing", "Over Line Sync"]}
+            onChange={(v) => $communityLyrics.set(v as CommunityLyrics)}
+          />
+        ),
+      },
+      {
+        id: "neteaseLyrics",
+        label: "NetEase Cloud Music",
+        description:
+          "Lyrics from NetEase Cloud Music, found by searching for the song and keeping the result whose title, artist and length match. Word-synced for many songs, line-synced for most others. Asked after Community TTML.",
+        keywords: "netease cloud music 163 ncm provider source yrc word synced fallback missing lyrics chinese",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($neteaseLyrics)}
+            options={["off", "fallback", "prefer"]}
+            labels={["Off", "When Missing", "Over Line Sync"]}
+            onChange={(v) => $neteaseLyrics.set(v as CommunityLyrics)}
+          />
+        ),
+      },
+      {
+        id: "qqLyrics",
+        label: "QQ Music",
+        description:
+          "Line-synced lyrics from QQ Music, found the same way. Asked last, so it fills in songs no other source has.",
+        keywords: "qq music tencent provider source lrc line synced fallback missing lyrics chinese",
+        Control: ({ label }) => (
+          <Select
+            label={label}
+            value={useStore($qqLyrics)}
+            options={["off", "fallback"]}
+            labels={["Off", "When Missing"]}
+            onChange={(v) => $qqLyrics.set(v as CommunityLyrics)}
+          />
+        ),
+      },
+    ],
+  },
   {
     title: "Text",
     settings: [

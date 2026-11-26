@@ -6,6 +6,24 @@ works the same as upstream [Spicy Lyrics](https://github.com/Spikerko/spicy-lyri
 Installed copies update on their own the next time Spotify starts, and the first start
 after an update shows what's new.
 
+## 2026-11-26
+
+### Added
+
+- **More lyrics sources.** Songs the Spicy Lyrics server has no lyrics for can now get
+  them from three more places, asked in this order:
+  - **AMLL TTML DB**, a public database of hand-synced, word-by-word TTML files, matched by
+    Spotify id or by ISRC, so other releases of the same recording find them too.
+  - **NetEase Cloud Music**, word-synced for many songs and line-synced for most others.
+  - **QQ Music**, line-synced.
+
+  NetEase and QQ Music are searched for the song, and a result is only used when its
+  title, artist and length match, so a different song or version with the same name is
+  turned down rather than shown. The credits name the source. Each has its own row under
+  Settings → Lyrics → Sources: **When Missing** (the default) or **Off**, and for the
+  first two also **Over Line Sync**, which uses their word-synced lyrics in place of the
+  server's line-synced and plain ones.
+
 ## 2026-11-25
 
 ### Added

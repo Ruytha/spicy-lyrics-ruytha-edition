@@ -1,6 +1,10 @@
 import { CreditsRow } from "./CreditsRow.ts";
 
+// Matched by substring in this order, so "amll-db" has to come before "aml" and "ldb".
 export const ProviderMap = {
+    "amll-db": "AMLL TTML DB",
+    "netease": "NetEase Cloud Music",
+    "qqmusic": "QQ Music",
     "spt": "Spotify",
     "aml": "Apple Music",
     "spl": "Spicy Lyrics",

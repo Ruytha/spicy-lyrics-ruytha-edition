@@ -274,6 +274,13 @@ export const $creditsFollowLastLine = persistAtom<boolean>("creditsFollowLastLin
 // the source and community line only, or the songwriters too.
 export type PinnedCredits = "off" | "noWriters" | "full";
 export const $pinnedCredits = persistAtom<PinnedCredits>("pinnedCredits", "off");
+// Lyrics from the community TTML database (CommunityTTML.ts): "off", "fallback" when the
+// server has none, or "prefer" over the server's line-synced and plain lyrics too.
+export type CommunityLyrics = "off" | "fallback" | "prefer";
+export const $communityLyrics = persistAtom<CommunityLyrics>("communityLyrics", "fallback");
+// The search-based sources (SearchedLyrics.ts), asked after the community database, same choices.
+export const $neteaseLyrics = persistAtom<CommunityLyrics>("neteaseLyrics", "fallback");
+export const $qqLyrics = persistAtom<CommunityLyrics>("qqLyrics", "fallback");
 export const $skipSpicyFont = persistAtom<boolean>("skipSpicyFont", false);
 // The page's font. Starts from the old Use System Font switch so nobody's font changes.
 export type LyricsFont = "spicy" | "system" | "sf" | "geist" | "inter" | "bricolage" | "poppins" | "custom" | "file";

@@ -1,5 +1,5 @@
 import { isDev } from "../../components/Global/Defaults.ts";
-import { $currentLyricsData, $currentLyricsType, $currentlyFetching } from "../stores.ts";
+import { $communityLyrics, $neteaseLyrics, $qqLyrics, $currentLyricsData, $currentLyricsType, $currentlyFetching } from "../stores.ts";
 import Platform from "../../components/Global/Platform.ts";
 import { SpotifyPlayer } from "../../components/Global/SpotifyPlayer.ts";
 import PageView, { PageContainer } from "../../components/Pages/PageView.ts";
@@ -18,6 +18,8 @@ import { HideLyricsSkeleton, IsLyricsSkeletonEnabled, ShowLyricsSkeleton } from 
 import { onExperimentChange } from "../experiments.ts";
 import { getRemoteConfig } from "../remoteConfig.ts";
 import { ClearPinnedCredits } from "./Applyer/Credits/PinnedCredits.ts";
+import { FindCommunityLyrics } from "./CommunityTTML.ts";
+import { FindNeteaseLyrics, FindQQLyrics } from "./SearchedLyrics.ts";
 
 const lyricsLogger = new Logger("Lyrics Pipeline");
 const lyricsCacheLogger = new Logger("Lyrics Cache");
@@ -105,7 +107,7 @@ export function GetLastLyricsFailure(uri: string | undefined): LyricsFetchFailur
 }
 
 /** Which stage last served lyrics, for the bug report: a cached copy is the usual suspect. */
-let lastAnswer: { uri: string; from: "already loaded" | "Local DB" | "cache" | "API" } | null = null;
+let lastAnswer: { uri: string; from: "already loaded" | "Local DB" | "cache" | "API" | "community TTML" | "NetEase" | "QQ Music" } | null = null;
 
 /** Where `uri`'s lyrics came from, or `null` if it hasn't been served lyrics. */
 export function GetLyricsAnsweredFrom(uri: string | undefined): string | null {
@@ -154,6 +156,53 @@ function isStaleFetch(uri: string): boolean {
  */
 function hideLoaderFor(uri: string): void {
   if (!isStaleFetch(uri)) HideLoaderContainer();
+}
+
+/**
+ * The sources asked besides the server, in order. Each setting is "off", "fallback" (only
+ * when the server has nothing) or "prefer" (also in place of the server's line-synced and
+ * plain lyrics, and then only with word-synced ones).
+ */
+const EXTRA_SOURCES = [
+  { mode: $communityLyrics, find: FindCommunityLyrics, from: "community TTML" },
+  { mode: $neteaseLyrics, find: FindNeteaseLyrics, from: "NetEase" },
+  { mode: $qqLyrics, find: FindQQLyrics, from: "QQ Music" },
+] as const;
+
+/** Whether an extra source should be asked even though the server answered with these. */
+function prefersExtraOver(lyrics: any): boolean {
+  return lyrics?.Type !== "Syllable" && EXTRA_SOURCES.some((source) => source.mode.get() === "prefer");
+}
+
+/**
+ * Serves the track's lyrics from the first extra source that has them (CommunityTTML.ts,
+ * SearchedLyrics.ts), processed and presented the way the server's are. Null when none
+ * has. `replacing` is set when the server did answer, and then only sources set to
+ * "prefer" are asked, and only word-synced lyrics count. They aren't put in the lyrics
+ * cache, which keeps the server's answer: the settings then decide on every play which
+ * shows, and turning one off takes effect at once.
+ */
+async function serveExtraLyrics(
+  uri: string,
+  trackId: string,
+  replacing = false
+): Promise<[object, number] | null> {
+  for (const source of EXTRA_SOURCES) {
+    const mode = source.mode.get();
+    if (mode === "off" || (replacing && mode !== "prefer")) continue;
+    if (isStaleFetch(uri)) return null;
+    const lyrics = await source.find(trackId);
+    if (!lyrics || (replacing && lyrics.Type !== "Syllable")) continue;
+    await ProcessLyrics(lyrics);
+    if (IsEmptyLyrics(lyrics)) continue;
+    lyrics.uri = uri;
+    if (isStaleFetch(uri)) return [{ ...lyrics, fromCache: false }, 200];
+    lastAnswer = { uri, from: source.from };
+    $currentLyricsData.set(JSON.stringify(lyrics));
+    presentLyrics(lyrics);
+    return [{ ...lyrics, fromCache: false }, 200];
+  }
+  return null;
 }
 
 /**
@@ -353,6 +402,8 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
       // Romaji in the other Japanese spelling is fetched and romanized again.
       if (lyricsFromCacheRes && JapaneseRomajiIsCurrent(lyricsFromCacheRes)) {
         if (lyricsFromCacheRes?.Value === "NO_LYRICS") {
+          const extra = await serveExtraLyrics(uri, trackId);
+          if (extra) return extra;
           $currentlyFetching.set(false);
           noteFailure(uri, "lyrics cache");
           return ["lyrics-not-found", 404];
@@ -361,6 +412,10 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
         // re-fetch checks (which match on uri) recognise it — older cache
         // entries predate the uri field.
         const lyricsFromCache = { ...(lyricsFromCacheRes ?? {}), uri };
+        if (prefersExtraOver(lyricsFromCache)) {
+          const extra = await serveExtraLyrics(uri, trackId, true);
+          if (extra) return extra;
+        }
         if (isStaleFetch(uri)) return [{ ...lyricsFromCache, fromCache: true }, 200];
         lastAnswer = { uri, from: "cache" };
         $currentLyricsData.set(JSON.stringify(lyricsFromCache));
@@ -493,6 +548,11 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
       return ["lyrics-queued", 503];
     }
 
+    if (status === 404) {
+      const extra = await serveExtraLyrics(uri, trackId);
+      if (extra) return extra;
+    }
+
     if (status !== 200) {
       noteFailure(uri, "API", `query status ${status}`);
       if (status === 404) {
@@ -515,6 +575,8 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
     const lyrics = lyricsPacker.unpack(lyricsQuery.data) as any;
 
     if (lyrics === null || lyrics === undefined || lyrics === "") {
+      const extra = await serveExtraLyrics(uri, trackId);
+      if (extra) return extra;
       hideLoaderFor(uri);
       $currentlyFetching.set(false);
       noteFailure(uri, "API", "empty lyrics payload");
@@ -528,6 +590,8 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
     // publishing an empty lyrics card.
     if (IsEmptyLyrics(lyrics)) {
       lyricsLogger.warn("Lyrics payload had no renderable lines after pruning");
+      const extra = await serveExtraLyrics(uri, trackId);
+      if (extra) return extra;
       hideLoaderFor(uri);
       $currentlyFetching.set(false);
       noteFailure(uri, "API", "no renderable lines after pruning");
@@ -548,6 +612,11 @@ async function runFetchLyrics(uri: string): Promise<[object | string, number] | 
       } catch (error) {
         lyricsCacheLogger.error("Error saving lyrics to cache", error);
       }
+    }
+
+    if (prefersExtraOver(lyrics)) {
+      const extra = await serveExtraLyrics(uri, trackId, true);
+      if (extra) return extra;
     }
 
     if (isStaleFetch(uri)) return [{ ...lyrics, fromCache: false }, 200];

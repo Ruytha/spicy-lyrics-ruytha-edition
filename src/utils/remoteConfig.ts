@@ -122,6 +122,16 @@ export const DEFAULT_REMOTE_CONFIG = {
   audioAnalysis: {
     timeoutMs: 15000,
   },
+  communityLyrics: {
+    indexTimeoutMs: 15000,
+    lyricsTimeoutMs: 8000,
+    // After the index couldn't be fetched, how long direct lookups stand in for it.
+    indexRetryMs: 600000,
+    indexTtlHours: 12,
+  },
+  searchedLyrics: {
+    timeoutMs: 8000,
+  },
   romanization: {
     // How long lyrics wait for the Japanese dictionary before showing kana-only romaji.
     dictionaryWaitMs: 5000,
@@ -168,7 +178,14 @@ const POLL_INTERVALS = [
 ] as const satisfies readonly (readonly [keyof RemoteConfig, string])[];
 const NON_EMPTY_LISTS = new Set(["breaker.ladderMs"]);
 // Keys this build reads that the shared server doesn't serve; their defaults apply.
-const LOCAL_ONLY_KEYS = new Set(["token.sourceTimeoutMs"]);
+const LOCAL_ONLY_KEYS = new Set([
+  "token.sourceTimeoutMs",
+  "communityLyrics.indexTimeoutMs",
+  "communityLyrics.lyricsTimeoutMs",
+  "communityLyrics.indexRetryMs",
+  "communityLyrics.indexTtlHours",
+  "searchedLyrics.timeoutMs",
+]);
 
 const isPlainObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null && !Array.isArray(v);
